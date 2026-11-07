@@ -2492,3 +2492,44 @@ button {
   .decision-desk__intro, .decision-desk__feedback { padding: 19px 16px; }
   .decision-desk__hint { padding: 15px 16px; }
 }
+
+
+/* Decision journey revision: the summary is primary; assumptions and audit are separate optional views. */
+.decision-desk__secondary { border: 1px solid var(--pine); background: var(--paper); color: var(--pine); padding: 12px 16px; font-size: 13px; font-weight: 750; }
+.decision-desk__secondary:hover { background: var(--sand); }
+.decision-desk__insight { background: #edf2e9; border-left: 3px solid var(--green); padding: 15px 16px; margin-top: 18px; }
+.decision-desk__insight strong { display: block; font: 400 20px var(--serif); }
+.decision-desk__insight p { margin-top: 7px; font-size: 13px; line-height: 1.6; }
+.decision-desk__comparisons { padding: 11px 0 0; }
+.decision-desk__comparisons p { padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+.lab-scenario-help { margin: 0; align-self: center; color: var(--ink-soft); max-width: 560px; font-size: 13px; line-height: 1.45; }
+.lab-workbench--parameters { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: start; }
+.lab-workbench--technical { display: block; }
+.lab-workbench--technical .lab-results { width: 100%; }
+.lab-workbench--parameters .lab-controls { max-width: none; width: 100%; }
+.lab-conditions-live { padding: 24px 26px; background: var(--paper); border: 1px solid var(--line); position: sticky; top: 18px; }
+.lab-conditions-live .kicker { color: var(--coral); font-size: 10px; font-weight: 850; letter-spacing: .1em; }
+.lab-conditions-live h3 { margin-top: 8px; font: 400 27px var(--serif); }
+.lab-conditions-live > p:nth-of-type(2) { font-size: 13px; line-height: 1.5; margin-top: 8px; }
+.lab-conditions-live dl { margin-top: 17px; border-top: 1px solid var(--line); }
+.lab-conditions-live dl > div { display: flex; justify-content: space-between; gap: 18px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.lab-conditions-live dt { color: var(--ink-soft); font-size: 12px; }
+.lab-conditions-live dd { font: 400 20px var(--serif); white-space: nowrap; }
+.lab-conditions-live button { background: var(--coral); color: var(--paper); border: 0; padding: 11px 16px; font-weight: 800; margin-top: 20px; font-size: 13px; }
+.lab-analysis-tabs { display: flex; flex-wrap: wrap; gap: 7px; padding: 11px; background: var(--sand); border: 1px solid var(--line); }
+.lab-analysis-tabs button { padding: 11px 13px; border: 1px solid transparent; background: var(--paper); color: var(--ink); font-size: 12px; font-weight: 700; }
+.lab-analysis-tabs button.is-active { border-color: var(--pine); background: var(--pine-deep); color: var(--paper); }
+.lab-analysis-tabs button:focus-visible { outline: 3px solid var(--coral); }
+.lab-detail-explanation { margin-top: 8px; font-size: 13px; color: var(--ink-soft); max-width: 730px; line-height: 1.5; }
+@media (max-width: 930px) {
+  .lab-workbench--parameters { grid-template-columns: 1fr; }
+  .lab-conditions-live { position: static; }
+}
+@media (max-width: 540px) {
+  .lab-analysis-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+  .lab-analysis-tabs button { font-size: 11px; padding: 10px 7px; }
+  .lab-conditions-live { padding: 18px; }
+  .decision-desk__actions { align-items: stretch; }
+  .decision-desk__actions button { width: 100%; }
+  .lab-conditions-live dl > div { flex-wrap: wrap; }
+}
