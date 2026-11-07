@@ -26,12 +26,16 @@ export function App() {
   useEffect(() => {
     const onHashChange = () => setView(viewFromHash());
     window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    window.addEventListener('popstate', onHashChange);
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('popstate', onHashChange);
+    };
   }, []);
 
   const navigate = (next: ViewId) => {
     setView(next);
-    window.history.replaceState(null, '', `#/${next}`);
+    window.history.pushState(null, '', `#/${next}`);
     window.scrollTo({ top: 0, behavior: 'auto' });
   };
 
