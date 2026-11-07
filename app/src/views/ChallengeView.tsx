@@ -125,6 +125,50 @@ function SensitivityChart({ scenario, locale, t }: { scenario: ReturnType<typeof
 }
 
 
+function thresholdQuestion(id: ReturnType<typeof calculateThresholds>[number]['id'], locale: Locale) {
+  const es = locale === 'es';
+  const texts = {
+    repairFeasibility: es ? '¿Qué probabilidad de reparar necesitamos?' : 'What repair-success chance do we need?',
+    repairDuration: es ? '¿Cuánto puede durar el trabajo de reparación?' : 'How long may the repair work take?',
+    newCancellationFraction: es ? '¿Cuánto dinero podemos comprometer al comprar en paralelo?' : 'How much of a parallel order can we commit?',
+  };
+  return texts[id];
+}
+
+function thresholdExplanation(threshold: ReturnType<typeof calculateThresholds>[number], locale: Locale) {
+  const es = locale === 'es';
+  if (threshold.value === null) {
+    if (threshold.status === 'unavailable') return es
+      ? 'No se puede calcular este límite aislando una probabilidad: en este escenario, los dos riesgos están relacionados.'
+      : 'This boundary cannot be calculated by changing one probability alone because the two risks are linked in this scenario.';
+    return es
+      ? 'Con los supuestos actuales no se ha encontrado ese límite en el intervalo analizado. No significa que la opción sea imposible.'
+      : 'No such boundary was found across the tested range. This does not mean the option is impossible.';
+  }
+  const value = `${number(threshold.value, locale, threshold.unit === 'days' ? 0 : 1)}${threshold.unit === 'days' ? (es ? ' días' : ' days') : '%'}`;
+  if (threshold.id === 'repairFeasibility') return es
+    ? `Si al menos el ${value} de los módulos se pueden reparar, «Reparar primero» tendría un tiempo medio de recuperación no superior al de comprar una pieza nueva, manteniendo las demás condiciones.`
+    : `If repairs are feasible at least ${value} of the time, «Repair first» would have an average recovery time no worse than buying a new part, holding all other assumptions constant.`;
+  if (threshold.id === 'repairDuration') return es
+    ? `La ejecución de la reparación podría durar hasta ${value} (sin contar la inspección) y «Reparar primero» aún no tardaría más, de media, que comprar nuevo con las probabilidades actuales.`
+    : `Repair execution could take up to ${value} (excluding inspection) while «Repair first» would still recover the module no slower on average than buying new under the current probabilities.`;
+  return es
+    ? `Si empezamos la compra y reparación a la vez, comprometer como máximo el ${value} del precio de la pieza nueva antes de cancelarla mantendría el desembolso medio de la vía paralela no superior al de comprar directamente, según estos supuestos.`
+    : `If procurement and repair start together, committing at most ${value} of the new component's price before cancelling would keep the parallel route's average cash outlay no higher than direct purchase under these assumptions.`;
+}
+function thresholdCaution(id: ReturnType<typeof calculateThresholds>[number]['id'], locale: Locale) {
+  const es = locale === 'es';
+  if (id === 'repairFeasibility') return es
+    ? 'No significa que podamos cumplir el objetivo de 60 días: solo compara los tiempos medios de dos estrategias.'
+    : 'This does not guarantee the target deadline: it only compares average recovery times between two strategies.';
+  if (id === 'repairDuration') return es
+    ? 'No es un plazo recomendado ni una fecha garantizada de entrega: es un límite calculado del modelo.'
+    : 'This is a modelled comparison limit, not a recommended repair duration or a guaranteed delivery date.';
+  return es
+    ? 'Es un porcentaje del importe comprometido al cancelar, no la probabilidad de tener que cancelar.'
+    : 'This is a proportion of cost committed on cancellation, not the probability that cancellation occurs.';
+}
+
 function branchLabel(repairFeasible: boolean | null, shock: boolean, locale: Locale): string {
   const es = locale === 'es';
   const repair = repairFeasible === null ? (es ? 'Compra de pieza nueva' : 'New part purchase') : repairFeasible ? (es ? 'Reparación viable' : 'Repair feasible') : (es ? 'Reparación no viable' : 'Repair not feasible');
@@ -214,7 +258,22 @@ export function ChallengeView({ content: _content, locale, guided }: ViewProps) 
         </nav>{lab.errors.length > 0 && <div className="lab-errors" role="alert"><strong>{t.modelInvalid}</strong><ul>{lab.errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}{lab.result && lab.classifications && <>
         {technicalTab === 'branches' && chosen && <article className="lab-panel lab-branches"><header><div><p className="kicker">{locale === 'es' ? 'DESGLOSE DE TU ELECCIÓN' : 'YOUR SELECTED ROUTE'}</p><h3>{t.strategies[chosen]}</h3><p className="lab-detail-explanation">{locale === 'es' ? 'Solo se muestran los posibles resultados de la alternativa que has elegido. Cambia la elección arriba para actualizar este desglose.' : 'Only outcomes for your selected route are shown. Choose a different route above to update the breakdown.'}</p></div></header><div className="lab-table-wrap"><table><thead><tr><th>{t.branch}</th><th>{t.probability}</th><th>{t.metrics.expectedRecoveryDays}</th><th>{t.outcome}</th><th>{t.obligations}</th><th>{t.cash}</th><th>{t.sunk}</th></tr></thead><tbody>{lab.result.strategies[chosen!].branches.map((branch) => <tr key={branch.id}><td>{branchLabel(branch.repairFeasible, branch.supplierShock, locale)}</td><td>{number(branch.probability * 100, locale)}%</td><td>{number(branch.recoveryDays, locale)} d</td><td>{branch.pathOutcome === 'new' ? (locale === 'es' ? 'Pieza nueva' : 'New part') : branch.pathOutcome === 'repair' ? (locale === 'es' ? 'Reparación' : 'Repair') : (locale === 'es' ? 'Empate de vías' : 'Tied routes')}</td><td><ul className="branch-obligations">{branch.economics.lineItems.map((item) => <li key={item.id}><span>{costLabel(item.category, locale)}</span><strong>{money(item.cashImpact, locale)}</strong></li>)}</ul></td><td>{money(branch.economics.totalCashOutlay, locale)}</td><td>{money(branch.economics.sunkCost, locale)}</td></tr>)}</tbody></table></div></article>}
         {technicalTab === 'sensitivity' && <SensitivityChart scenario={lab.scenario} locale={locale} t={t} />}
-        {technicalTab === 'sensitivity' && <article className="lab-panel"><header><div><p className="kicker">{locale === "es" ? "UMBRAL" : "THRESHOLD"}</p><h3>{t.thresholds}</h3></div></header><div className="threshold-grid">{thresholds.map((threshold) => <section key={threshold.id}><span>{t.thresholdNames[threshold.id]}</span><strong>{threshold.value === null ? t.thresholdStatus[threshold.status as keyof typeof t.thresholdStatus] : `${number(threshold.value, locale)} ${threshold.unit === 'days' ? t.units.days : '%'}`}</strong>{threshold.reason && <small>{threshold.reason}</small>}</section>)}</div></article>}
+        {technicalTab === 'sensitivity' && <article className="lab-panel threshold-explained">
+          <header><div><p className="kicker">{locale === 'es' ? 'TRES LÍMITES DE LA DECISIÓN' : 'THREE DECISION BOUNDARIES'}</p><h3>{locale === 'es' ? '¿Hasta dónde compensa cada opción?' : 'When does each route still make sense?'}</h3></div></header>
+          <p className="threshold-intro">{locale === 'es'
+            ? 'Cada número indica un límite hipotético, calculado cambiando una sola condición cada vez. Un límite compara el tiempo medio o el desembolso medio; no decide por sí solo cuál es la mejor estrategia.'
+            : 'Each number is a hypothetical boundary calculated by changing one assumption at a time. A boundary compares average time or average spending; it does not by itself identify the best strategy.'}</p>
+          <div className="threshold-explained__grid">{thresholds.map((threshold, index) => <section key={threshold.id} className="threshold-explained__card">
+            <span className="threshold-explained__index">{String(index + 1).padStart(2, '0')}</span>
+            <h4>{thresholdQuestion(threshold.id, locale)}</h4>
+            <strong>{threshold.value === null ? t.thresholdStatus[threshold.status as keyof typeof t.thresholdStatus] : `${number(threshold.value, locale, threshold.unit === 'days' ? 0 : 1)}${threshold.unit === 'days' ? ` ${t.units.days}` : '%'}`}</strong>
+            <p>{thresholdExplanation(threshold, locale)}</p>
+            <small>{thresholdCaution(threshold.id, locale)}</small>
+          </section>)}</div>
+          <p className="threshold-footer">{locale === 'es'
+            ? 'Todo el caso DEMO-60 usa cifras inventadas. Si cambias los datos de partida, cambian estos límites. Son resultados de simulación, no recomendaciones operativas de Airbus.'
+            : 'All DEMO-60 figures are invented. Changing the scenario inputs changes these boundaries. They are simulated results, not Airbus operational recommendations.'}</p>
+        </article>}
         {technicalTab === 'method' && <article className="lab-panel formula-panel"><header><div><p className="kicker">{locale === "es" ? "MÉTODO" : "METHOD"}</p><h3>{t.formulas}</h3></div></header><div className="formula-grid"><code>E[T<sub>repair</sub>] = q·(I+R) + (1−q)·(I+N+p<sub>s|¬q</sub>·S)</code><code>E[C<sub>s</sub>] = Σ<sub>b</sub> P(b)·[Σ obligations<sub>b</sub> − explicit credits<sub>b</sub>]</code><code>P(T≤target) = Σ<sub>b:Tb≤target</sub> P(b)</code><code>j ∈ [max(0,q+p−1), min(q,p)]</code></div><p>{t.formulaNote}</p></article>}
       </>}</div>}
     </div>}
