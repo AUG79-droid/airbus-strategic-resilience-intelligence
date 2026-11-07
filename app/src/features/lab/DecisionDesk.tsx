@@ -57,6 +57,16 @@ export function DecisionDesk({ locale, chosen, onChoose, activePanel, onPanel }:
   const t = labCopy(locale);
   const es = locale === 'es';
   const current = chosen && lab.result ? lab.result.strategies[chosen] : null;
+  const conditionalMean = (feasible: boolean) => {
+    if (!current) return null;
+    const branches = current.branches.filter((branch) => branch.repairFeasible === feasible);
+    const probability = branches.reduce((sum, branch) => sum + branch.probability, 0);
+    return probability > 0
+      ? branches.reduce((sum, branch) => sum + branch.probability * branch.recoveryDays, 0) / probability
+      : null;
+  };
+  const repairSuccessDays = chosen === 'repairFirst' ? conditionalMean(true) : null;
+  const repairFailureDays = chosen === 'repairFirst' ? conditionalMean(false) : null;
   const environmental = chosen === 'repairFirst' || chosen === 'parallel' ? lab.environmental?.[chosen] : null;
   const circularityIndicators = ([
     ['virginMaterialDemandDeltaKg', es ? 'Material virgen' : 'Virgin material'],
@@ -101,9 +111,19 @@ export function DecisionDesk({ locale, chosen, onChoose, activePanel, onPanel }:
       <p className="kicker">{es ? 'ESTO SUCEDERÍA EN EL ESCENARIO SELECCIONADO' : 'THIS IS WHAT THE SELECTED SCENARIO PREDICTS'}</p>
       <h4>{t.strategies[chosen!]}</h4>
       <div className="decision-desk__metrics">
-        <div><strong>{fmt(current.expectedRecoveryDays, locale, 1)}</strong><span>{es ? 'días esperados para recuperar' : 'expected recovery days'}</span></div>
-        <div><strong>{fmt(current.probabilityTargetMet * 100, locale, 1)}%</strong><span>{es ? 'probabilidad de cumplir el objetivo' : 'chance of meeting the target'}</span></div>
-        <div><strong>{currency(current.expectedCashOutlay, locale)}</strong><span>{es ? 'desembolso esperado' : 'expected cash outlay'}</span></div>
+        <div><strong>{fmt(current.expectedRecoveryDays, locale, 1)} {es ? 'días' : 'days'}</strong><span>{es ? 'Tiempo medio estimado hasta tener un módulo operativo' : 'Estimated average time to recover an operational module'}</span></div>
+        <div><strong>{fmt(current.probabilityTargetMet * 100, locale, 1)}%</strong><span>{es ? `Probabilidad de recuperarlo en un máximo de ${fmt(lab.scenario.timing.targetRecoveryDays, locale)} días` : `Chance of recovery within ${fmt(lab.scenario.timing.targetRecoveryDays, locale)} days`}</span></div>
+        <div><strong>{currency(current.expectedCashOutlay, locale)}</strong><span>{es ? 'Desembolso medio estimado' : 'Estimated average cash outlay'}</span></div>
+      </div>
+      <div className="decision-desk__time-note" data-testid="recovery-time-explanation">
+        <strong>{es ? '¿Qué significan esos días?' : 'What do these days mean?'}</strong>
+        {chosen === 'repairFirst' && repairSuccessDays !== null && repairFailureDays !== null
+          ? <p>{es
+              ? `No significa que reparar tarde ${fmt(current.expectedRecoveryDays, locale, 1)} días. Si la reparación es viable (${fmt(lab.scenario.risks.repairFeasibilityProbability * 100, locale)}% de probabilidad), recuperar el módulo requiere ${fmt(repairSuccessDays, locale, 1)} días. Si no es viable, la compra de sustitución lleva una media de ${fmt(repairFailureDays, locale, 1)} días, incluidos los posibles retrasos. El promedio ponderado de ambos resultados es ${fmt(current.expectedRecoveryDays, locale, 1)} días.`
+              : `It does not mean the repair itself takes ${fmt(current.expectedRecoveryDays, locale, 1)} days. If repair is feasible (${fmt(lab.scenario.risks.repairFeasibilityProbability * 100, locale)}% probability), recovery takes ${fmt(repairSuccessDays, locale, 1)} days. If it fails, purchasing a replacement takes ${fmt(repairFailureDays, locale, 1)} days on average, including possible delays. The probability-weighted average is ${fmt(current.expectedRecoveryDays, locale, 1)} days.`}</p>
+          : <p>{es
+              ? 'Es una media calculada a partir de los resultados posibles de esta estrategia y sus probabilidades, incluidos los riesgos de suministro. No es el tiempo fijo de una reparación ni una fecha garantizada.'
+              : 'This is a probability-weighted average of the possible outcomes under this strategy, including supply risks. It is neither a fixed repair duration nor a guaranteed date.'}</p>}
       </div>
       <p className="decision-desk__compare-title">{es ? '¿Y frente a las otras dos decisiones?' : 'How does it compare with the other two routes?'}</p>
       <div className="decision-desk__comparisons">
