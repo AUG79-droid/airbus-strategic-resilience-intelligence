@@ -6,6 +6,7 @@ type SymbolEntry = { symbol: string; es: string; en: string };
 const symbols: SymbolEntry[] = [
   { symbol: 'E[·]', es: 'Valor medio calculado considerando todos los resultados posibles y sus probabilidades.', en: 'Probability-weighted average across all possible outcomes.' },
   { symbol: 'T', es: 'Tiempo necesario para volver a disponer de un módulo operativo (no solo tiempo de reparación).', en: 'Time until an operational module is available again (not just hands-on repair time).' },
+  { symbol: 'rep', es: 'Identifica la estrategia «Reparar primero» en la fórmula del tiempo medio.', en: 'Identifies the «Repair first» strategy in the average-recovery-time equation.' },
   { symbol: 'q', es: 'Probabilidad de que reparar el módulo sea viable.', en: 'Probability that repairing the module is feasible.' },
   { symbol: 'I', es: 'Días necesarios para inspeccionar el módulo.', en: 'Days needed to inspect the module.' },
   { symbol: 'R', es: 'Días de ejecución de la reparación, si resulta viable.', en: 'Days to perform the repair, if it is feasible.' },
@@ -80,7 +81,7 @@ export function MethodLegend({ locale }: { locale: Locale }) {
     <div className="method-explained__equations">
       <section>
         <h4>{equations[0][locale]}</h4>
-        <div className="method-explained__math"><code>E[T<sub>reparar</sub>] = q·(I + R) + (1−q)·(I + N + p<sub>s|¬q</sub>·S)</code></div>
+        <div className="method-explained__math"><code>E[T<sub>rep</sub>] = q·(I + R) + (1−q)·(I + N + p<sub>s|¬q</sub>·S)</code></div>
         <p>{es ? equations[0].detailEs : equations[0].detailEn}</p>
       </section>
       <section>
