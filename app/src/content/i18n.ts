@@ -90,8 +90,8 @@ export const copy: Record<Locale, Copy> = {
     dataMeta: 'FICTIONAL SCENARIO / PUBLIC EVIDENCE',
     systemMap: 'RI / CAUSAL SYSTEM',
     causalCaption: 'CAUSAL CHAIN / EVERY LINK MUST EARN ITS CLAIM',
-    caseLabel: 'CASE 01 — REPAIR VS REPLACEMENT',
-    caseDescription: 'Qualified repair · new procurement · parallel strategy',
+    caseLabel: 'DEMO-60 — TEST-BENCH CONTROL MODULE',
+    caseDescription: 'Fictional maintenance centre · repair · new purchase · parallel route',
     chainKicker: 'GUIDED CASE / CAUSAL INVESTIGATION',
     chainTitle: 'From an initiative to customer value—without skipping the evidence.',
     chainIntro:
@@ -241,8 +241,8 @@ export const copy: Record<Locale, Copy> = {
     dataMeta: 'ESCENARIO FICTICIO / EVIDENCIA PÚBLICA',
     systemMap: 'RI / SISTEMA CAUSAL',
     causalCaption: 'CADENA CAUSAL / CADA ENLACE DEBE MERECER SU AFIRMACIÓN',
-    caseLabel: 'CASO 01 — REPARAR FRENTE A SUSTITUIR',
-    caseDescription: 'Reparación cualificada · compra nueva · estrategia paralela',
+    caseLabel: 'DEMO-60 — MÓDULO DE CONTROL DE BANCO DE ENSAYOS',
+    caseDescription: 'Centro ficticio de mantenimiento · reparación · compra nueva · vía paralela',
     chainKicker: 'CASO GUIADO / INVESTIGACIÓN CAUSAL',
     chainTitle: 'De una iniciativa al valor para el cliente, sin saltarse la evidencia.',
     chainIntro:
