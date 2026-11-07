@@ -1,0 +1,3 @@
+Start the first ASRI English narrated video preview on GitHub Actions.
+This file is the only automatic video-build trigger; no app code is changed.
+Run 1: 2026-11-07.
