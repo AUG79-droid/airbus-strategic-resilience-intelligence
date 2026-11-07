@@ -71,7 +71,11 @@ export function ChallengeView({ content: _content, locale, guided }: ViewProps) 
   return <section className="lab" aria-labelledby="challenge-title">
     <header className="lab-header"><div><p className="kicker">{locale === 'es' ? 'CASO 01 · PASO 2 DE 4' : 'CASE 01 · STEP 2 OF 4'}</p><h2 id="challenge-title">{locale === 'es' ? 'Decide y comprueba qué ocurre' : 'Make a decision and see what happens'}</h2></div><div className="lab-header__warnings"><strong>{t.fictional}</strong></div></header>
     <div className="lab-preset-row"><SelectField label={t.preset} value={lab.selectedPreset} onChange={(value) => value !== 'custom' && lab.applyPreset(value as PresetId)} options={[...LAB_PRESETS.map((preset) => ({ value: preset.id, label: t.presets[preset.id] })), ...(lab.selectedPreset === 'custom' ? [{ value: 'custom', label: t.custom }] : [])]} testId="preset-select" /><span className="phase-chip">{lab.selectedPreset === 'custom' ? t.custom : t.presets[lab.selectedPreset]}</span></div>
-    <DecisionDesk locale={locale} detailsOpen={showDetailedAnalysis} onToggleDetails={() => setShowDetailedAnalysis((current) => !current)} />
+    <DecisionDesk locale={locale} detailsOpen={showDetailedAnalysis} onToggleDetails={() => {
+      const opening = !showDetailedAnalysis;
+      setShowDetailedAnalysis(opening);
+      window.requestAnimationFrame(() => document.getElementById(opening ? 'lab-detailed-analysis' : 'decision-desk-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }} />
     {showDetailedAnalysis && <div className="lab-workbench" id="lab-detailed-analysis">
       <aside className="lab-controls" aria-label={t.title}>
         {guided ? <>
