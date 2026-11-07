@@ -86,7 +86,7 @@ export const copy: Record<Locale, Copy> = {
     heroSubtitle: 'From environmental initiatives to operational advantage and customer value.',
     heroCopy:
       'Explore how sustainability-driven decisions can reduce critical dependencies, strengthen operational continuity and create strategic value for Airbus and its customers. Use practical cases to discover when these benefits materialise and what evidence is needed to demonstrate them.',
-    scopeMeta: 'PRACTICAL CASE: COMPONENT RECOVERY',
+    scopeMeta: 'FICTIONAL CASE DEMO-60: TEST-BENCH CONTROLLER',
     dataMeta: 'FICTIONAL SCENARIO / PUBLIC EVIDENCE',
     systemMap: 'RI / CAUSAL SYSTEM',
     causalCaption: 'CAUSAL CHAIN / EVERY LINK MUST EARN ITS CLAIM',
@@ -215,7 +215,7 @@ export const copy: Record<Locale, Copy> = {
       'When activated in a later phase, the translator will preserve the same facts while changing emphasis for each audience. Negative and inconclusive findings will remain negative and inconclusive.',
     memoGuardrail: 'NO NARRATIVE GENERATED · PHASE 1',
     footerLeft: 'INDEPENDENT CONCEPT · NO CONFIDENTIAL DATA · NOT AN AIRBUS PRODUCT',
-    footerRight: 'RI / 2026 · PHASE 1 FOUNDATION',
+    footerRight: 'RI / 2026 · DEMO-60 · FICTIONAL PROTOTYPE',
   },
   es: {
     skip: 'Saltar al contenido principal',
@@ -237,7 +237,7 @@ export const copy: Record<Locale, Copy> = {
     heroSubtitle: 'De las iniciativas ambientales a las ventajas operativas y al valor para el cliente.',
     heroCopy:
       'Explora cómo las decisiones de sostenibilidad pueden reducir dependencias críticas, fortalecer la continuidad operativa y crear valor estratégico para Airbus y sus clientes. Utiliza casos prácticos para descubrir cuándo se producen estos beneficios y qué evidencias necesitamos para demostrarlos.',
-    scopeMeta: 'CASO PRÁCTICO: RECUPERACIÓN DE COMPONENTE',
+    scopeMeta: 'CASO FICTICIO DEMO-60: MÓDULO DE BANCO DE ENSAYOS',
     dataMeta: 'ESCENARIO FICTICIO / EVIDENCIA PÚBLICA',
     systemMap: 'RI / SISTEMA CAUSAL',
     causalCaption: 'CADENA CAUSAL / CADA ENLACE DEBE MERECER SU AFIRMACIÓN',
@@ -366,6 +366,6 @@ export const copy: Record<Locale, Copy> = {
       'Cuando se active en una fase posterior, el traductor conservará los mismos hechos y cambiará el énfasis para cada audiencia. Los resultados negativos y no concluyentes seguirán siéndolo.',
     memoGuardrail: 'SIN NARRATIVA GENERADA · FASE 1',
     footerLeft: 'CONCEPTO INDEPENDIENTE · SIN DATOS CONFIDENCIALES · NO ES UN PRODUCTO AIRBUS',
-    footerRight: 'RI / 2026 · FUNDACIÓN FASE 1',
+    footerRight: 'RI / 2026 · DEMO-60 · PROTOTIPO FICTICIO',
   },
 };
