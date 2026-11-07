@@ -1,0 +1,35 @@
+{
+  "name": "airbus-strategic-resilience-intelligence",
+  "private": true,
+  "version": "0.6.0-phase-6",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "test": "vitest run",
+    "test:domain": "vitest run src/domain",
+    "test:lab-ui": "node scripts/test-lab-ui.mjs",
+    "test:evidence-ui": "node scripts/test-evidence-ui.mjs",
+    "test:translator-ui": "node scripts/test-translator-ui.mjs",
+    "test:export-ui": "node scripts/test-export-ui.mjs",
+    "test:final-qa": "node scripts/test-final-qa.mjs",
+    "test:guided-ui": "node scripts/test-guided-journey.mjs",
+    "typecheck": "tsc -b --pretty false",
+    "qa:visual": "node scripts/capture-visuals.mjs",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "@vitejs/plugin-react": "6.1.2",
+    "playwright-core": "1.64.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.6",
+    "vitest": "5.1.0"
+  }
+}

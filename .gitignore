@@ -1,0 +1,13 @@
+app/node_modules/
+app/dist/
+app/.vite/
+artifacts/
+output/
+tmp/
+.vite/
+*.log
+*.pdf
+preview-*.png
+.env
+.env.*
+!.env.example
