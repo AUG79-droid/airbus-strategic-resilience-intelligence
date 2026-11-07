@@ -57,6 +57,12 @@ export function DecisionDesk({ locale, chosen, onChoose, activePanel, onPanel }:
   const t = labCopy(locale);
   const es = locale === 'es';
   const current = chosen && lab.result ? lab.result.strategies[chosen] : null;
+  const environmental = chosen === 'repairFirst' || chosen === 'parallel' ? lab.environmental?.[chosen] : null;
+  const circularityIndicators = ([
+    ['virginMaterialDemandDeltaKg', es ? 'Material virgen' : 'Virgin material'],
+    ['wasteGeneratedDeltaKg', es ? 'Residuos' : 'Waste'],
+    ['boundedGhgDeltaKgCo2e', es ? 'GEI parciales' : 'Partial GHG'],
+  ] as const).map(([id, label]) => ({ id, label, result: environmental?.indicators.find((item) => item.id === id) }));
   const dominatedBy = current && lab.result ? options.filter((option) => {
     if (option === chosen) return false;
     const alternative = lab.result!.strategies[option];
@@ -115,9 +121,39 @@ export function DecisionDesk({ locale, chosen, onChoose, activePanel, onPanel }:
             ? 'Tu alternativa no queda superada simultáneamente en plazo, coste y cumplimiento por otra. Eso no la convierte automáticamente en la mejor: hay que valorar los compromisos y las condiciones reales.'
             : 'No other route is simultaneously as good or better in all three measures and strictly better in one. This does not automatically make your choice best: trade-offs and real conditions still matter.'}</p>
       </div>
+      <section className="decision-desk__environment" aria-labelledby="decision-environment-title">
+        <div className="decision-desk__environment-heading">
+          <p className="kicker">{es ? 'UNA SEGUNDA PREGUNTA: ¿QUÉ OCURRE CON LOS MATERIALES?' : 'A SECOND QUESTION: WHAT HAPPENS TO MATERIALS?'}</p>
+          <h5 id="decision-environment-title">{es ? 'Circularidad e impacto potencial' : 'Circularity and potential impact'}</h5>
+        </div>
+        {chosen === 'new' ? (
+          <p>{es
+            ? 'Comprar una pieza nueva es la referencia ambiental. Selecciona Reparar primero o Paralela / mixta para calcular diferencias hipotéticas respecto a esta vía.'
+            : 'Purchasing a new component is the environmental baseline. Choose Repair first or Parallel to model hypothetical differences versus this route.'}</p>
+        ) : lab.environmentalEnabled ? (
+          <>
+            <div className="decision-desk__environment-grid">
+              {circularityIndicators.map(({ id, label, result }) => <div key={id}>
+                <span>{label}</span>
+                <strong>{result?.status === 'modelled' && result.value !== null
+                  ? `${fmt(result.value, locale, 1)} ${result.unit}`
+                  : (es ? 'No cuantificado' : 'Not quantified')}</strong>
+                <small>{result?.status === 'modelled'
+                  ? (es ? 'Diferencia simulada frente a compra nueva' : 'Modelled difference vs new purchase')
+                  : (es ? 'Falta una hipótesis física o un factor' : 'Physical assumption or factor missing')}</small>
+              </div>)}
+            </div>
+            <p>{es
+              ? 'Un valor negativo representa menos material, residuos o GEI dentro de las hipótesis elegidas. Los factores son totalmente inventados; esto no es un análisis de ciclo de vida ni acredita beneficios reales.'
+              : 'A negative value represents less material, waste or GHG under the chosen assumptions. All factors are invented; this is not a lifecycle assessment or evidence of real benefits.'}</p>
+          </>
+        ) : <p>{es
+          ? 'Los factores ambientales ficticios están desactivados. Puedes activarlos en Modificar las condiciones → Factores ambientales.'
+          : 'Fictional environmental factors are disabled. Enable them in Change conditions → Environmental factors.'}</p>}
+      </section>
       <p className="decision-desk__caution">{es
-        ? 'Todas las alternativas se calculan bajo las mismas condiciones. Elegir una cambia el foco de la comparación, no los datos del escenario. Son ejemplos ficticios, no resultados reales de Airbus.'
-        : 'All alternatives are calculated under the same conditions. Choosing one changes the focus of the comparison, not the scenario inputs. These are fictional examples, not real Airbus outcomes.'}</p>
+        ? 'Todas las alternativas se calculan bajo las mismas condiciones. Elegir una cambia el foco de la comparación, no los datos del escenario. Ninguna de estas cifras corresponde a Airbus.'
+        : 'All alternatives are calculated under the same conditions. Your choice changes the focus of comparison, not the inputs. None of these figures belongs to Airbus.'}</p>
       <div className="decision-desk__actions">
         <button type="button" className="decision-desk__explore" data-testid="change-conditions" onClick={() => onPanel('parameters')}>
           {activePanel === 'parameters' ? (es ? 'Ocultar condiciones' : 'Hide inputs') : (es ? 'Modificar las condiciones' : 'Change conditions')}
