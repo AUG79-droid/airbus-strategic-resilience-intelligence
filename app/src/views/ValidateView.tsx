@@ -1,116 +1,139 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Locale } from '../app/types';
 import type { Copy } from '../content/i18n';
-import { evidenceCopy } from '../features/evidence/copy';
+import type { StrategyId } from '../domain';
 import { useEvidence } from '../features/evidence/EvidenceProvider';
-import type {
-  CausalStageId,
-  ClaimGateResult,
-  EvidenceFocus,
-  EvidenceOwner,
-  EvidenceRecord,
-  EvidenceStatus,
-  PublicSource,
-} from '../features/evidence/types';
+import { useLab } from '../features/lab/LabProvider';
+import { TechnicalEvidenceView } from './TechnicalEvidenceView';
 
-interface ViewProps { content: Copy; locale: Locale; }
-type TabId = 'register' | 'claims' | 'sources' | 'requests';
-const owners: EvidenceOwner[] = ['engineering', 'procurement', 'sustainability', 'programmes'];
+interface ViewProps { content: Copy; locale: Locale; chosen: StrategyId | null; }
 
-function focusValue(focus: EvidenceFocus) {
-  return focus.type === 'all' ? 'all' : `${focus.type}:${focus.id}`;
-}
+const strategyNames: Record<Locale, Record<StrategyId, string>> = {
+  es: { new: 'Sustituir', repairFirst: 'Reparar primero', parallel: 'Paralela / mixta' },
+  en: { new: 'Replace', repairFirst: 'Repair first', parallel: 'Parallel / mixed' },
+};
 
-function parseFocus(value: string): EvidenceFocus {
-  if (value === 'all') return { type: 'all' };
-  const [type, id] = value.split(':');
-  return { type: type as EvidenceFocus['type'], id: id as EvidenceFocus['id'] };
-}
-
-function EvidenceDetail({ record, locale }: { record: EvidenceRecord; locale: Locale }) {
-  const t = evidenceCopy(locale);
+export function ValidateView({ content, locale, chosen }: ViewProps) {
+  const es = locale === 'es';
+  const lab = useLab();
   const evidence = useEvidence();
-  const assumptions = new Map(evidence.assumptions.map((item) => [item.id, item]));
-  const outputs = new Map(evidence.modelOutputs.map((item) => [item.id, item]));
-  const sources = new Map(evidence.sources.map((item) => [item.id, item]));
-  return <article className="selected-evidence" aria-live="polite">
-    <header><div><span className="evidence-record__id">{record.id}</span><h3>{record.title[locale]}</h3></div><span className={`evidence-status evidence-status--${record.status}`}>{t.statuses[record.status]}</span></header>
-    <p className="selected-evidence__statement">{record.statement[locale]}</p>
-    <div className="trace-tags">{record.stages.map((stage) => <span key={stage}>{t.stages[stage]}</span>)}{record.strategyIds.map((strategy) => <span key={strategy}>{t.strategies[strategy]}</span>)}</div>
-    {record.sourceIds.length > 0 ? <section><h4>{t.sourcesLabel}</h4>{record.sourceIds.map((sourceId) => { const source = sources.get(sourceId); return source && <div className="trace-source" key={source.id}><strong>{source.id} · {source.publisher}</strong><a href={source.url} target="_blank" rel="noreferrer">{source.title} ↗</a><small>{t.locator}: {source.locator}</small></div>; })}</section> : <p className="trace-empty">{t.noSource}</p>}
-    {record.assumptionIds.length > 0 && <section><h4>{t.assumption}</h4><dl className="trace-list">{record.assumptionIds.map((id) => { const item = assumptions.get(id); return item && <div key={id}><dt>{item.id} · {item.label[locale]}</dt><dd>{item.value}<small>{t.provenance[item.provenance]}</small></dd></div>; })}</dl></section>}
-    {record.modelOutputIds.length > 0 && <section><h4>{t.output}</h4><dl className="trace-list">{record.modelOutputIds.map((id) => { const item = outputs.get(id); return item && <div key={id}><dt>{item.id} · {item.label[locale]}</dt><dd>{item.value}<code>{item.formula}</code></dd></div>; })}</dl></section>}
-    <section><h4>{t.limitations}</h4><ul>{record.limitations[locale].map((item) => <li key={item}>{item}</li>)}</ul></section>
-    {record.requiredInformation.length > 0 && <section><h4>{t.needed}</h4><ul>{record.requiredInformation.map((item) => <li key={`${item.owner}-${item.request.en}`}><strong>{t.owners[item.owner]}:</strong> {item.request[locale]}</li>)}</ul></section>}
-    <footer><span>{t.reviewed}: {record.lastReviewed}</span><span>{t.reviewer}: {record.reviewer}</span></footer>
-  </article>;
-}
-
-function ClaimDetail({ claim, locale, onTrace }: { claim: ClaimGateResult; locale: Locale; onTrace: () => void }) {
-  const t = evidenceCopy(locale);
-  return <article className={`selected-claim selected-claim--${claim.status}`} aria-live="polite">
-    <header><div><span>{claim.id}</span><h3>{claim.title[locale]}</h3></div><strong>{t.gateStatuses[claim.status]}</strong></header>
-    <p className="selected-claim__statement">{claim.proposedClaim[locale]}</p>
-    <section><h4>{t.claimReason}</h4><ul>{claim.reasons[locale].map((reason) => <li key={reason}>{reason}</li>)}</ul></section>
-    {claim.missingInformation.length > 0 && <section><h4>{t.missingInfo}</h4><ul>{claim.missingInformation.map((item) => <li key={`${item.owner}-${item.request.en}`}><strong>{t.owners[item.owner]}:</strong> {item.request[locale]}</li>)}</ul></section>}
-    <footer><span>{t.lastEvaluated}: {claim.lastEvaluated}</span><button type="button" onClick={onTrace}>{t.traceResult} →</button></footer>
-  </article>;
-}
-
-function SourceItem({ source, locale }: { source: PublicSource; locale: Locale }) {
-  const t = evidenceCopy(locale);
-  return <details className="source-accordion" data-testid={`source-${source.id}`}>
-    <summary><span>{source.id}</span><div><strong>{source.title}</strong><small>{source.publisher} · {source.publicationDate ?? source.accessedDate}</small></div><span>{t.details} +</span></summary>
-    <div><dl><div><dt>{t.publicationDate}</dt><dd>{source.publicationDate ?? '—'}</dd></div><div><dt>{t.accessedDate}</dt><dd>{source.accessedDate}</dd></div><div><dt>{t.reviewState}</dt><dd>{t.reviewedSource}</dd></div><div><dt>{t.locator}</dt><dd>{source.locator}</dd></div></dl><blockquote>{source.extract}</blockquote><h4>{t.sourceLimits}</h4><ul>{source.limitations.map((item) => <li key={item}>{item}</li>)}</ul><a href={source.url} target="_blank" rel="noreferrer">{t.openSource} ↗</a></div>
-  </details>;
-}
-
-export function ValidateView({ content: _content, locale }: ViewProps) {
-  const t = evidenceCopy(locale);
-  const evidence = useEvidence();
-  const [tab, setTab] = useState<TabId>('register');
-  const [selectedRecordId, setSelectedRecordId] = useState(evidence.visibleRecords[0]?.id ?? '');
-  const [selectedClaimId, setSelectedClaimId] = useState<ClaimGateResult['id']>(evidence.claims[0]?.id ?? 'serviceContext');
-  const [selectedOwner, setSelectedOwner] = useState<EvidenceOwner>('engineering');
+  const openFromEvidence = Boolean(window.history.state?.asriOpenEvidence && evidence.focus.type !== 'all');
+  const [advancedOpen, setAdvancedOpen] = useState(openFromEvidence);
+  const route = chosen ?? 'repairFirst';
+  const result = lab.result?.strategies[route];
+  const format = (value: number, decimals = 0) =>
+    new Intl.NumberFormat(locale, { maximumFractionDigits: decimals }).format(value);
+  const euros = (value: number) =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
+  const material = (route !== 'new' ? lab.environmental?.[route].indicators.find((indicator) => indicator.id === 'virginMaterialDemandDeltaKg') : null);
+  const firstSource = evidence.sources.find((source) => source.id === 'AIRBUS-MMS-01');
 
   useEffect(() => {
-    if (!evidence.visibleRecords.some((record) => record.id === selectedRecordId)) {
-      setSelectedRecordId(evidence.visibleRecords[0]?.id ?? '');
-    }
-  }, [evidence.visibleRecords, selectedRecordId]);
+    if (!openFromEvidence) return;
+    const frame = window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() =>
+        document.getElementById('technical-evidence')?.scrollIntoView({ behavior: 'auto', block: 'start' })
+      )
+    );
+    return () => window.cancelAnimationFrame(frame);
+  }, [openFromEvidence]);
 
-  const selectedRecord = evidence.visibleRecords.find((record) => record.id === selectedRecordId) ?? evidence.visibleRecords[0];
-  const selectedClaim = evidence.claims.find((claim) => claim.id === selectedClaimId) ?? evidence.claims[0];
-  const ownerRequests = useMemo(() => {
-    const byOwner = new Map<EvidenceOwner, Set<string>>(owners.map((owner) => [owner, new Set()]));
-    for (const record of evidence.records) for (const item of record.requiredInformation) byOwner.get(item.owner)?.add(item.request[locale]);
-    for (const claim of evidence.claims) for (const item of claim.missingInformation) byOwner.get(item.owner)?.add(item.request[locale]);
-    return byOwner;
-  }, [evidence.claims, evidence.records, locale]);
-  const statusCount = (status: EvidenceStatus) => evidence.records.filter((record) => record.status === status).length;
+  return <section className="validation-simple" data-testid="validate-simple" aria-labelledby="validation-simple-title">
+    <header className="validation-simple__header">
+      <p className="kicker">{es ? 'PASO 3 · COMPROBEMOS LO QUE SABEMOS' : 'STEP 3 · CHECK WHAT WE KNOW'}</p>
+      <h2 id="validation-simple-title">{es ? '¿Qué es real y qué hemos simulado?' : 'What is real, and what have we simulated?'}</h2>
+      <p>{es
+        ? 'Antes de compartir una conclusión, necesitamos distinguir los datos inventados de los cálculos y las fuentes reales. No tienes que revisar una auditoría ni completar formularios.'
+        : 'Before sharing a conclusion, we need to distinguish invented inputs from model calculations and genuine sources. You do not need to perform an audit or complete any forms.'}</p>
+    </header>
 
-  const openClaimEvidence = (claim: ClaimGateResult) => {
-    evidence.setFocus({ type: 'claim', id: claim.id });
-    setTab('register');
-  };
+    <div className="validation-simple__three" aria-label={es ? 'Tres tipos de información' : 'Three kinds of information'}>
+      <article>
+        <span className="validation-simple__number">01</span>
+        <h3>{es ? 'Datos inventados' : 'Invented data'}</h3>
+        <p>{es
+          ? 'El fallo del módulo, los tiempos, los precios, las probabilidades y los factores ambientales pertenecen al caso ficticio DEMO-60.'
+          : 'The failed module, timings, prices, probabilities and environmental factors all belong to the fictional DEMO-60 case.'}</p>
+        <div className="validation-simple__example">
+          <strong>{format(lab.scenario.risks.repairFeasibilityProbability * 100)}%</strong>
+          <span>{es ? 'Probabilidad de reparación supuesta, no observada' : 'Assumed repair feasibility, not observed data'}</span>
+        </div>
+      </article>
+      <article>
+        <span className="validation-simple__number">02</span>
+        <h3>{es ? 'Resultados calculados' : 'Calculated results'}</h3>
+        <p>{es
+          ? 'El simulador utiliza esos datos para comparar las tres alternativas. Los resultados son matemáticos, pero siguen siendo ficticios.'
+          : 'The simulator uses those assumptions to compare the three routes. The calculations are mathematical, but the outcomes remain fictional.'}</p>
+        {result && <div className="validation-simple__example">
+          <strong>{format(result.expectedRecoveryDays, 1)} {es ? 'días' : 'days'}</strong>
+          <span>{es
+            ? `Tiempo medio simulado para «${strategyNames.es[route]}» · ${euros(result.expectedCashOutlay)} de desembolso medio`
+            : `Simulated average recovery for “${strategyNames.en[route]}” · ${euros(result.expectedCashOutlay)} average cash outlay`}</span>
+        </div>}
+      </article>
+      <article>
+        <span className="validation-simple__number">03</span>
+        <h3>{es ? 'Información pública real' : 'Real public information'}</h3>
+        <p>{es
+          ? 'Airbus describe públicamente servicios de mantenimiento y reparación. Eso aporta contexto, pero NO demuestra los resultados de nuestro módulo ficticio.'
+          : 'Airbus publicly describes maintenance and repair services. That provides context, but does NOT prove the outcomes for our fictional component.'}</p>
+        {firstSource && <a href={firstSource.url} target="_blank" rel="noreferrer">{es ? 'Consultar la información pública de Airbus' : 'See Airbus public information'} ↗</a>}
+      </article>
+    </div>
 
-  return <section className="evidence-workspace evidence-workspace--compact" aria-labelledby="validate-title">
-    <header className="evidence-workspace__header"><div><p className="kicker">PHASE 04 / EVIDENCE CONTROL</p><h2 id="validate-title">{t.title}</h2><p>{t.intro}</p></div><div className="evidence-public-warning"><strong>{t.publicOnly}</strong><span>{t.noValidated}</span></div></header>
+    <section className="validation-simple__decision" aria-labelledby="validation-claim-question">
+      <div>
+        <p className="kicker">{es ? 'LA PREGUNTA IMPORTANTE' : 'THE IMPORTANT QUESTION'}</p>
+        <h3 id="validation-claim-question">{es ? '¿Podemos presentar estas cifras como resultados reales de Airbus?' : 'Can we present these figures as real Airbus results?'}</h3>
+      </div>
+      <div className="validation-simple__decision-answer">
+        <strong>{es ? 'No, todavía no.' : 'No, not yet.'}</strong>
+        <p>{es
+          ? 'Sí podemos decir: «Con datos inventados, el simulador muestra cómo comparar plazos, gastos e impactos ambientales». No podemos afirmar que Airbus haya conseguido estos ahorros ni que el módulo mejore la disponibilidad de una aeronave.'
+          : 'We can say: “Using invented data, the simulator shows how to compare recovery times, spending and potential environmental effects.” We cannot claim Airbus has achieved these savings or that module recovery improves aircraft availability.'}</p>
+        {material?.status === 'modelled' && material.value !== null && <small>{es
+          ? `Por ejemplo, los ${format(Math.abs(material.value), 2)} kg de material virgen calculados en el escenario no son un ahorro real verificado.`
+          : `For example, the ${format(Math.abs(material.value), 2)} kg of modelled virgin material in this scenario is not a verified real-world saving.`}</small>}
+      </div>
+    </section>
 
-    <div className="evidence-status-summary">{(Object.keys(t.statuses) as EvidenceStatus[]).map((status) => <section key={status} className={`evidence-summary evidence-summary--${status}`}><strong>{statusCount(status)}</strong><span>{t.statuses[status]}</span></section>)}</div>
+    <section className="validation-simple__next" aria-labelledby="validation-real-case-title">
+      <header>
+        <p className="kicker">{es ? 'SI QUISIÉRAMOS ESTUDIAR UN CASO REAL' : 'IF WE WANTED TO STUDY A REAL CASE'}</p>
+        <h3 id="validation-real-case-title">{es ? '¿Qué tendríamos que comprobar?' : 'What would we need to verify?'}</h3>
+        <p>{es
+          ? 'No son tareas para ti ahora. Son ejemplos de la información necesaria antes de utilizar resultados reales.'
+          : 'These are not tasks you need to complete now. They show the evidence a real project would require.'}</p>
+      </header>
+      <div className="validation-simple__checks">
+        {[
+          { es: 'Equipo técnico', en: 'Engineering team', esCopy: '¿Puede repararse ese módulo de forma aprobada? ¿Cuánto tarda y cuánto duraría en servicio?', enCopy: 'Is repair approved for this component? How long does it take, and how much additional service life is approved?' },
+          { es: 'Compras', en: 'Procurement', esCopy: '¿Qué plazos y precios reales tiene el proveedor? ¿Qué gastos generaría cancelar un pedido?', enCopy: 'What are the supplier’s actual lead times and prices? What cancellation charges apply?' },
+          { es: 'Medioambiente', en: 'Environment', esCopy: '¿Qué materiales, residuos y emisiones se producen realmente, con qué límites de comparación?', enCopy: 'What material, waste and emissions data can actually be measured, and within what comparison boundary?' },
+          { es: 'Responsables del programa', en: 'Programme leads', esCopy: '¿Cómo afecta la recuperación de esa pieza a un resultado operativo medible, sin confundirlo con disponibilidad de flota?', enCopy: 'How does component recovery relate to a measurable operational outcome, without confusing it with fleet availability?' },
+        ].map((item, index) => <article key={item.en}>
+          <span>{String(index + 1).padStart(2, '0')}</span>
+          <h4>{es ? item.es : item.en}</h4>
+          <p>{es ? item.esCopy : item.enCopy}</p>
+        </article>)}
+      </div>
+    </section>
 
-    <nav className="evidence-tabs" role="tablist" aria-label={t.title}>{(Object.keys(t.tabs) as TabId[]).map((item, index) => <button key={item} id={`evidence-tab-${item}`} type="button" role="tab" aria-selected={tab === item} aria-controls={`evidence-panel-${item}`} tabIndex={tab === item ? 0 : -1} className={tab === item ? 'is-active' : ''} onClick={() => setTab(item)}><span>0{index + 1}</span>{t.tabs[item]}</button>)}</nav>
-
-    {tab === 'register' && <section id="evidence-panel-register" className="evidence-tabpanel" role="tabpanel" aria-labelledby="evidence-tab-register">
-      <div className="evidence-focusbar"><label><span>{t.filter}</span><select data-testid="evidence-focus" value={focusValue(evidence.focus)} onChange={(event) => evidence.setFocus(parseFocus(event.target.value))}><option value="all">{t.all}</option><optgroup label={t.focusNames.stage}>{(Object.keys(t.stages) as CausalStageId[]).map((stage) => <option key={stage} value={`stage:${stage}`}>{t.stages[stage]}</option>)}</optgroup><optgroup label={t.focusNames.strategy}>{(Object.keys(t.strategies) as Array<keyof typeof t.strategies>).map((strategy) => <option key={strategy} value={`strategy:${strategy}`}>{t.strategies[strategy]}</option>)}</optgroup><optgroup label={t.focusNames.claim}>{evidence.claims.map((claim) => <option key={claim.id} value={`claim:${claim.id}`}>{claim.title[locale]}</option>)}</optgroup></select></label><span><strong>{evidence.visibleRecords.length}</strong> {t.recordsShown}</span>{evidence.focus.type !== 'all' && <button type="button" onClick={() => evidence.setFocus({ type: 'all' })}>{t.clear}</button>}</div>
-      <p className="tab-instruction">{t.selectRecord}</p>
-      <div className="register-master-detail"><div className="evidence-row-list" role="list">{evidence.visibleRecords.map((record) => <button type="button" role="listitem" key={record.id} data-testid={`evidence-${record.id}`} className={selectedRecord?.id === record.id ? 'is-selected' : ''} aria-pressed={selectedRecord?.id === record.id} onClick={() => setSelectedRecordId(record.id)}><span className="evidence-record__id">{record.id}</span><div><strong>{record.title[locale]}</strong><small>{record.statement[locale]}</small></div><span className={`evidence-status evidence-status--${record.status}`}>{t.statuses[record.status]}</span></button>)}</div>{selectedRecord && <EvidenceDetail record={selectedRecord} locale={locale} />}</div>
-    </section>}
-
-    {tab === 'claims' && <section id="evidence-panel-claims" className="evidence-tabpanel" role="tabpanel" aria-labelledby="evidence-tab-claims"><header className="tabpanel-heading"><div><p className="kicker">02 / GATE</p><h3>{t.claims}</h3><p>{t.selectClaim}</p></div><div className="compact-zero"><strong>0</strong><span>{t.noValidated}</span></div></header><div className="claim-master-detail"><div className="claim-row-list" role="list">{evidence.claims.map((claim) => <button type="button" role="listitem" key={claim.id} data-testid={`claim-${claim.id}`} className={selectedClaim?.id === claim.id ? 'is-selected' : ''} aria-pressed={selectedClaim?.id === claim.id} onClick={() => setSelectedClaimId(claim.id)}><span>{claim.id}</span><strong>{claim.title[locale]}</strong><em className={`gate-state gate-state--${claim.status}`}>{t.gateStatuses[claim.status]}</em></button>)}</div>{selectedClaim && <ClaimDetail claim={selectedClaim} locale={locale} onTrace={() => openClaimEvidence(selectedClaim)} />}</div></section>}
-
-    {tab === 'sources' && <section id="evidence-panel-sources" className="evidence-tabpanel" role="tabpanel" aria-labelledby="evidence-tab-sources"><header className="tabpanel-heading"><div><p className="kicker">03 / PROVENANCE</p><h3>{t.sources}</h3></div><span className="phase-chip">{evidence.sources.length}</span></header><div className="source-accordion-list">{evidence.sources.map((source) => <SourceItem key={source.id} source={source} locale={locale} />)}</div></section>}
-
-    {tab === 'requests' && <section id="evidence-panel-requests" className="evidence-tabpanel" role="tabpanel" aria-labelledby="evidence-tab-requests"><header className="tabpanel-heading"><div><p className="kicker">04 / CLOSE THE GAPS</p><h3>{t.gaps}</h3><p>{t.selectOwner}</p></div></header><div className="request-owner-tabs" role="tablist" aria-label={t.gaps}>{owners.map((owner) => <button key={owner} type="button" role="tab" aria-selected={selectedOwner === owner} className={selectedOwner === owner ? 'is-active' : ''} onClick={() => setSelectedOwner(owner)}><strong>{t.owners[owner]}</strong><span>{ownerRequests.get(owner)?.size ?? 0}</span></button>)}</div><article className="selected-owner-requests"><p>{t.requestsFor}</p><h3>{t.owners[selectedOwner]}</h3><ul>{[...(ownerRequests.get(selectedOwner) ?? [])].map((request) => <li key={request}>{request}</li>)}</ul></article></section>}
+    <div className="validation-simple__technical">
+      <button type="button" data-testid="validate-advanced-toggle" aria-expanded={advancedOpen} aria-controls="technical-evidence" onClick={() => setAdvancedOpen((value) => !value)}>
+        <span>
+          <strong>{es ? 'Ver documentación y comprobaciones técnicas' : 'View technical documentation and checks'}</strong>
+          <small>{es ? 'Opcional · fuentes, registros y criterios de validación' : 'Optional · sources, records and validation criteria'}</small>
+        </span>
+        <span aria-hidden="true">{advancedOpen ? '−' : '+'}</span>
+      </button>
+      {advancedOpen && <div id="technical-evidence" className="validation-simple__technical-content">
+        <p>{es
+          ? 'Esta es la documentación técnica que utiliza el prototipo para justificar de dónde procede cada afirmación. No hace falta leerla para continuar con el caso.'
+          : 'This is the technical documentation used by the prototype to trace each statement. You do not need to read it to continue the case.'}</p>
+        <TechnicalEvidenceView content={content} locale={locale} />
+      </div>}
+    </div>
   </section>;
 }
