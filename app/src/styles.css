@@ -2815,3 +2815,33 @@ button {
   .condition-impact__changes > div:last-child { border-bottom: 0; }
   .condition-impact__changes strong { font-size: 18px; }
 }
+
+
+/* Export review: plain-language status instead of claim counters and internal PASS codes. */
+.export-review__summary--simple { display: block; }
+.export-review__summary--simple dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.export-review__summary--simple dl div { padding: 13px 19px; }
+.export-review__summary--simple dt { font-size: 10px; }
+.export-review__summary--simple dd { font-size: 18px; }
+.export-review__scope { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); }
+.export-review__scope > div { padding: 18px 20px; min-width: 0; }
+.export-review__scope > div:first-child { border-right: 1px solid var(--line); }
+.export-review__scope strong { display: block; font: 400 21px/1.2 var(--serif); color: var(--pine); margin-bottom: 8px; }
+.export-review__scope p { color: var(--ink-soft); font-size: 13px; line-height: 1.6; }
+.export-review__readiness { padding: 13px 20px; background: var(--sand); border-bottom: 1px solid var(--line); display: grid; gap: 6px; }
+.export-review__readiness strong { font-size: 13px; color: var(--pine); }
+.export-review__readiness span { color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.export-review__readiness.is-blocked strong { color: var(--coral); }
+.export-review__technical { border-bottom: 1px solid var(--line); }
+.export-review__technical summary { padding: 12px 20px; cursor: pointer; color: var(--pine); font-size: 12px; font-weight: 750; }
+.export-review__technical summary:hover { background: var(--sand); }
+.export-review__technical ul { margin: 0; padding: 0 20px 13px; list-style: none; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+.export-review__technical li { display: flex; gap: 12px; align-items: start; background: var(--sand); padding: 10px; font-size: 12px; line-height: 1.45; min-width: 0; }
+.export-review__technical li strong { color: var(--pine); flex: 0 0 auto; }
+.export-review__technical li span { color: var(--ink-soft); }
+@media(max-width:700px) {
+  .export-review__summary--simple dl { grid-template-columns: 1fr; }
+  .export-review__scope { grid-template-columns: 1fr; }
+  .export-review__scope > div:first-child { border-right: 0; border-bottom: 1px solid var(--line); }
+  .export-review__technical ul { grid-template-columns: 1fr; }
+}
