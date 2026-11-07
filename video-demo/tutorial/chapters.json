@@ -1,0 +1,382 @@
+{
+  "version": "tutorial-v1",
+  "language": "en-GB",
+  "case": "DEMO-60",
+  "fictional": true,
+  "chapters": [
+    {
+      "id": "investigate",
+      "title": "01 — Investigate",
+      "cues": [
+        {
+          "id": "hero",
+          "text": "Welcome to Strategic Resilience Intelligence. This tutorial will walk through the tool at a comfortable pace."
+        },
+        {
+          "id": "purpose",
+          "text": "Its purpose is to explore how maintenance choices, sustainability questions, and operational resilience can be assessed together."
+        },
+        {
+          "id": "scope",
+          "text": "This is a decision-support prototype. It does not measure fleet readiness or make approved Airbus operational decisions."
+        },
+        {
+          "id": "navigation",
+          "text": "Notice the four steps: Investigate, Challenge, Check, and Translate. We will work through all four."
+        },
+        {
+          "id": "case",
+          "text": "In Investigate, a fictional aerospace test bench loses an electronic control module. We need to restore a working module."
+        },
+        {
+          "id": "facts",
+          "text": "The deadline is sixty days. Buying a replacement carries a long supplier lead time and a risk of additional disruption."
+        },
+        {
+          "id": "facts_detail",
+          "text": "The repair option has a seventy-five percent feasibility assumption. These are invented numbers, not observed Airbus data."
+        },
+        {
+          "id": "alternatives",
+          "text": "We can buy new, attempt repair first, or launch both routes. Each has different implications for time, money, and resources."
+        },
+        {
+          "id": "begin",
+          "text": "Click Make a decision to enter the interactive comparison. The scenario is the same; now we choose a response."
+        }
+      ]
+    },
+    {
+      "id": "challenge",
+      "title": "02 — Challenge: decisions",
+      "cues": [
+        {
+          "id": "scenario",
+          "text": "At the top of Challenge, the scenario selector controls the background assumptions. It is not the strategy selector."
+        },
+        {
+          "id": "scenario_help",
+          "text": "Other presets simulate disruptions, cost pressure, low repair feasibility, or correlated risks. We will use the starting case."
+        },
+        {
+          "id": "choices",
+          "text": "Below are three strategy cards. They answer a different question: what should the team do in this scenario?"
+        },
+        {
+          "id": "choose_new",
+          "text": "First, choose a new component. This means placing a replacement order and accepting supplier lead times."
+        },
+        {
+          "id": "new_outcome",
+          "text": "The result panel calculates expected recovery time, the chance of meeting sixty days, and expected cash spending."
+        },
+        {
+          "id": "choose_parallel",
+          "text": "Now choose the parallel strategy. It starts procurement and repair together, potentially gaining speed at extra cost."
+        },
+        {
+          "id": "parallel_outcome",
+          "text": "Parallel action can reduce exposure to a single failure route, but cancellation obligations and duplicate work still matter."
+        },
+        {
+          "id": "choose_repair",
+          "text": "Finally, select Repair First. This is the route we will analyse in detail and carry through the tutorial."
+        },
+        {
+          "id": "repair_mean",
+          "text": "The initial average recovery time is fifty days. That number is not the time spent physically repairing the component."
+        },
+        {
+          "id": "repair_deadline",
+          "text": "The next indicator is the probability of getting an operational module within sixty days. It is not a guarantee."
+        },
+        {
+          "id": "repair_cost",
+          "text": "The third indicator estimates cash outlay. The three metrics together reveal trade-offs rather than one universal winner."
+        },
+        {
+          "id": "repair_explain",
+          "text": "Open the explanation beneath the metrics. If repair succeeds, recovery is quicker. If it fails, replacement follows."
+        },
+        {
+          "id": "compare_routes",
+          "text": "The comparison text explains how the selected strategy differs from the other two on timing, spending, and deadline risk."
+        },
+        {
+          "id": "decision_caution",
+          "text": "Notice the warning: modelled outcomes depend on the inputs. They cannot be presented as demonstrated Airbus benefits."
+        }
+      ]
+    },
+    {
+      "id": "conditions",
+      "title": "02 — Challenge: conditions",
+      "cues": [
+        {
+          "id": "open_conditions",
+          "text": "Select Change Conditions. This is where the tool becomes interactive rather than simply displaying a result."
+        },
+        {
+          "id": "inputs",
+          "text": "The basic controls include repair feasibility, repair duration, replacement lead time, supplier risk, and the target date."
+        },
+        {
+          "id": "repair_initial",
+          "text": "Here, repair feasibility starts at seventy-five percent. The model treats this as a probability, not a certification."
+        },
+        {
+          "id": "change_probability",
+          "text": "Change the feasibility assumption from seventy-five to ninety percent. Watch the result update immediately."
+        },
+        {
+          "id": "result_updated",
+          "text": "Expected average recovery falls from fifty to thirty-six point eight days. The other indicators also recalculate."
+        },
+        {
+          "id": "interpret_change",
+          "text": "Why? A quicker successful repair now receives more weight in the average, and the slower fallback becomes less likely."
+        },
+        {
+          "id": "other_inputs",
+          "text": "Changing supplier lead time or disruption probability can reverse the trade-off. We should test assumptions, not cherry-pick results."
+        },
+        {
+          "id": "advanced_inputs",
+          "text": "Open the advanced inputs. Inspection time, extra supplier delays, and dependence between risks can also be specified."
+        },
+        {
+          "id": "cost_fields",
+          "text": "The Costs section includes inspection, repair, purchase, logistics, and disruption charges. These are illustrative inputs."
+        },
+        {
+          "id": "contract_fields",
+          "text": "The Contract section records what happens when one route wins: cancellation charges, commitments, and inventory treatment."
+        },
+        {
+          "id": "environment_inputs",
+          "text": "Environmental inputs cover materials, waste, and partial emissions. The model is explicit about its boundaries and uncertainty."
+        },
+        {
+          "id": "back_compare",
+          "text": "Return to the comparison. Our selected Repair First strategy remains visible, now under the changed assumption."
+        }
+      ]
+    },
+    {
+      "id": "technical",
+      "title": "02 — Challenge: technical analysis",
+      "cues": [
+        {
+          "id": "open_analysis",
+          "text": "Now open View Analysis. This optional technical workspace lets us inspect how the headline metrics were calculated."
+        },
+        {
+          "id": "branch_table",
+          "text": "The first tab is Selected route breakdown. Each row represents a possible outcome under the strategy we chose."
+        },
+        {
+          "id": "branch_probability",
+          "text": "Notice the branch probabilities. Repair success or failure is combined with possible supplier disruption."
+        },
+        {
+          "id": "branch_costs",
+          "text": "Recovery time and financial obligations are calculated for each branch, then weighted to obtain the average."
+        },
+        {
+          "id": "sensitivity_tab",
+          "text": "The second tab asks when repair or replacement makes sense. It explores sensitivity rather than assuming fixed conditions."
+        },
+        {
+          "id": "sensitivity_graph",
+          "text": "The graph shows how an outcome changes when one input changes. It helps identify assumptions that drive the decision."
+        },
+        {
+          "id": "sensitivity_test",
+          "text": "Selectors above the graph let us choose the input and the metric. These are hypothetical curves, not measured trends."
+        },
+        {
+          "id": "thresholds",
+          "text": "The decision boundaries below the graph indicate where routes may become comparable on time or spending."
+        },
+        {
+          "id": "environment_tab",
+          "text": "Next is Environmental Effects. This is important, because avoiding a new purchase might reduce material demand."
+        },
+        {
+          "id": "environment_mechanism",
+          "text": "The analysis considers materials, generated waste, and bounded greenhouse gas estimates compared with new procurement."
+        },
+        {
+          "id": "environment_limits",
+          "text": "But none of those calculated environmental values is a verified benefit. The physical and data boundaries must be confirmed."
+        },
+        {
+          "id": "method_tab",
+          "text": "The Method and Equations tab explains the probability-weighted model, definitions, and calculation assumptions."
+        },
+        {
+          "id": "method_explain",
+          "text": "That transparency is essential: a credible resilience argument needs a reproducible mechanism, not a green headline."
+        },
+        {
+          "id": "technical_end",
+          "text": "Now we have both an operational comparison and an explanation of its limitations. Next we check the evidence."
+        }
+      ]
+    },
+    {
+      "id": "validate",
+      "title": "03 — Check evidence",
+      "cues": [
+        {
+          "id": "validate_nav",
+          "text": "Select Check. This step separates what the model predicts from what the available evidence actually supports."
+        },
+        {
+          "id": "validate_intro",
+          "text": "A mathematically consistent result is not automatically proof of a business, environmental, or operational benefit."
+        },
+        {
+          "id": "evidence_documented",
+          "text": "The first evidence category contains documented information. Here we can identify the source behind a statement."
+        },
+        {
+          "id": "evidence_hypothesis",
+          "text": "The second is an assumption still to be verified, such as whether a particular repair is technically approved."
+        },
+        {
+          "id": "evidence_modelled",
+          "text": "The third is a model output. The recovery time and spending estimates result from invented inputs."
+        },
+        {
+          "id": "supported_vs_pending",
+          "text": "The conclusions section makes a critical distinction: what we can say today, and what remains to be demonstrated."
+        },
+        {
+          "id": "engineering",
+          "text": "Engineering would need to confirm repair eligibility, duration, quality requirements, and additional approved service life."
+        },
+        {
+          "id": "procurement",
+          "text": "Procurement would confirm actual delivery times, prices, supply disruption risks, and contract cancellation terms."
+        },
+        {
+          "id": "environment_team",
+          "text": "Environment would check the material, waste, and emissions data and define an honest comparison boundary."
+        },
+        {
+          "id": "programme",
+          "text": "Programme teams would decide whether component-level recovery translates into a measurable operational effect."
+        },
+        {
+          "id": "advanced_evidence",
+          "text": "Open the optional technical documentation. It provides source references, evidence records, and validation criteria."
+        },
+        {
+          "id": "validate_end",
+          "text": "This evidence review protects the project from overstated claims. Only supported conclusions should be communicated."
+        }
+      ]
+    },
+    {
+      "id": "translate",
+      "title": "04 — Translate for decisions",
+      "cues": [
+        {
+          "id": "translate_nav",
+          "text": "Choose Translate, the fourth step. Here the same analytical result is expressed for different decision audiences."
+        },
+        {
+          "id": "audiences",
+          "text": "The audience cards include Defence Customer, Programme Manager, Engineering, and Executive Leadership."
+        },
+        {
+          "id": "audience_engineering",
+          "text": "Select Engineering. The message now emphasises technical eligibility, underlying mechanisms, and proof still required."
+        },
+        {
+          "id": "engineering_message",
+          "text": "The tool does not change the data when we change the audience. It changes the explanation and questions to be answered."
+        },
+        {
+          "id": "audience_exec",
+          "text": "Now select Executive Leadership. This view focuses on strategic options, vulnerability, and the readiness of claims."
+        },
+        {
+          "id": "executive_message",
+          "text": "Resilience is not presented as a slogan: the summary links a decision to a specified risk and a conditional outcome."
+        },
+        {
+          "id": "strategy_choice",
+          "text": "The strategy cards also allow us to translate the results for replacement, repair first, or parallel response."
+        },
+        {
+          "id": "summary",
+          "text": "The principal conclusion and recommendation are modelled statements. Their status depends on the supporting evidence."
+        },
+        {
+          "id": "comparison",
+          "text": "Further down, the three-way comparison describes the trade-offs and a decision test, rather than declaring a winner."
+        },
+        {
+          "id": "profile_tab",
+          "text": "The Strategy Profile tab separates modelled advantages, drawbacks, and uncertainties for the selected route."
+        },
+        {
+          "id": "causal_tab",
+          "text": "Causal Reasoning follows a chain from a sustainability initiative to environmental mechanisms and resilience outcomes."
+        },
+        {
+          "id": "causal_caution",
+          "text": "Each link can be inspected. This is where we distinguish plausible pathways from benefits actually demonstrated."
+        },
+        {
+          "id": "trace_tab",
+          "text": "Evidence Trace links individual statements to evidence identifiers and model outputs, making the narrative auditable."
+        },
+        {
+          "id": "validation_tab",
+          "text": "The Validation Plan assigns the remaining checks to the relevant owners before anyone makes stronger claims."
+        },
+        {
+          "id": "limitations",
+          "text": "Method and Limitations offers additional context. An uncertainty should remain visible even in an executive presentation."
+        }
+      ]
+    },
+    {
+      "id": "export",
+      "title": "04 — Review and export",
+      "cues": [
+        {
+          "id": "export_open",
+          "text": "Finally, open Review and Export. This is where the analysis becomes a shareable decision report."
+        },
+        {
+          "id": "export_summary",
+          "text": "The report shows the audience, selected strategy, scenario, result, and the scope of conclusions."
+        },
+        {
+          "id": "export_readiness",
+          "text": "Automatic file checks do not validate the underlying facts. The prototype clearly marks unverified claims."
+        },
+        {
+          "id": "export_confirm",
+          "text": "Before downloading, acknowledge that the conclusions depend on the quality and validation of the inputs."
+        },
+        {
+          "id": "export_pdf",
+          "text": "The PDF is intended for reading and discussion. It includes conclusions, sources, limitations, and the analysis."
+        },
+        {
+          "id": "export_json",
+          "text": "The JSON preserves structured inputs and calculations for reproducibility. This is useful for technical review."
+        },
+        {
+          "id": "end",
+          "text": "That is the complete decision journey: investigate, compare, test conditions, verify evidence, and communicate responsibly."
+        }
+      ]
+    }
+  ]
+}
