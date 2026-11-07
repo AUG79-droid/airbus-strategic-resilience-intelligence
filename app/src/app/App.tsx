@@ -222,6 +222,7 @@ export function App() {
                 technicalTab={challengeScreen.tab}
                 onPanel={(panel) => openChallengeScreen({ ...challengeScreen, panel: challengeScreen.panel === panel ? null : panel })}
                 onTabChange={(tab) => openChallengeScreen({ ...challengeScreen, panel: 'technical', tab })}
+                onBack={goBack}
               />}
               {view === 'validate' && <ValidateView content={content} locale={locale} />}
               {view === 'translate' && <TranslateView content={content} locale={locale} />}
