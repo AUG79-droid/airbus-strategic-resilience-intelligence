@@ -2648,3 +2648,40 @@ button {
   .environmental-breakdown__body { padding: 13px; }
   .environmental-breakdown__calculations { grid-template-columns: 1fr; }
 }
+
+
+/* Method panel — plain-language formula walkthrough, full symbol legend and live assumptions. */
+.method-explained { padding: 20px 21px 23px; }
+.method-explained__intro { max-width: 930px; font-size: 14px; line-height: 1.6; color: var(--ink-soft); margin-bottom: 17px; }
+.method-explained__equations { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }
+.method-explained__equations section { background: var(--paper); border: 1px solid var(--line-strong); padding: 19px; min-width: 0; }
+.method-explained__equations h4 { font: 400 20px/1.25 var(--serif); color: var(--pine); min-height: 2.4em; }
+.method-explained__math { padding: 11px 12px; background: var(--sand); margin: 12px 0; overflow-x: auto; }
+.method-explained__math code { white-space: nowrap; font: 12px/1.7 Consolas,monospace; color: var(--pine-deep); }
+.method-explained__equations section > p { font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+.method-explained__key { border: 1px solid var(--line-strong); margin-top: 17px; background: var(--paper); }
+.method-explained__key > h4, .method-explained__current > h4 { font: 400 23px/1.25 var(--serif); color: var(--pine); padding: 17px 18px; }
+.method-explained__key dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0; }
+.method-explained__key dl > div { display: flex; align-items: flex-start; gap: 13px; padding: 10px 14px; border-top: 1px solid var(--line); min-width: 0; }
+.method-explained__key dl > div:nth-child(odd) { border-right: 1px solid var(--line); }
+.method-explained__key dt { flex: 0 0 78px; font: 750 14px/1.45 Consolas,monospace; color: var(--pine); }
+.method-explained__key dd { font-size: 13px; line-height: 1.55; color: var(--ink-soft); min-width: 0; }
+.method-explained__current { margin-top: 15px; background: var(--sand); }
+.method-explained__current > h4 { padding-bottom: 5px; }
+.method-explained__current > p { padding: 0 18px; font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
+.method-explained__current > div { display: flex; flex-wrap: wrap; gap: 8px; padding: 15px 18px 18px; }
+.method-explained__current > div > span { padding: 10px 13px; background: var(--paper); border: 1px solid var(--line); font-size: 13px; white-space: nowrap; }
+.method-explained__current > div > span strong { color: var(--pine); }
+.method-explained__warning { margin-top: 16px; border-left: 3px solid var(--coral); padding: 10px 14px; font-size: 12px; line-height: 1.6; background: var(--sand); color: var(--ink-soft); }
+@media (max-width: 860px) {
+  .method-explained__equations, .method-explained__key dl { grid-template-columns: 1fr; }
+  .method-explained__key dl > div:nth-child(odd) { border-right: 0; }
+  .method-explained__equations h4 { min-height: 0; }
+}
+@media (max-width: 520px) {
+  .method-explained { padding: 15px 12px 18px; }
+  .method-explained__equations section { padding: 14px; }
+  .method-explained__key dt { flex-basis: 65px; }
+  .method-explained__key dl > div { padding: 10px 11px; }
+  .method-explained__key > h4 { padding: 14px 12px; }
+}
