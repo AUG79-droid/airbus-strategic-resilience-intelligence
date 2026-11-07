@@ -77,7 +77,7 @@ export const copy: Record<Locale, Copy> = {
     views: {
       investigate: { label: 'Investigate', short: '01' },
       challenge: { label: 'Challenge', short: '02' },
-      validate: { label: 'Validate', short: '03' },
+      validate: { label: 'Check', short: '03' },
       translate: { label: 'Translate', short: '04' },
     },
     eyebrow: 'STRATEGIC RESILIENCE INTELLIGENCE / PRACTICAL CASES',
@@ -228,7 +228,7 @@ export const copy: Record<Locale, Copy> = {
     views: {
       investigate: { label: 'Investigar', short: '01' },
       challenge: { label: 'Cuestionar', short: '02' },
-      validate: { label: 'Validar', short: '03' },
+      validate: { label: 'Comprobar', short: '03' },
       translate: { label: 'Traducir', short: '04' },
     },
     eyebrow: 'INTELIGENCIA DE RESILIENCIA ESTRATÉGICA / CASOS PRÁCTICOS',
