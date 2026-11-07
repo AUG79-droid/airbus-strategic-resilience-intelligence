@@ -175,11 +175,11 @@ export function DecisionDesk({ locale, chosen, onChoose, activePanel, onPanel }:
         ? 'Todas las alternativas se calculan bajo las mismas condiciones. Elegir una cambia el foco de la comparación, no los datos del escenario. Ninguna de estas cifras corresponde a Airbus.'
         : 'All alternatives are calculated under the same conditions. Your choice changes the focus of comparison, not the inputs. None of these figures belongs to Airbus.'}</p>
       <div className="decision-desk__actions">
-        <button type="button" className="decision-desk__explore" data-testid="change-conditions" onClick={() => onPanel('parameters')}>
-          {activePanel === 'parameters' ? (es ? 'Ocultar condiciones' : 'Hide inputs') : (es ? 'Modificar las condiciones' : 'Change conditions')}
+        <button type="button" className="decision-desk__explore" data-testid="open-technical" onClick={() => onPanel('technical')}>
+          {activePanel === 'technical' ? (es ? 'Cerrar análisis' : 'Close analysis') : (es ? 'Ver análisis' : 'View analysis')}
         </button>
-        <button type="button" className="decision-desk__secondary" data-testid="open-technical" onClick={() => onPanel('technical')}>
-          {activePanel === 'technical' ? (es ? 'Cerrar análisis técnico' : 'Close technical analysis') : (es ? 'Ver análisis técnico (opcional)' : 'View technical analysis (optional)')}
+        <button type="button" className="decision-desk__secondary" data-testid="change-conditions" onClick={() => onPanel('parameters')}>
+          {activePanel === 'parameters' ? (es ? 'Ocultar condiciones' : 'Hide inputs') : (es ? 'Modificar condiciones' : 'Change conditions')}
         </button>
       </div>
       <button type="button" className="decision-desk__evidence-link" onClick={() => evidence.openEvidence({ type: 'strategy', id: chosen! })}>{es ? 'Consultar evidencias de esta elección' : 'Inspect evidence for this route'} →</button>
