@@ -119,7 +119,7 @@ export function ChallengeView({ content: _content, locale, guided }: ViewProps) 
       {activePanel === 'parameters' && chosen && lab.result && <div className="lab-conditions-live" data-testid="live-conditions">
         <p className="kicker">{locale === 'es' ? 'RESULTADO ACTUALIZADO DE TU ELECCIÓN' : 'LIVE RESULT FOR YOUR CHOICE'}</p>
         <h3>{t.strategies[chosen]}</h3>
-        <p>{locale === 'es' ? 'Al cambiar cualquiera de los datos, estos valores se recalculan inmediatamente.' : 'These figures update as soon as you change an assumption.'}</p>
+        <p>{locale === 'es' ? 'Al cambiar un dato se recalcula el tiempo medio de recuperación (no el tiempo de reparar físicamente la pieza), el cumplimiento y el coste.' : 'Changing an input recalculates average recovery time (not physical repair duration), deadline attainment and cost.'}</p>
         <dl>
           <div><dt>{t.metrics.expectedRecoveryDays}</dt><dd>{number(lab.result.strategies[chosen].expectedRecoveryDays, locale)} {t.units.days}</dd></div>
           <div><dt>{t.metrics.probabilityTargetMet}</dt><dd>{number(lab.result.strategies[chosen].probabilityTargetMet * 100, locale)}%</dd></div>
