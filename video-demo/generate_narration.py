@@ -118,7 +118,7 @@ def main() -> None:
                 clips.append((scene, cue, frames, duration))
 
     assert sample_rate and channels and sample_width
-    silence_frame = b"\\x00" * channels * sample_width
+    silence_frame = b"\x00" * channels * sample_width
     def silence(seconds: float) -> bytes:
         return silence_frame * round(seconds * sample_rate)
 
@@ -151,8 +151,8 @@ def main() -> None:
                 stitched.writeframes(frames)
                 # Each displayed subtitle is aligned to its own synthesized WAV.
                 subtitles.append(
-                    f"{len(subtitles) + 1}\\n{srt_time(cue_start)} --> "
-                    f"{srt_time(cue_end)}\\n{cue['text']}\\n"
+                    f"{len(subtitles) + 1}\n{srt_time(cue_start)} --> "
+                    f"{srt_time(cue_end)}\n{cue['text']}\n"
                 )
                 is_last = cue_number == len(scene["cues"]) - 1
                 gap = PAUSE_SECONDS if is_last else CUE_GAP_SECONDS
