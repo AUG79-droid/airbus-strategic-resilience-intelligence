@@ -17,7 +17,7 @@ const en = {
   profile: 'Strategy profile', advantages: 'Modelled advantages', drawbacks: 'Drawbacks', uncertainties: 'Uncertainties',
   comparison: 'Three-way comparison', decisionTest: 'Decision test',
   limitations: 'Method and limitations', pending: 'What must be verified', owner: 'Owner',
-  metrics: { expectedRecovery: 'Expected recovery', targetAttainment: 'Target attainment', expectedCashOutlay: 'Expected cash outlay' },
+  metrics: { expectedRecovery: 'Average module recovery time', targetAttainment: 'Target attainment', expectedCashOutlay: 'Expected cash outlay' },
   stageLabels: { initiative: 'Sustainability initiative', environmentalMechanism: 'Environmental mechanism', strategicVulnerability: 'Strategic vulnerability', resilienceOutcome: 'Resilience outcome', customerValue: 'Customer value' },
   noValidated: 'No environmental, operational or strategic benefit is validated for this case.',
 };
@@ -40,7 +40,7 @@ const es = {
   profile: 'Perfil de la estrategia', advantages: 'Ventajas modelizadas', drawbacks: 'Inconvenientes', uncertainties: 'Incertidumbres',
   comparison: 'Comparación entre las tres alternativas', decisionTest: 'Prueba de decisión',
   limitations: 'Método y limitaciones', pending: 'Qué debe verificarse', owner: 'Responsable',
-  metrics: { expectedRecovery: 'Recuperación esperada', targetAttainment: 'Cumplimiento del objetivo', expectedCashOutlay: 'Desembolso esperado' },
+  metrics: { expectedRecovery: 'Tiempo medio de recuperación del módulo', targetAttainment: 'Cumplimiento del objetivo', expectedCashOutlay: 'Desembolso esperado' },
   stageLabels: { initiative: 'Iniciativa de sostenibilidad', environmentalMechanism: 'Mecanismo ambiental', strategicVulnerability: 'Vulnerabilidad estratégica', resilienceOutcome: 'Resultado de resiliencia', customerValue: 'Valor para el cliente' },
   noValidated: 'No hay ningún beneficio ambiental, operativo o estratégico validado para este caso.',
 };
