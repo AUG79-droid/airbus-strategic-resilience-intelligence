@@ -2,7 +2,6 @@
 """Assemble validated real-browser recording, local British TTS and subtitles."""
 from __future__ import annotations
 import json
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -10,7 +9,7 @@ ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "output"
 VOICE = OUT / "narration.wav"
 VIDEO = OUT / "browser.webm"
-DEST = OUT / "ASRI_English_Demo_60s.mp4"
+DEST = OUT / "ASRI_English_Demo_Synced_v2.mp4"
 
 def probe(path: Path) -> float:
     result = subprocess.run(
@@ -19,6 +18,37 @@ def probe(path: Path) -> float:
         capture_output=True, text=True, check=True,
     )
     return float(result.stdout.strip())
+
+
+def detect_narration_zero(video: Path) -> tuple[float, int]:
+    """Find the first clean frame after a deliberately captured magenta marker.
+
+    Playwright begins capturing before navigation completes. Trimming to
+    raw-video-duration minus audio-duration confuses end-padding with pre-roll.
+    A distinct 850 ms frame marker yields precise synchronization instead.
+    """
+    fps = 25
+    # Averages a 32x32 sample inside the temporary 96x96 magenta patch.
+    command = [
+        "ffmpeg", "-v", "error", "-nostdin", "-i", str(video),
+        "-vf", "fps=25,crop=32:32:4:4,scale=1:1:flags=area,format=rgb24",
+        "-an", "-f", "rawvideo", "-pix_fmt", "rgb24", "pipe:1",
+    ]
+    frames = subprocess.run(command, capture_output=True, check=True).stdout
+    if len(frames) % 3:
+        raise RuntimeError("Invalid marker-detection raw video.")
+    markers = [
+        i for i in range(len(frames) // 3)
+        if frames[3*i] >= 175 and frames[3*i+1] <= 95 and frames[3*i+2] >= 175
+    ]
+    if len(markers) < 8:
+        raise RuntimeError("Video synchronization marker not found (need at least 8 frames).")
+    if max(markers) - min(markers) > len(markers) + 4:
+        raise RuntimeError("Unexpected split/multiple synchronization markers.")
+    # The first *non*-magenta frame is the narration timeline's t = 0.
+    preroll = (max(markers) + 1) / fps
+    print(f"Detected {len(markers)} sync frames; precise pre-roll: {preroll:.3f}s", flush=True)
+    return preroll, len(markers)
 
 def main() -> None:
     for file in [VOICE, VIDEO, OUT / "subtitles.srt", OUT / "recording-timing.json"]:
@@ -35,10 +65,12 @@ def main() -> None:
     if video_seconds < audio_seconds - 2:
         raise RuntimeError(f"Browser recording too short: {video_seconds} < {audio_seconds}")
 
-    # Playwright recording begins during page navigation; trim that initial pre-roll.
-    # Video recording finalisation may add a fraction of a second at the end.
-    preroll = max(0.0, video_seconds - audio_seconds)
-    print(f"Audio: {audio_seconds:.2f}s | raw browser: {video_seconds:.2f}s | trim pre-roll: {preroll:.2f}s", flush=True)
+    preroll, marker_frames = detect_narration_zero(VIDEO)
+    if video_seconds - preroll < audio_seconds - 0.55:
+        raise RuntimeError("Browser recording is shorter than the synchronized audio.")
+    if any(abs(cue["drift_ms"]) > 500 for cue in recording["cue_timings"]):
+        raise RuntimeError("A visual cue deviated too far from its spoken sentence.")
+    print(f"Audio: {audio_seconds:.2f}s | raw browser: {video_seconds:.2f}s | precise video offset: {preroll:.2f}s", flush=True)
     vf = (
         "scale=1920:1080:flags=lanczos,"
         "tpad=stop_mode=clone:stop_duration=3,"
@@ -76,6 +108,10 @@ def main() -> None:
         "verified_scenario": recording["verified"],
         "browser_errors": recording["page_errors"],
         "licence": "Voice attribution in voice-credits.txt",
+        "sync_method": "Visual marker detected in recorded video",
+        "video_preroll_seconds": round(preroll, 3),
+        "marker_frames_found": marker_frames,
+        "maximum_cue_drift_ms": max(abs(c["drift_ms"]) for c in recording["cue_timings"]),
     }
     (OUT / "video-report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
