@@ -2575,3 +2575,41 @@ button {
 .decision-desk__time-note { margin-top: 12px; padding: 12px 15px; border-left: 3px solid var(--coral); background: var(--sand); }
 .decision-desk__time-note strong { display: block; font-size: 13px; color: var(--pine); }
 .decision-desk__time-note p { margin-top: 5px; max-width: 1040px; color: var(--ink-soft); font-size: 13px; line-height: 1.55; }
+
+
+/* Accessible, plain-language scenario sensitivity and decision thresholds. */
+.lab-sensitivity .sensitivity-explain { padding: 15px 19px 0; font-size: 14px; line-height: 1.6; color: var(--ink-soft); }
+.lab-sensitivity .lab-chart-wrap { padding: 15px 24px 22px; overflow-x: auto; }
+.lab-chart-intro { display: flex; align-items: center; flex-wrap: wrap; gap: 7px 16px; font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; }
+.lab-chart-intro strong { color: var(--pine); font-weight: 800; }
+.lab-sensitivity .lab-chart-wrap svg { width: 100%; height: auto; max-width: 1040px; min-width: 580px; margin: 0 auto; display: block; overflow: visible; }
+.lab-chart-tick { fill: var(--ink-soft); font: 13px/1.2 Arial, Helvetica, sans-serif; }
+.lab-chart-axis-label { fill: var(--ink); font: 600 15px/1.2 Arial, Helvetica, sans-serif; }
+.lab-chart-axis { stroke: var(--ink-soft); stroke-width: 1; }
+.lab-chart-current { stroke: var(--coral); stroke-width: 1.5; stroke-dasharray: 6 7; opacity: .7; }
+.lab-chart-point { stroke: var(--paper); stroke-width: 2.5; }
+.lab-chart-point--new { fill: var(--ink); }
+.lab-chart-point--repairFirst { fill: var(--coral); }
+.lab-chart-point--parallel { fill: var(--green); }
+.lab-sensitivity .lab-chart-legend { display: flex; gap: 20px; flex-wrap: wrap; margin: 6px auto 10px; justify-content: center; font-size: 12px; }
+.lab-chart-insight { padding: 14px 16px; background: var(--sand); border-left: 3px solid var(--coral); font-size: 13px; line-height: 1.6; }
+.threshold-intro { padding: 17px 21px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+.threshold-explained__grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; padding: 0 20px 20px; }
+.threshold-explained__card { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; gap: 11px; padding: 20px; border: 1px solid var(--line-strong); background: var(--paper); }
+.threshold-explained__index { color: var(--coral); font: 800 11px Arial, Helvetica, sans-serif; }
+.threshold-explained__card h4 { font: 400 clamp(20px,2vw,25px)/1.2 var(--serif); min-height: 3em; }
+.threshold-explained__card > strong { font: 400 clamp(33px,3.6vw,44px)/1.05 var(--serif); color: var(--pine); }
+.threshold-explained__card > p { font-size: 13px; line-height: 1.6; }
+.threshold-explained__card > small { display: block; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); color: var(--subtle); font-size: 12px; line-height: 1.55; }
+.threshold-footer { border-top: 1px solid var(--line); padding: 15px 21px; color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+@media (max-width: 950px) {
+  .threshold-explained__grid { grid-template-columns: 1fr; }
+  .threshold-explained__card h4 { min-height: 0; }
+  .threshold-explained__card { padding: 17px; }
+}
+@media (max-width: 670px) {
+  .lab-sensitivity .lab-chart-wrap { padding: 12px 16px 17px; }
+  .lab-sensitivity .lab-chart-wrap svg { width: 580px; height: auto; }
+  .threshold-explained__grid { padding: 0 13px 16px; }
+  .threshold-intro { padding: 15px; }
+}
