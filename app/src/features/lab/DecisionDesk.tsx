@@ -2,6 +2,7 @@ import type { Locale } from '../../app/types';
 import type { StrategyId } from '../../domain';
 import { useLab } from './LabProvider';
 import { labCopy } from './copy';
+import { useEvidence } from '../evidence/EvidenceProvider';
 
 const options: StrategyId[] = ['new', 'repairFirst', 'parallel'];
 
@@ -52,6 +53,7 @@ export function DecisionDesk({ locale, chosen, onChoose, activePanel, onPanel }:
   onPanel: (panel: Exclude<Panel, null>) => void;
 }) {
   const lab = useLab();
+  const evidence = useEvidence();
   const t = labCopy(locale);
   const es = locale === 'es';
   const current = chosen && lab.result ? lab.result.strategies[chosen] : null;
@@ -124,6 +126,7 @@ export function DecisionDesk({ locale, chosen, onChoose, activePanel, onPanel }:
           {activePanel === 'technical' ? (es ? 'Cerrar análisis técnico' : 'Close technical analysis') : (es ? 'Ver análisis técnico (opcional)' : 'View technical analysis (optional)')}
         </button>
       </div>
+      <button type="button" className="decision-desk__evidence-link" onClick={() => evidence.openEvidence({ type: 'strategy', id: chosen! })}>{es ? 'Consultar evidencias de esta elección' : 'Inspect evidence for this route'} →</button>
     </div> : <p className="decision-desk__hint">{es
       ? 'Selecciona una de las tres opciones para ver su resultado y compararla con las demás.'
       : 'Select one of the three options to see its result and compare it with the others.'}</p>}
