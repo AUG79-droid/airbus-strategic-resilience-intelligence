@@ -5,6 +5,7 @@ No paid APIs, no repository changes outside video-demo/.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import urllib.request
 import wave
@@ -119,7 +120,17 @@ def main() -> None:
             scene_end = time + duration
             stitched.writeframes(data)
             stitched.writeframes(silence(PAUSE_SECONDS))
-            subtitles.append(f"{i}\n{srt_time(scene_start)} --> {srt_time(scene_end)}\n{scene['text']}\n")
+            # Readable sentence-by-sentence captions rather than one long paragraph.
+            sentences = re.split(r"(?<=[.!?])\s+", scene["text"])
+            total_weight = sum(max(1, len(sentence)) for sentence in sentences)
+            caption_start = scene_start
+            for sentence in sentences:
+                caption_end = caption_start + duration * max(1, len(sentence)) / total_weight
+                subtitles.append(
+                    f"{len(subtitles) + 1}\n{srt_time(caption_start)} --> "
+                    f"{srt_time(caption_end)}\n{sentence}\n"
+                )
+                caption_start = caption_end
             manifest["scenes"].append({
                 "id": scene["id"],
                 "text": scene["text"],
