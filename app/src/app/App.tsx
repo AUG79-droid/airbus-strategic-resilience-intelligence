@@ -132,7 +132,7 @@ export function App() {
             </nav>
 
             <div className="workspace-view" key={`${locale}-${view}`}>
-              {view !== 'investigate' && (
+              {view !== 'investigate' && view !== 'challenge' && (
                 <div className="step-direction" role="note">
                   <strong>{locale === 'es' ? 'PASO' : 'STEP'} {workflow.indexOf(view) + 1} / 4 · {content.views[view].label}</strong>
                   <p>{locale === 'es'
