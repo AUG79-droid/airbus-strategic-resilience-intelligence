@@ -12,7 +12,19 @@ import type { PresetId } from '../features/lab/presets';
 import { runSensitivity, type SensitivityMetric, type SensitivityVariable } from '../features/lab/sensitivity';
 import { calculateThresholds } from '../features/lab/thresholds';
 
-interface ViewProps { content: Copy; locale: Locale; guided: boolean; }
+type ChallengePanel = 'parameters' | 'technical' | null;
+type ChallengeTab = 'branches' | 'sensitivity' | 'environment' | 'method';
+interface ViewProps {
+  content: Copy;
+  locale: Locale;
+  guided: boolean;
+  chosen: StrategyId | null;
+  onChoose: (strategy: StrategyId) => void;
+  activePanel: ChallengePanel;
+  technicalTab: ChallengeTab;
+  onPanel: (panel: Exclude<ChallengePanel, null>) => void;
+  onTabChange: (tab: ChallengeTab) => void;
+}
 const strategyOrder: StrategyId[] = ['new', 'repairFirst', 'parallel'];
 const causalStageIds: CausalStageId[] = ['initiative', 'environmentalMechanism', 'strategicVulnerability', 'resilienceOutcome', 'customerValue', 'evidenceLimitations'];
 
@@ -194,14 +206,11 @@ function costLabel(code: string, locale: Locale): string {
   return label ? label[locale === 'es' ? 0 : 1] : code;
 }
 
-export function ChallengeView({ content: _content, locale, guided }: ViewProps) {
+export function ChallengeView({ content: _content, locale, guided, chosen, onChoose, activePanel, technicalTab, onPanel, onTabChange }: ViewProps) {
   const t = labCopy(locale);
   const et = evidenceCopy(locale);
   const lab = useLab();
   const evidence = useEvidence();
-  const [chosen, setChosen] = useState<StrategyId | null>(null);
-  const [activePanel, setActivePanel] = useState<'parameters' | 'technical' | null>(null);
-  const [technicalTab, setTechnicalTab] = useState<'branches' | 'sensitivity' | 'environment' | 'method'>('branches');
   const thresholds = useMemo(() => lab.result ? calculateThresholds(lab.scenario) : [], [lab.result, lab.scenario]);
   const setTiming = (key: keyof typeof lab.scenario.timing, value: number) => lab.updateScenario((draft) => { draft.timing[key] = value; });
   const setCost = (key: keyof typeof lab.scenario.costs, value: number) => lab.updateScenario((draft) => { draft.costs[key] = value; });
@@ -215,11 +224,7 @@ export function ChallengeView({ content: _content, locale, guided }: ViewProps) 
   return <section className="lab" aria-labelledby="challenge-title">
     <header className="lab-header"><div><p className="kicker">{locale === 'es' ? 'CASO 01 · PASO 2 DE 4' : 'CASE 01 · STEP 2 OF 4'}</p><h2 id="challenge-title">{locale === 'es' ? 'Decide y comprueba qué ocurre' : 'Make a decision and see what happens'}</h2></div><div className="lab-header__warnings"><strong>{t.fictional}</strong></div></header>
     <div className="lab-preset-row"><SelectField label={t.preset} value={lab.selectedPreset} onChange={(value) => value !== 'custom' && lab.applyPreset(value as PresetId)} options={[...LAB_PRESETS.map((preset) => ({ value: preset.id, label: t.presets[preset.id] })), ...(lab.selectedPreset === 'custom' ? [{ value: 'custom', label: t.custom }] : [])]} testId="preset-select" /><p className="lab-scenario-help">{locale === 'es' ? 'El escenario describe las condiciones. Tu elección es una de las tres alternativas que aparecen debajo.' : 'The scenario sets the conditions. Your decision is one of the three routes below.'}</p></div>
-    <DecisionDesk locale={locale} chosen={chosen} onChoose={setChosen} activePanel={activePanel} onPanel={(panel) => {
-      const next = activePanel === panel ? null : panel;
-      setActivePanel(next);
-      if (next) window.requestAnimationFrame(() => document.getElementById('lab-detailed-analysis')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    }} />
+    <DecisionDesk locale={locale} chosen={chosen} onChoose={onChoose} activePanel={activePanel} onPanel={onPanel} />
     {activePanel && <div className={`lab-workbench lab-workbench--${activePanel}`} id="lab-detailed-analysis">
       {activePanel === 'parameters' && <aside className="lab-controls" aria-label={t.title}>
         {guided ? <>
@@ -243,8 +248,7 @@ export function ChallengeView({ content: _content, locale, guided }: ViewProps) 
           <div><dt>{t.metrics.expectedCashOutlay}</dt><dd>{money(lab.result.strategies[chosen].expectedCashOutlay, locale)}</dd></div>
         </dl>
         <button type="button" onClick={() => {
-          setActivePanel(null);
-          window.requestAnimationFrame(() => document.getElementById('decision-desk-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+          onPanel('parameters');
         }}>{locale === 'es' ? 'Volver a la comparación' : 'Back to your comparison'} →</button>
       </div>}
       {activePanel === 'technical' && <div className="lab-results">
@@ -254,7 +258,7 @@ export function ChallengeView({ content: _content, locale, guided }: ViewProps) 
             ['sensitivity', locale === 'es' ? '¿Cuándo conviene reparar o comprar?' : 'When should we repair or buy?'],
             ['environment', locale === 'es' ? 'Impacto ambiental' : 'Environmental effects'],
             ['method', locale === 'es' ? 'Método y fórmulas' : 'Method and equations'],
-          ] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={technicalTab === id} className={technicalTab === id ? 'is-active' : ''} onClick={() => setTechnicalTab(id)}>{label}</button>)}
+          ] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={technicalTab === id} className={technicalTab === id ? 'is-active' : ''} onClick={() => onTabChange(id)}>{label}</button>)}
         </nav>{lab.errors.length > 0 && <div className="lab-errors" role="alert"><strong>{t.modelInvalid}</strong><ul>{lab.errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}{lab.result && lab.classifications && <>
         {technicalTab === 'branches' && chosen && <article className="lab-panel lab-branches"><header><div><p className="kicker">{locale === 'es' ? 'DESGLOSE DE TU ELECCIÓN' : 'YOUR SELECTED ROUTE'}</p><h3>{t.strategies[chosen]}</h3><p className="lab-detail-explanation">{locale === 'es' ? 'Solo se muestran los posibles resultados de la alternativa que has elegido. Cambia la elección arriba para actualizar este desglose.' : 'Only outcomes for your selected route are shown. Choose a different route above to update the breakdown.'}</p></div></header><div className="lab-table-wrap"><table><thead><tr><th>{t.branch}</th><th>{t.probability}</th><th>{t.metrics.expectedRecoveryDays}</th><th>{t.outcome}</th><th>{t.obligations}</th><th>{t.cash}</th><th>{t.sunk}</th></tr></thead><tbody>{lab.result.strategies[chosen!].branches.map((branch) => <tr key={branch.id}><td>{branchLabel(branch.repairFeasible, branch.supplierShock, locale)}</td><td>{number(branch.probability * 100, locale)}%</td><td>{number(branch.recoveryDays, locale)} d</td><td>{branch.pathOutcome === 'new' ? (locale === 'es' ? 'Pieza nueva' : 'New part') : branch.pathOutcome === 'repair' ? (locale === 'es' ? 'Reparación' : 'Repair') : (locale === 'es' ? 'Empate de vías' : 'Tied routes')}</td><td><ul className="branch-obligations">{branch.economics.lineItems.map((item) => <li key={item.id}><span>{costLabel(item.category, locale)}</span><strong>{money(item.cashImpact, locale)}</strong></li>)}</ul></td><td>{money(branch.economics.totalCashOutlay, locale)}</td><td>{money(branch.economics.sunkCost, locale)}</td></tr>)}</tbody></table></div></article>}
         {technicalTab === 'sensitivity' && <SensitivityChart scenario={lab.scenario} locale={locale} t={t} />}
