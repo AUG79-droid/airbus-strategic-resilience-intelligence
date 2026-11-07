@@ -2446,3 +2446,49 @@ button {
   .case-start__options article h3 { font-size: 20px; }
   .journey-actions { flex-wrap: wrap; }
 }
+
+
+/* Decision-first experience: choice -> model feedback -> optional deeper analysis. */
+.decision-desk { background: var(--paper); border: 1px solid var(--line-strong); overflow: hidden; }
+.decision-desk__intro { padding: 24px 28px 19px; }
+.decision-desk__intro .kicker, .decision-desk__feedback > .kicker { color: var(--coral); font-size: 10px; font-weight: 900; letter-spacing: .12em; }
+.decision-desk__intro h3 { margin: 9px 0 9px; font: 400 clamp(25px, 3vw, 34px)/1.15 var(--serif); }
+.decision-desk__intro p:last-child { font-size: 14px; line-height: 1.55; max-width: 860px; }
+.decision-desk__options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.decision-desk__option { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 19px 20px; min-height: 125px; background: var(--paper); border: 0; border-right: 1px solid var(--line); text-align: left; transition: background 120ms ease; }
+.decision-desk__option:last-child { border-right: 0; }
+.decision-desk__option:hover { background: var(--sand); }
+.decision-desk__option.is-selected { background: var(--pine-deep); color: #f6f8ee; box-shadow: inset 0 4px var(--lime); }
+.decision-desk__option span { color: var(--coral); font-size: 11px; font-weight: 900; }
+.decision-desk__option.is-selected span { color: var(--lime); }
+.decision-desk__option strong { font: 400 23px/1.15 var(--serif); }
+.decision-desk__option small { color: var(--subtle); font-size: 12px; line-height: 1.4; }
+.decision-desk__option.is-selected small { color: #d7e5d9; }
+.decision-desk__hint { padding: 16px 28px; font-size: 14px; color: var(--ink-soft); background: var(--sand); }
+.decision-desk__feedback { padding: 24px 28px; }
+.decision-desk__feedback h4 { margin: 7px 0 16px; font: 400 26px var(--serif); }
+.decision-desk__metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); }
+.decision-desk__metrics > div { padding: 16px 18px; border-right: 1px solid var(--line); display: grid; gap: 5px; }
+.decision-desk__metrics > div:last-child { border-right: 0; }
+.decision-desk__metrics strong { font: 400 clamp(22px, 2.3vw, 31px)/1.1 var(--serif); white-space: nowrap; }
+.decision-desk__metrics span { font-size: 12px; color: var(--ink-soft); line-height: 1.45; }
+.decision-desk__compare-title { margin-top: 21px; font-weight: 800; font-size: 14px; }
+.decision-desk__comparisons { margin-top: 10px; display: grid; gap: 8px; }
+.decision-desk__comparisons p { font-size: 13px; line-height: 1.55; }
+.decision-desk__comparisons strong { color: var(--pine); }
+.decision-desk__caution { margin-top: 16px; color: var(--subtle); border-left: 3px solid var(--coral); padding: 8px 12px; font-size: 12px; line-height: 1.5; }
+.decision-desk__actions { margin-top: 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.decision-desk__explore { background: var(--coral); color: white; border: 0; padding: 13px 18px; font-weight: 800; font-size: 13px; }
+.decision-desk__actions span { color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+@media (max-width: 800px) {
+  .decision-desk__options { grid-template-columns: 1fr; }
+  .decision-desk__option { border-right: 0; border-bottom: 1px solid var(--line); min-height: 0; padding: 14px 18px; }
+  .decision-desk__option:last-child { border-bottom: 0; }
+  .decision-desk__metrics { grid-template-columns: 1fr; }
+  .decision-desk__metrics > div { border-right: 0; border-bottom: 1px solid var(--line); }
+  .decision-desk__metrics > div:last-child { border-bottom: 0; }
+}
+@media (max-width: 540px) {
+  .decision-desk__intro, .decision-desk__feedback { padding: 19px 16px; }
+  .decision-desk__hint { padding: 15px 16px; }
+}
