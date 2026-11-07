@@ -3,3 +3,5 @@ This file is the only automatic video-build trigger; no app code is changed.
 Run 1: 2026-11-07.
 
 Run 2: install and verify ffmpeg on GitHub-hosted runner.
+
+Run 3: synchronize every narrated cue and trim video using a frame marker, v2.
