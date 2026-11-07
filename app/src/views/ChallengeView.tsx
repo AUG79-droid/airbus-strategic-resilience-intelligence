@@ -7,6 +7,7 @@ import { useEvidence } from '../features/evidence/EvidenceProvider';
 import type { CausalStageId } from '../features/evidence/types';
 import { labCopy } from '../features/lab/copy';
 import { DecisionDesk } from '../features/lab/DecisionDesk';
+import { MethodLegend } from '../features/lab/MethodLegend';
 import { EnvironmentalBreakdown } from '../features/lab/EnvironmentalBreakdown';
 import { LAB_PRESETS, useLab, type EnvironmentalExampleValues } from '../features/lab/LabProvider';
 import type { PresetId } from '../features/lab/presets';
@@ -283,7 +284,7 @@ export function ChallengeView({ content: _content, locale, guided, chosen, onCho
             ? 'Todo el caso DEMO-60 usa cifras inventadas. Si cambias los datos de partida, cambian estos límites. Son resultados de simulación, no recomendaciones operativas de Airbus.'
             : 'All DEMO-60 figures are invented. Changing the scenario inputs changes these boundaries. They are simulated results, not Airbus operational recommendations.'}</p>
         </article>}
-        {technicalTab === 'method' && <article className="lab-panel formula-panel"><header><div><p className="kicker">{locale === "es" ? "MÉTODO" : "METHOD"}</p><h3>{t.formulas}</h3></div></header><div className="formula-grid"><code>E[T<sub>repair</sub>] = q·(I+R) + (1−q)·(I+N+p<sub>s|¬q</sub>·S)</code><code>E[C<sub>s</sub>] = Σ<sub>b</sub> P(b)·[Σ obligations<sub>b</sub> − explicit credits<sub>b</sub>]</code><code>P(T≤target) = Σ<sub>b:Tb≤target</sub> P(b)</code><code>j ∈ [max(0,q+p−1), min(q,p)]</code></div><p>{t.formulaNote}</p></article>}
+        {technicalTab === 'method' && <article className="lab-panel formula-panel"><header><div><p className="kicker">{locale === "es" ? "MÉTODO" : "METHOD"}</p><h3>{t.formulas}</h3></div></header><MethodLegend locale={locale} /></article>}
       </>}</div>}
     </div>}
     {activePanel === 'technical' && technicalTab === 'environment' && chosen === 'new' && <article className="lab-panel" style={{ padding: 24 }}><h3>{locale === 'es' ? 'Sustitución: estrategia de referencia' : 'Replacement: reference strategy'}</h3><p>{locale === 'es' ? 'Los indicadores ambientales del laboratorio representan diferencias respecto a comprar una pieza nueva. Selecciona Reparar primero o En paralelo para consultar su posible efecto ambiental; ningún beneficio está validado.' : 'Environmental indicators are differences from purchasing a new part. Select Repair first or Parallel to inspect potential environmental effects; no benefit is validated.'}</p></article>}
