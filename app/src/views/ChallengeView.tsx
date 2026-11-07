@@ -7,6 +7,7 @@ import { useEvidence } from '../features/evidence/EvidenceProvider';
 import type { CausalStageId } from '../features/evidence/types';
 import { labCopy } from '../features/lab/copy';
 import { DecisionDesk } from '../features/lab/DecisionDesk';
+import { ConditionImpactGuide } from '../features/lab/ConditionImpactGuide';
 import { MethodLegend } from '../features/lab/MethodLegend';
 import { EnvironmentalBreakdown } from '../features/lab/EnvironmentalBreakdown';
 import { LAB_PRESETS, useLab, type EnvironmentalExampleValues } from '../features/lab/LabProvider';
@@ -250,6 +251,7 @@ export function ChallengeView({ content: _content, locale, guided, chosen, onCho
           <div><dt>{t.metrics.probabilityTargetMet}</dt><dd>{number(lab.result.strategies[chosen].probabilityTargetMet * 100, locale)}%</dd></div>
           <div><dt>{t.metrics.expectedCashOutlay}</dt><dd>{money(lab.result.strategies[chosen].expectedCashOutlay, locale)}</dd></div>
         </dl>
+        <ConditionImpactGuide locale={locale} chosen={chosen} onOpenMethod={() => onTabChange('method')} />
         <button type="button" onClick={() => {
           onPanel('parameters');
         }}>{locale === 'es' ? 'Volver a la comparación' : 'Back to your comparison'} →</button>
