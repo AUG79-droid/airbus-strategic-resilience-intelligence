@@ -6,8 +6,33 @@ import { InvestigateView } from '../views/InvestigateView';
 import { TranslateView } from '../views/TranslateView';
 import { ValidateView } from '../views/ValidateView';
 import type { Locale, ViewId } from './types';
+import type { StrategyId } from '../domain';
 
 const workflow: ViewId[] = ['investigate', 'challenge', 'validate', 'translate'];
+type ChallengePanel = 'parameters' | 'technical' | null;
+type ChallengeTab = 'branches' | 'sensitivity' | 'environment' | 'method';
+type ChallengeScreen = { panel: ChallengePanel; tab: ChallengeTab };
+type JourneyHistoryState = {
+  asriChallenge?: ChallengeScreen;
+  asriChoice?: StrategyId | null;
+  asriInsideChallenge?: boolean;
+};
+const initialChallenge: ChallengeScreen = { panel: null, tab: 'branches' };
+function currentHistory(): JourneyHistoryState {
+  return (window.history.state ?? {}) as JourneyHistoryState;
+}
+function screenFromHistory(): ChallengeScreen {
+  const value = currentHistory().asriChallenge;
+  const panel = value?.panel === 'technical' || value?.panel === 'parameters' ? value.panel : null;
+  const tab = value?.tab === 'sensitivity' || value?.tab === 'environment' || value?.tab === 'method' ? value.tab : 'branches';
+  return { panel, tab };
+}
+function scrollToChallenge(screen: ChallengeScreen) {
+  window.requestAnimationFrame(() => window.requestAnimationFrame(() =>
+    document.getElementById(screen.panel ? 'lab-detailed-analysis' : 'decision-desk-heading')
+      ?.scrollIntoView({ behavior: 'auto', block: 'start' })
+  ));
+}
 
 function viewFromHash(): ViewId {
   const candidate = window.location.hash.replace('#/', '') as ViewId;
@@ -17,6 +42,8 @@ function viewFromHash(): ViewId {
 export function App() {
   const [locale, setLocale] = useState<Locale>('en');
   const [view, setView] = useState<ViewId>(viewFromHash);
+  const [challengeScreen, setChallengeScreen] = useState<ChallengeScreen>(screenFromHistory);
+  const [challengeChoice, setChallengeChoice] = useState<StrategyId | null>(() => currentHistory().asriChoice ?? null);
   const content = useMemo(() => copy[locale], [locale]);
 
   useEffect(() => {
@@ -24,19 +51,66 @@ export function App() {
   }, [locale]);
 
   useEffect(() => {
-    const onHashChange = () => setView(viewFromHash());
-    window.addEventListener('hashchange', onHashChange);
-    window.addEventListener('popstate', onHashChange);
+    const onNavigation = () => {
+      const next = viewFromHash();
+      const screen = screenFromHistory();
+      setView(next);
+      setChallengeScreen(screen);
+      setChallengeChoice(currentHistory().asriChoice ?? null);
+      if (next === 'challenge') scrollToChallenge(screen);
+    };
+    window.addEventListener('hashchange', onNavigation);
+    window.addEventListener('popstate', onNavigation);
     return () => {
-      window.removeEventListener('hashchange', onHashChange);
-      window.removeEventListener('popstate', onHashChange);
+      window.removeEventListener('hashchange', onNavigation);
+      window.removeEventListener('popstate', onNavigation);
     };
   }, []);
 
   const navigate = (next: ViewId) => {
+    if (next === view) return;
     setView(next);
-    window.history.pushState(null, '', `#/${next}`);
+    window.history.pushState({
+      asriChallenge: challengeScreen,
+      asriChoice: challengeChoice,
+      asriInsideChallenge: false,
+    } satisfies JourneyHistoryState, '', `#/${next}`);
     window.scrollTo({ top: 0, behavior: 'auto' });
+  };
+
+  const chooseStrategy = (choice: StrategyId) => {
+    setChallengeChoice(choice);
+    window.history.replaceState({ ...currentHistory(), asriChallenge: challengeScreen, asriChoice: choice }, '', window.location.href);
+  };
+
+  const openChallengeScreen = (next: ChallengeScreen) => {
+    if (challengeScreen.panel === next.panel && challengeScreen.tab === next.tab) return;
+    setChallengeScreen(next);
+    window.history.pushState({
+      asriChallenge: next,
+      asriChoice: challengeChoice,
+      asriInsideChallenge: true,
+    } satisfies JourneyHistoryState, '', '#/challenge');
+    scrollToChallenge(next);
+  };
+
+  const goBack = () => {
+    if (view === 'challenge') {
+      // Internal panel/tab changes have their own browser history entries.
+      // Never send the user back to Investigate while inside an analysis.
+      if (currentHistory().asriInsideChallenge) {
+        window.history.back();
+        return;
+      }
+      if (challengeScreen.panel !== null) {
+        const summary = { ...challengeScreen, panel: null } satisfies ChallengeScreen;
+        setChallengeScreen(summary);
+        window.history.replaceState({ ...currentHistory(), asriChallenge: summary, asriInsideChallenge: false }, '', '#/challenge');
+        scrollToChallenge(summary);
+        return;
+      }
+    }
+    navigate(workflow[workflow.indexOf(view) - 1]);
   };
 
   return (
@@ -141,13 +215,22 @@ export function App() {
                 </div>
               )}
               {view === 'investigate' && <InvestigateView content={content} locale={locale} onNext={() => navigate('challenge')} />}
-              {view === 'challenge' && <ChallengeView content={content} locale={locale} guided={true} />}
+              {view === 'challenge' && <ChallengeView content={content} locale={locale} guided={true}
+                chosen={challengeChoice}
+                onChoose={chooseStrategy}
+                activePanel={challengeScreen.panel}
+                technicalTab={challengeScreen.tab}
+                onPanel={(panel) => openChallengeScreen({ ...challengeScreen, panel: challengeScreen.panel === panel ? null : panel })}
+                onTabChange={(tab) => openChallengeScreen({ ...challengeScreen, panel: 'technical', tab })}
+              />}
               {view === 'validate' && <ValidateView content={content} locale={locale} />}
               {view === 'translate' && <TranslateView content={content} locale={locale} />}
               {view !== 'investigate' && (
                 <nav className="journey-actions" aria-label={locale === 'es' ? 'Navegación del caso' : 'Case navigation'}>
-                  <button type="button" className="journey-actions__back" onClick={() => navigate(workflow[workflow.indexOf(view) - 1])}>
-                    ← {locale === 'es' ? 'Volver' : 'Back'}
+                  <button type="button" className="journey-actions__back" onClick={goBack} data-testid="journey-back">
+                    ← {view === 'challenge' && (challengeScreen.panel !== null || currentHistory().asriInsideChallenge)
+                      ? (locale === 'es' ? 'Volver a la pantalla anterior' : 'Back to previous screen')
+                      : (locale === 'es' ? 'Volver' : 'Back')}
                   </button>
                   <button type="button" className="journey-actions__next" onClick={() => navigate(view === 'translate' ? 'investigate' : workflow[workflow.indexOf(view) + 1])}>
                     {view === 'translate' ? (locale === 'es' ? 'Volver al caso' : 'Return to case') : (locale === 'es' ? 'Continuar: ' : 'Continue: ') + content.views[workflow[workflow.indexOf(view) + 1]].label} →
