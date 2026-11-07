@@ -78,7 +78,7 @@ function environmentalFactors(
 export function LabProvider({ children }: { children: ReactNode }) {
   const [scenario, setScenario] = useState(() => scenarioForPreset('balanced'));
   const [selectedPreset, setSelectedPreset] = useState<PresetId | 'custom'>('balanced');
-  const [environmentalEnabled, setEnvironmentalEnabled] = useState(false);
+  const [environmentalEnabled, setEnvironmentalEnabled] = useState(true); // DEMO-60: all factors remain clearly fictional.
   const [environmentalValues, setEnvironmentalValues] = useState(initialEnvironmentalValues);
 
   const computed = useMemo(() => {
