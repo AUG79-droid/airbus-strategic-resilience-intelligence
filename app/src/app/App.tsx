@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { WorkflowIcon } from '../components/Icons';
-import { SystemMap } from '../components/SystemMap';
 import { copy } from '../content/i18n';
-import { GuidedJourney } from '../features/guidance/GuidedJourney';
 import { ChallengeView } from '../views/ChallengeView';
 import { InvestigateView } from '../views/InvestigateView';
 import { TranslateView } from '../views/TranslateView';
@@ -19,9 +17,6 @@ function viewFromHash(): ViewId {
 export function App() {
   const [locale, setLocale] = useState<Locale>('en');
   const [view, setView] = useState<ViewId>(viewFromHash);
-  const [guided, setGuided] = useState(() => {
-    try { return window.localStorage.getItem('asri-experience-mode') !== 'expert'; } catch { return true; }
-  });
   const content = useMemo(() => copy[locale], [locale]);
 
   useEffect(() => {
@@ -37,15 +32,8 @@ export function App() {
   const navigate = (next: ViewId) => {
     setView(next);
     window.history.replaceState(null, '', `#/${next}`);
-    document.getElementById('case-workspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   };
-
-  const setGuidedMode = (enabled: boolean) => {
-    setGuided(enabled);
-    try { window.localStorage.setItem('asri-experience-mode', enabled ? 'guided' : 'expert'); } catch { /* Local storage can be unavailable in restricted browsers. */ }
-  };
-
-  const nextView = () => navigate(workflow[(workflow.indexOf(view) + 1) % workflow.length]);
 
   return (
     <>
@@ -64,7 +52,6 @@ export function App() {
           <div className="topbar__controls">
             <span className="prototype-status"><i />{content.prototypeStatus}</span>
             <span className="phase-label">{content.phaseLabel}</span>
-            <button className={`guidance-toggle ${guided ? 'is-active' : ''}`} type="button" data-testid="guidance-toggle" aria-pressed={guided} onClick={() => setGuidedMode(!guided)}>{guided ? (locale === 'es' ? 'GUÍA ACTIVA' : 'GUIDE ON') : (locale === 'es' ? 'MODO EXPERTO' : 'EXPERT MODE')}</button>
             <div className="language-switch" aria-label="Language">
               {(['en', 'es'] as const).map((language) => (
                 <button
@@ -105,7 +92,7 @@ export function App() {
         </aside>
 
         <main id="main-content" className="main-content">
-          <section className="hero" aria-labelledby="hero-title">
+          {view === 'investigate' && <section className="hero" aria-labelledby="hero-title">
             <div className="hero__copy">
               <p className="eyebrow">{content.eyebrow}</p>
               <h1 id="hero-title">
@@ -119,8 +106,7 @@ export function App() {
                 <span><i className="meta-square meta-square--green" />{content.dataMeta}</span>
               </div>
             </div>
-            <SystemMap label={content.systemMap} caption={content.causalCaption} />
-          </section>
+          </section>}
 
           <section id="case-workspace" className="case-workspace" aria-label={content.caseLabel}>
             <div className="case-line">
@@ -142,11 +128,28 @@ export function App() {
             </nav>
 
             <div className="workspace-view" key={`${locale}-${view}`}>
-              {guided && <GuidedJourney view={view} locale={locale} onNext={nextView} onDisable={() => setGuidedMode(false)} />}
-              {view === 'investigate' && <InvestigateView content={content} />}
-              {view === 'challenge' && <ChallengeView content={content} locale={locale} guided={guided} />}
+              {view !== 'investigate' && (
+                <div className="step-direction" role="note">
+                  <strong>{locale === 'es' ? 'PASO' : 'STEP'} {workflow.indexOf(view) + 1} / 4 · {content.views[view].label}</strong>
+                  <p>{locale === 'es'
+                    ? ({ challenge: 'Elige un escenario, cambia un dato y compara las tres alternativas. Los detalles avanzados están plegados.', validate: 'Selecciona una evidencia y comprueba qué está documentado, qué es una hipótesis y qué falta validar.', translate: 'Selecciona una estrategia y una audiencia. Comprueba la conclusión antes de exportar.' } as Record<string, string>)[view]
+                    : ({ challenge: 'Choose a scenario, change one input and compare all three options. Advanced details are collapsed.', validate: 'Select an evidence record to see what is documented, assumed or still needs validation.', translate: 'Choose a strategy and an audience. Review the conclusion before exporting.' } as Record<string, string>)[view]}</p>
+                </div>
+              )}
+              {view === 'investigate' && <InvestigateView content={content} locale={locale} onNext={() => navigate('challenge')} />}
+              {view === 'challenge' && <ChallengeView content={content} locale={locale} guided={true} />}
               {view === 'validate' && <ValidateView content={content} locale={locale} />}
               {view === 'translate' && <TranslateView content={content} locale={locale} />}
+              {view !== 'investigate' && (
+                <nav className="journey-actions" aria-label={locale === 'es' ? 'Navegación del caso' : 'Case navigation'}>
+                  <button type="button" className="journey-actions__back" onClick={() => navigate(workflow[workflow.indexOf(view) - 1])}>
+                    ← {locale === 'es' ? 'Volver' : 'Back'}
+                  </button>
+                  <button type="button" className="journey-actions__next" onClick={() => navigate(view === 'translate' ? 'investigate' : workflow[workflow.indexOf(view) + 1])}>
+                    {view === 'translate' ? (locale === 'es' ? 'Volver al caso' : 'Return to case') : (locale === 'es' ? 'Continuar: ' : 'Continue: ') + content.views[workflow[workflow.indexOf(view) + 1]].label} →
+                  </button>
+                </nav>
+              )}
             </div>
           </section>
 
