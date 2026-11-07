@@ -9,7 +9,6 @@ import type {
   EvidenceFocus,
   EvidenceOwner,
   EvidenceRecord,
-  EvidenceStatus,
   PublicSource,
 } from '../features/evidence/types';
 
@@ -87,7 +86,6 @@ export function TechnicalEvidenceView({ content: _content, locale }: ViewProps) 
     for (const claim of evidence.claims) for (const item of claim.missingInformation) byOwner.get(item.owner)?.add(item.request[locale]);
     return byOwner;
   }, [evidence.claims, evidence.records, locale]);
-  const statusCount = (status: EvidenceStatus) => evidence.records.filter((record) => record.status === status).length;
 
   const openClaimEvidence = (claim: ClaimGateResult) => {
     evidence.setFocus({ type: 'claim', id: claim.id });
@@ -95,9 +93,15 @@ export function TechnicalEvidenceView({ content: _content, locale }: ViewProps) 
   };
 
   return <section className="evidence-workspace evidence-workspace--compact" aria-labelledby="validate-title">
-    <header className="evidence-workspace__header"><div><p className="kicker">PHASE 04 / EVIDENCE CONTROL</p><h2 id="validate-title">{t.title}</h2><p>{t.intro}</p></div><div className="evidence-public-warning"><strong>{t.publicOnly}</strong><span>{t.noValidated}</span></div></header>
-
-    <div className="evidence-status-summary">{(Object.keys(t.statuses) as EvidenceStatus[]).map((status) => <section key={status} className={`evidence-summary evidence-summary--${status}`}><strong>{statusCount(status)}</strong><span>{t.statuses[status]}</span></section>)}</div>
+    <header className="evidence-workspace__header">
+      <div>
+        <p className="kicker">{locale === 'es' ? 'CONSULTA AVANZADA' : 'ADVANCED REFERENCE'}</p>
+        <h2 id="validate-title">{locale === 'es' ? 'Fuentes y comprobaciones' : 'Sources and validation checks'}</h2>
+        <p>{locale === 'es'
+          ? 'Estas fichas sirven para rastrear información y distinguir datos ficticios, cálculos y fuentes públicas. No son tareas que tengas que completar para continuar.'
+          : 'These records let you trace invented inputs, calculations and public sources. They are not tasks you must complete to continue.'}</p>
+      </div>
+    </header>
 
     <nav className="evidence-tabs" role="tablist" aria-label={t.title}>{(Object.keys(t.tabs) as TabId[]).map((item, index) => <button key={item} id={`evidence-tab-${item}`} type="button" role="tab" aria-selected={tab === item} aria-controls={`evidence-panel-${item}`} tabIndex={tab === item ? 0 : -1} className={tab === item ? 'is-active' : ''} onClick={() => setTab(item)}><span>0{index + 1}</span>{t.tabs[item]}</button>)}</nav>
 
