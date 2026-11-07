@@ -30,7 +30,7 @@ const en = {
 const es = {
   ...en,
   title: 'Evidencias y control de afirmaciones',
-  intro: 'Traza hechos públicos, hipótesis y resultados del modelo antes de permitir que una afirmación supere el control.',
+  intro: 'DEMO-60: consulta resultados simulados y separa datos inventados del contexto público real. Que haya cero beneficios validados es intencionado: una simulación no demuestra resultados de Airbus.',
   tabs: { register: 'Registro de evidencias', claims: 'Control de afirmaciones', sources: 'Biblioteca de fuentes', requests: 'Solicitudes de validación' },
   selectRecord: 'Selecciona un registro para consultar su trazabilidad completa.',
   selectClaim: 'Selecciona una afirmación para consultar la justificación y los requisitos de validación.',
