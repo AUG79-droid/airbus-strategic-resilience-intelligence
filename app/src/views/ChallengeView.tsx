@@ -24,6 +24,7 @@ interface ViewProps {
   technicalTab: ChallengeTab;
   onPanel: (panel: Exclude<ChallengePanel, null>) => void;
   onTabChange: (tab: ChallengeTab) => void;
+  onBack: () => void;
 }
 const strategyOrder: StrategyId[] = ['new', 'repairFirst', 'parallel'];
 const causalStageIds: CausalStageId[] = ['initiative', 'environmentalMechanism', 'strategicVulnerability', 'resilienceOutcome', 'customerValue', 'evidenceLimitations'];
@@ -206,7 +207,7 @@ function costLabel(code: string, locale: Locale): string {
   return label ? label[locale === 'es' ? 0 : 1] : code;
 }
 
-export function ChallengeView({ content: _content, locale, guided, chosen, onChoose, activePanel, technicalTab, onPanel, onTabChange }: ViewProps) {
+export function ChallengeView({ content: _content, locale, guided, chosen, onChoose, activePanel, technicalTab, onPanel, onTabChange, onBack }: ViewProps) {
   const t = labCopy(locale);
   const et = evidenceCopy(locale);
   const lab = useLab();
@@ -252,6 +253,9 @@ export function ChallengeView({ content: _content, locale, guided, chosen, onCho
         }}>{locale === 'es' ? 'Volver a la comparación' : 'Back to your comparison'} →</button>
       </div>}
       {activePanel === 'technical' && <div className="lab-results">
+        <div className="lab-backbar">
+          <button type="button" data-testid="analysis-back" onClick={onBack}>← {locale === 'es' ? 'Volver a la pantalla anterior' : 'Back to previous screen'}</button>
+        </div>
         <nav className="lab-analysis-tabs" aria-label={locale === 'es' ? 'Apartados del análisis técnico' : 'Technical analysis sections'}>
           {([
             ['branches', locale === 'es' ? 'Desglose de tu elección' : 'Selected route breakdown'],
