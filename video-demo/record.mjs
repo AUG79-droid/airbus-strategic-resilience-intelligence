@@ -25,11 +25,11 @@ await fs.mkdir(out, {recursive: true});
 const errors = [];
 const browser = await chromium.launch({headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage']});
 const context = await browser.newContext({
-  viewport: {width: 1280, height: 720},
-  screen: {width: 1280, height: 720},
+  viewport: {width: 1920, height: 1080},
+  screen: {width: 1920, height: 1080},
   deviceScaleFactor: 1,
   reducedMotion: 'reduce',
-  recordVideo: {dir: out, size: {width: 1280, height: 720}},
+  recordVideo: {dir: out, size: {width: 1920, height: 1080}},
 });
 
 // Overlay a visible pointer in the RECORDING BROWSER ONLY.
