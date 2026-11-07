@@ -206,7 +206,7 @@ export function App() {
             </nav>
 
             <div className="workspace-view" key={`${locale}-${view}`}>
-              {view !== 'investigate' && view !== 'challenge' && (
+              {view === 'translate' && (
                 <div className="step-direction" role="note">
                   <strong>{locale === 'es' ? 'PASO' : 'STEP'} {workflow.indexOf(view) + 1} / 4 · {content.views[view].label}</strong>
                   <p>{locale === 'es'
@@ -224,7 +224,7 @@ export function App() {
                 onTabChange={(tab) => openChallengeScreen({ ...challengeScreen, panel: 'technical', tab })}
                 onBack={goBack}
               />}
-              {view === 'validate' && <ValidateView content={content} locale={locale} />}
+              {view === 'validate' && <ValidateView content={content} locale={locale} chosen={challengeChoice} />}
               {view === 'translate' && <TranslateView content={content} locale={locale} />}
               {view !== 'investigate' && (
                 <nav className="journey-actions" aria-label={locale === 'es' ? 'Navegación del caso' : 'Case navigation'}>
