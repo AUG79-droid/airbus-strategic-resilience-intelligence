@@ -2613,3 +2613,9 @@ button {
   .threshold-explained__grid { padding: 0 13px 16px; }
   .threshold-intro { padding: 15px; }
 }
+
+
+/* Internal history navigation: Back from an analysis returns to the previous tab, not the introduction. */
+.lab-backbar { display: flex; justify-content: flex-start; align-items: center; padding: 9px 12px; border: 1px solid var(--line); background: var(--paper); }
+.lab-backbar button { padding: 9px 13px; border: 1px solid var(--line-strong); background: var(--paper); color: var(--pine); font-size: 12px; font-weight: 750; }
+.lab-backbar button:hover, .lab-backbar button:focus-visible { background: var(--sand); }
