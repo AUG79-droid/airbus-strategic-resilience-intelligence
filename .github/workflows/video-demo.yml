@@ -69,7 +69,7 @@ jobs:
         with:
           name: ASRI-English-Video-Preview
           path: |
-            video-demo/output/ASRI_English_Demo_60s.mp4
+            video-demo/output/ASRI_English_Demo_Synced_v2.mp4
             video-demo/output/subtitles.srt
             video-demo/output/voice-credits.txt
             video-demo/output/timeline.json
