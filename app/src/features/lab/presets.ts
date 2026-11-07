@@ -47,7 +47,7 @@ function baseScenario(): ScenarioInputs {
       onRepairWins: 'cancelNew',
       onNewWins: 'cancelRepair',
       tiePolicy: 'completeBothUseRepair',
-      cancelledNewPhysicalOutcome: 'unknown',
+      cancelledNewPhysicalOutcome: 'cancelledBeforeManufacture', // DEMO-60 fictional physical assumption; not a validated supplier fact.
       cancelledRepairPhysicalOutcome: 'disposed',
       residualValueRecognition: { enabled: false },
     },
