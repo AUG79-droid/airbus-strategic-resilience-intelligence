@@ -2,7 +2,7 @@ import type { Locale } from '../../app/types';
 
 const en = {
   title: 'Evidence & claim control',
-  intro: 'Trace public facts, assumptions and model outputs before any statement can pass the claim gate.',
+  intro: 'DEMO-60: inspect simulated outputs and distinguish invented inputs from real public context. Zero validated benefits is intentional: no fictional result can be presented as a real Airbus claim.',
   tabs: { register: 'Evidence Register', claims: 'Claim Gates', sources: 'Source Library', requests: 'Validation Requests' },
   selectRecord: 'Select a record to inspect its complete trace.',
   selectClaim: 'Select a claim to inspect the gate rationale and validation requirements.',
