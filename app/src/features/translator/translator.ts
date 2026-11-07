@@ -88,16 +88,16 @@ function analyticalSentence(
   const cost = formatMoney(selected.expectedCashOutlay, locale);
   const deltaTime = formatNumber(Math.abs(selected.expectedRecoveryDays - baseline.expectedRecoveryDays), locale);
   if (locale === 'es') {
-    if (conclusion === 'reference') return `${name} establece la referencia del modelo: ${time} días de tiempo medio para recuperar un módulo operativo, ${target}% de cumplimiento y ${cost} de desembolso esperado.`;
-    if (conclusion === 'favourable') return `${name} produce ${time} días de tiempo medio para recuperar un módulo operativo, ${target}% de cumplimiento y ${cost}; el modelo estima una mejora temporal de ${deltaTime} días frente a sustitución.`;
-    if (conclusion === 'unfavourable') return `${name} produce ${time} días de tiempo medio para recuperar un módulo operativo, ${target}% de cumplimiento y ${cost}; el modelo estima un deterioro temporal de ${deltaTime} días frente a sustitución.`;
+    if (conclusion === 'reference') return `${name} establece la referencia del modelo: un tiempo medio de ${time} días para recuperar un módulo operativo, ${target}% de cumplimiento y ${cost} de desembolso esperado.`;
+    if (conclusion === 'favourable') return `${name} produce un tiempo medio de ${time} días para recuperar un módulo operativo, ${target}% de cumplimiento y ${cost}; el modelo estima una mejora temporal de ${deltaTime} días frente a sustitución.`;
+    if (conclusion === 'unfavourable') return `${name} produce un tiempo medio de ${time} días para recuperar un módulo operativo, ${target}% de cumplimiento y ${cost}; el modelo estima un deterioro temporal de ${deltaTime} días frente a sustitución.`;
     if (conclusion === 'contradictory') return `${name} presenta un tiempo medio de recuperación de ${time} días, ${target}% de cumplimiento y ${cost}, pero las señales de resiliencia y coste apuntan en direcciones distintas.`;
     if (conclusion === 'noDemonstratedBenefit') return `${name} no supera la referencia dentro de las tolerancias declaradas; esto significa ausencia de beneficio demostrado, no falta de capacidad analítica.`;
     return `${name} genera señales de resiliencia incompatibles o insuficientes para establecer una dirección única; la conclusión permanece no concluyente.`;
   }
-  if (conclusion === 'reference') return `${name} establishes the model reference: ${time} days average time to recover an operational module, ${target}% target attainment and ${cost} expected cash outlay.`;
-  if (conclusion === 'favourable') return `${name} produces ${time} days average time to recover an operational module, ${target}% target attainment and ${cost}; the model estimates a ${deltaTime}-day time improvement versus replacement.`;
-  if (conclusion === 'unfavourable') return `${name} produces ${time} days average time to recover an operational module, ${target}% target attainment and ${cost}; the model estimates a ${deltaTime}-day time deterioration versus replacement.`;
+  if (conclusion === 'reference') return `${name} establishes the model reference: an average of ${time} days to recover an operational module, ${target}% target attainment and ${cost} expected cash outlay.`;
+  if (conclusion === 'favourable') return `${name} produces an average of ${time} days to recover an operational module, ${target}% target attainment and ${cost}; the model estimates a ${deltaTime}-day time improvement versus replacement.`;
+  if (conclusion === 'unfavourable') return `${name} produces an average of ${time} days to recover an operational module, ${target}% target attainment and ${cost}; the model estimates a ${deltaTime}-day time deterioration versus replacement.`;
   if (conclusion === 'contradictory') return `${name} produces an average module recovery time of ${time} days, ${target}% target attainment and ${cost}, but resilience and cost signals point in different directions.`;
   if (conclusion === 'noDemonstratedBenefit') return `${name} does not outperform the reference within the declared tolerances; this means no demonstrated benefit, not an inability to analyse the case.`;
   return `${name} produces incompatible or insufficient resilience signals to establish one direction; the conclusion remains inconclusive.`;
