@@ -5,7 +5,6 @@ No paid APIs, no repository changes outside video-demo/.
 from __future__ import annotations
 
 import json
-import re
 import subprocess
 import urllib.request
 import wave
@@ -22,29 +21,51 @@ VOICE.mkdir(parents=True, exist_ok=True)
 MODEL_NAME = "en_GB-alba-medium"
 VOICE_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/alba/medium/"
 LEAD_SECONDS = 1.0
-PAUSE_SECONDS = 0.70
+PAUSE_SECONDS = 0.65
+CUE_GAP_SECONDS = 0.16
 TAIL_SECONDS = 1.0
 
 SCENES = [
     {
         "id": "introduction",
-        "text": "Welcome to Strategic Resilience Intelligence. In this fictional aerospace example, a test-bench control module has failed. We will explore how recovery decisions affect operational resilience.",
+        "cues": [
+            {"id": "welcome", "text": "Welcome to Strategic Resilience Intelligence."},
+            {"id": "case", "text": "In this fictional aerospace example, a test-bench control module has failed."},
+            {"id": "purpose", "text": "We will explore how recovery decisions affect operational resilience."},
+        ],
     },
     {
         "id": "choose_repair",
-        "text": "Choose Repair First. Under the original assumptions, the average time to recover an operational module is fifty days. This is a probability-weighted average, not the duration of the physical repair.",
+        "cues": [
+            {"id": "enter_challenge", "text": "First, let's open the decision screen."},
+            {"id": "select_repair", "text": "Choose Repair First."},
+            {"id": "baseline", "text": "Under the original assumptions, the average recovery time is fifty days."},
+            {"id": "baseline_explain", "text": "This is a probability-weighted average, not the duration of the physical repair."},
+        ],
     },
     {
         "id": "inspect",
-        "text": "Open the analysis to examine possible outcomes. Each route has its own timing, costs, and risks. The figures are calculated from the assumptions, which we can change.",
+        "cues": [
+            {"id": "open_analysis", "text": "Open the technical analysis to examine the possible outcomes."},
+            {"id": "compare", "text": "Each route has its own timing, costs, and risks."},
+            {"id": "assumptions", "text": "The results depend on the assumptions, which we can change."},
+        ],
     },
     {
         "id": "modify",
-        "text": "Now open Change Conditions. Increase repair feasibility from seventy-five to ninety percent. Expected recovery time falls to thirty-six point eight days, because a successful repair becomes more likely.",
+        "cues": [
+            {"id": "open_conditions", "text": "Now open Change Conditions."},
+            {"id": "change_feasibility", "text": "Increase repair feasibility from seventy-five to ninety percent."},
+            {"id": "new_result", "text": "Expected recovery time falls to thirty-six point eight days, because a successful repair becomes more likely."},
+        ],
     },
     {
         "id": "explain",
-        "text": "The model explains why the values change, using probabilities and possible outcomes. All figures here are fictional. The same analytical approach can later be tested with verified case data.",
+        "cues": [
+            {"id": "open_breakdown", "text": "Open the calculation breakdown to see how this estimate is obtained."},
+            {"id": "fictional", "text": "All figures here are fictional, not actual Airbus performance data."},
+            {"id": "conclusion", "text": "The same approach can later be tested with verified case data."},
+        ],
     },
 ]
 
@@ -75,28 +96,29 @@ def main() -> None:
     download(VOICE_BASE + model.name + "?download=true", model)
     download(VOICE_BASE + config.name + "?download=true", config)
 
-    clips: list[tuple[dict, bytes, float]] = []
+    clips: list[tuple[dict, dict, bytes, float]] = []
     sample_rate = channels = sample_width = None
     for i, scene in enumerate(SCENES, start=1):
-        wav_file = OUT / f"voice-{i:02d}.wav"
-        print(f"Synthesizing scene {i}: {scene['id']}", flush=True)
-        subprocess.run(
-            ["piper", "--model", str(model), "--config", str(config),
-             "--output_file", str(wav_file)],
-            input=scene["text"].encode("utf-8"), check=True,
-        )
-        with wave.open(str(wav_file), "rb") as audio:
-            rate, ch, width = audio.getframerate(), audio.getnchannels(), audio.getsampwidth()
-            if sample_rate is None:
-                sample_rate, channels, sample_width = rate, ch, width
-            if (rate, ch, width) != (sample_rate, channels, sample_width):
-                raise RuntimeError("Piper output formats vary between scenes.")
-            frames = audio.readframes(audio.getnframes())
-            duration = audio.getnframes() / rate
-            clips.append((scene, frames, duration))
+        for j, cue in enumerate(scene["cues"], start=1):
+            wav_file = OUT / f"voice-{i:02d}-{j:02d}.wav"
+            print(f"Synthesizing {scene['id']} / {cue['id']}", flush=True)
+            subprocess.run(
+                ["piper", "--model", str(model), "--config", str(config),
+                 "--output_file", str(wav_file)],
+                input=cue["text"].encode("utf-8"), check=True,
+            )
+            with wave.open(str(wav_file), "rb") as audio:
+                rate, ch, width = audio.getframerate(), audio.getnchannels(), audio.getsampwidth()
+                if sample_rate is None:
+                    sample_rate, channels, sample_width = rate, ch, width
+                if (rate, ch, width) != (sample_rate, channels, sample_width):
+                    raise RuntimeError("Piper output formats vary between cues.")
+                frames = audio.readframes(audio.getnframes())
+                duration = audio.getnframes() / rate
+                clips.append((scene, cue, frames, duration))
 
     assert sample_rate and channels and sample_width
-    silence_frame = b"\x00" * channels * sample_width
+    silence_frame = b"\\x00" * channels * sample_width
     def silence(seconds: float) -> bytes:
         return silence_frame * round(seconds * sample_rate)
 
@@ -106,39 +128,49 @@ def main() -> None:
         "voice_attribution": "Piper en_GB-alba-medium; dataset CC BY 4.0",
         "lead_seconds": LEAD_SECONDS,
         "pause_seconds": PAUSE_SECONDS,
+        "cue_gap_seconds": CUE_GAP_SECONDS,
         "tail_seconds": TAIL_SECONDS,
         "scenes": [],
     }
-    subtitles = []
+    subtitles: list[str] = []
+    index = 0
     with wave.open(str(OUT / "narration.wav"), "wb") as stitched:
         stitched.setnchannels(channels)
         stitched.setsampwidth(sample_width)
         stitched.setframerate(sample_rate)
         stitched.writeframes(silence(LEAD_SECONDS))
-        for i, (scene, data, duration) in enumerate(clips, start=1):
+        for scene in SCENES:
             scene_start = time
-            scene_end = time + duration
-            stitched.writeframes(data)
-            stitched.writeframes(silence(PAUSE_SECONDS))
-            # Readable sentence-by-sentence captions rather than one long paragraph.
-            sentences = re.split(r"(?<=[.!?])\s+", scene["text"])
-            total_weight = sum(max(1, len(sentence)) for sentence in sentences)
-            caption_start = scene_start
-            for sentence in sentences:
-                caption_end = caption_start + duration * max(1, len(sentence)) / total_weight
+            cues_manifest = []
+            for cue_number, cue in enumerate(scene["cues"]):
+                matched_scene, matched_cue, frames, duration = clips[index]
+                index += 1
+                assert matched_scene is scene and matched_cue is cue
+                cue_start = time
+                cue_end = time + duration
+                stitched.writeframes(frames)
+                # Each displayed subtitle is aligned to its own synthesized WAV.
                 subtitles.append(
-                    f"{len(subtitles) + 1}\n{srt_time(caption_start)} --> "
-                    f"{srt_time(caption_end)}\n{sentence}\n"
+                    f"{len(subtitles) + 1}\\n{srt_time(cue_start)} --> "
+                    f"{srt_time(cue_end)}\\n{cue['text']}\\n"
                 )
-                caption_start = caption_end
+                is_last = cue_number == len(scene["cues"]) - 1
+                gap = PAUSE_SECONDS if is_last else CUE_GAP_SECONDS
+                stitched.writeframes(silence(gap))
+                cues_manifest.append({
+                    "id": cue["id"],
+                    "text": cue["text"],
+                    "start_seconds": round(cue_start, 3),
+                    "voice_seconds": round(duration, 3),
+                    "hold_seconds": round(duration + gap, 3),
+                })
+                time = cue_end + gap
             manifest["scenes"].append({
                 "id": scene["id"],
-                "text": scene["text"],
                 "start_seconds": round(scene_start, 3),
-                "voice_seconds": round(duration, 3),
-                "hold_seconds": round(duration + PAUSE_SECONDS, 3),
+                "hold_seconds": round(time - scene_start, 3),
+                "cues": cues_manifest,
             })
-            time = scene_end + PAUSE_SECONDS
         stitched.writeframes(silence(TAIL_SECONDS))
     manifest["duration_seconds"] = round(time + TAIL_SECONDS, 3)
     (OUT / "timeline.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
