@@ -77,9 +77,9 @@ export function EvidenceProvider({ children }: { children: ReactNode }) {
     setFocus,
     openEvidence: (nextFocus) => {
       setFocus(nextFocus);
-      window.history.replaceState(null, '', '#/validate');
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-      document.getElementById('case-workspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState({ ...(window.history.state ?? {}), asriOpenEvidence: true, asriInsideChallenge: false }, '', '#/validate');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      document.getElementById('case-workspace')?.scrollIntoView({ behavior: 'auto', block: 'start' });
     },
   }), [computed, focus, visibleRecords]);
 
