@@ -32,6 +32,23 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Check Spanish script and recorder syntax before using runner resources
+        run: |
+          python -m py_compile video-demo/tutorial-es/narrate.py video-demo/tutorial-es/assemble.py
+          node --check video-demo/tutorial-es/record.mjs
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          doc = json.loads(Path('video-demo/tutorial-es/chapters.json').read_text(encoding='utf-8'))
+          assert doc['language'] == 'es-ES'
+          assert len(doc['chapters']) == 7
+          cues = [x for chapter in doc['chapters'] for x in chapter['cues']]
+          assert len(cues) == 82
+          assert all(x['text'].strip() for x in cues)
+          assert len(set(x['id'] for x in cues)) == len(cues)
+          print('82 Castilian Spanish narration cues confirmed')
+          PY
+
       - name: Install independent browser controller
         run: npm install --prefix video-demo --no-fund --no-audit --ignore-scripts
 
