@@ -1,0 +1,2 @@
+Probar una sola voz de locutor sereno, grave y claro en castellano de España con Qwen3-TTS VoiceDesign.
+2026-11-08; no modificar aplicación ni regrabar vídeo completo.
