@@ -1,0 +1,1 @@
+Validate 2026-11-08 font-size and contrast refinements on published Translate page in English and Spanish, desktop and mobile.
