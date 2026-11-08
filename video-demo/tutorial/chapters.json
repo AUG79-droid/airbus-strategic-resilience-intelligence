@@ -1,5 +1,5 @@
 {
-  "version": "tutorial-v1",
+  "version": "tutorial-revised-word-v2",
   "language": "en-GB",
   "case": "DEMO-60",
   "fictional": true,
@@ -10,15 +10,11 @@
       "cues": [
         {
           "id": "hero",
-          "text": "Welcome to Strategic Resilience Intelligence. This tutorial will walk through the tool at a comfortable pace."
+          "text": "Welcome to Strategic Resilience Intelligence."
         },
         {
           "id": "purpose",
-          "text": "Its purpose is to explore how maintenance choices, sustainability questions, and operational resilience can be assessed together."
-        },
-        {
-          "id": "scope",
-          "text": "This is a decision-support prototype. It does not measure fleet readiness or make approved Airbus operational decisions."
+          "text": "The purpose of this tutorial is to explore how maintenance choices, sustainability questions and operational resilience can be assessed together."
         },
         {
           "id": "navigation",
@@ -34,7 +30,7 @@
         },
         {
           "id": "facts_detail",
-          "text": "The repair option has a seventy-five percent feasibility assumption. These are invented numbers, not observed Airbus data."
+          "text": "The repair option has a seventy-five percent feasibility assumption."
         },
         {
           "id": "alternatives",
@@ -104,7 +100,7 @@
         },
         {
           "id": "decision_caution",
-          "text": "Notice the warning: modelled outcomes depend on the inputs. They cannot be presented as demonstrated Airbus benefits."
+          "text": "Notice the warning: modelled outcomes depend on the inputs."
         }
       ]
     },
@@ -158,7 +154,11 @@
         },
         {
           "id": "back_compare",
-          "text": "Return to the comparison. Our selected Repair First strategy remains visible, now under the changed assumption."
+          "text": "Return to the comparison. Our selected Repair First strategy remains visible."
+        },
+        {
+          "id": "reset_assumption",
+          "text": "Now undo the changed assumption."
         }
       ]
     },
@@ -192,7 +192,7 @@
         },
         {
           "id": "sensitivity_test",
-          "text": "Selectors above the graph let us choose the input and the metric. These are hypothetical curves, not measured trends."
+          "text": "Selectors above the graph let us choose the input and the metric."
         },
         {
           "id": "thresholds",
@@ -358,11 +358,7 @@
         },
         {
           "id": "export_readiness",
-          "text": "Automatic file checks do not validate the underlying facts. The prototype clearly marks unverified claims."
-        },
-        {
-          "id": "export_confirm",
-          "text": "Before downloading, acknowledge that the conclusions depend on the quality and validation of the inputs."
+          "text": "Automatic file checks do not validate the underlying facts."
         },
         {
           "id": "export_pdf",
@@ -378,5 +374,6 @@
         }
       ]
     }
-  ]
+  ],
+  "source_note": "Narration revised against user-supplied Word; marked strikethrough phrases removed; full previously removed scope excluded; original British-English terms restored where Word transcription was inaccurate."
 }
