@@ -1,0 +1,35 @@
+name: ASRI typography readability verification
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "video-demo/typography-qa-trigger.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-readability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install isolated browser tools
+        run: |
+          npm install --prefix video-demo --no-fund --no-audit --ignore-scripts
+          node video-demo/node_modules/playwright-core/cli.js install --with-deps chromium
+          node --check video-demo/typography-qa.mjs
+      - name: Check published English and Spanish application at desktop and mobile widths
+        run: node video-demo/typography-qa.mjs
+      - name: Publish four locale-and-width visual records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-Typography-EN-ES-Visual-QA
+          path: video-demo/typography-qa/
+          if-no-files-found: warn
+          retention-days: 7
