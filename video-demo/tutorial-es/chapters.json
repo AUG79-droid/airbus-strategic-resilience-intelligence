@@ -106,7 +106,7 @@
     },
     {
       "id": "conditions",
-      "title": "02 — Decidir: conditions",
+      "title": "02 — Decidir: modificar condiciones",
       "cues": [
         {
           "id": "open_conditions",
@@ -164,7 +164,7 @@
     },
     {
       "id": "technical",
-      "title": "02 — Decidir: technical analysis",
+      "title": "02 — Decidir: análisis detallado",
       "cues": [
         {
           "id": "open_analysis",
@@ -226,7 +226,7 @@
     },
     {
       "id": "validate",
-      "title": "03 — Check evidence",
+      "title": "03 — Comprobar evidencias",
       "cues": [
         {
           "id": "validate_nav",
@@ -280,7 +280,7 @@
     },
     {
       "id": "translate",
-      "title": "04 — Translate for decisions",
+      "title": "04 — Traducir para distintos públicos",
       "cues": [
         {
           "id": "translate_nav",
