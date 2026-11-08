@@ -1,0 +1,43 @@
+name: ASRI - probar voces naturales en castellano
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "video-demo/tutorial-es/VOICE_TEST_TRIGGER.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  sample:
+    name: Generar tres muestras de voz española
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar sintetizador, procesador fonético y FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak-ng libespeak-ng1 ffmpeg
+          python -m pip install --disable-pip-version-check 'kokoro-onnx==0.6.1' soundfile misaki-fork
+      - name: Comprobar sintaxis del programa
+        run: python -m py_compile video-demo/tutorial-es/voice_preview.py
+      - name: Crear tres muestras con el mismo guion
+        run: python video-demo/tutorial-es/voice_preview.py
+      - name: Subir los MP3 para poder escuchar las voces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-Pruebas-Voces-Naturales-Castellano
+          path: |
+            video-demo/tutorial-es/voice-previews/*.mp3
+            video-demo/tutorial-es/voice-previews/guion-prueba.txt
+            video-demo/tutorial-es/voice-previews/credits.txt
+          if-no-files-found: warn
+          retention-days: 7
