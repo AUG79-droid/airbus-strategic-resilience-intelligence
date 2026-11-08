@@ -3,3 +3,5 @@ Expected: 7 chapters, 83 individually narrated cues; 4 real product stages; two-
 Do not modify any files under app/.
 
 Revised Word-approved narration, 82 cues, fresh TTS timing and restored 75% baseline. Run date: 2026-11-08.
+
+Revised speech run 2: preserve 2-line captions with 78-character wrapping, no narration changes.
