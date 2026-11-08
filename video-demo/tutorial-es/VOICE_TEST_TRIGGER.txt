@@ -1,0 +1,3 @@
+Primera prueba de tres voces naturales para sustituir el narrador robótico de la versión española.
+Usar únicamente servicios de código abierto y GitHub Actions estándar.
+No generar aún otro vídeo de doce minutos.
