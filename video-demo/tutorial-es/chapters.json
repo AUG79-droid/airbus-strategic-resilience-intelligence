@@ -1,0 +1,378 @@
+{
+  "version": "tutorial-ES-ES-v1",
+  "language": "es-ES",
+  "case": "DEMO-60",
+  "fictional": true,
+  "chapters": [
+    {
+      "id": "investigate",
+      "title": "01 — Investigar",
+      "cues": [
+        {
+          "id": "hero",
+          "text": "Bienvenidos a Strategic Resilience Intelligence."
+        },
+        {
+          "id": "purpose",
+          "text": "El objetivo es analizar conjuntamente cómo las decisiones de mantenimiento, la sostenibilidad y la resiliencia operativa pueden influirse entre sí."
+        },
+        {
+          "id": "navigation",
+          "text": "Observa las cuatro etapas: Investigar, Decidir, Comprobar y Traducir. Vamos a recorrerlas una a una."
+        },
+        {
+          "id": "case",
+          "text": "En Investigar, un banco de ensayos aeroespacial pierde un módulo electrónico de control. Nuestro objetivo es recuperar un módulo que funcione."
+        },
+        {
+          "id": "facts",
+          "text": "Disponemos de sesenta días. Comprar una pieza nueva implica un plazo de entrega largo y el riesgo de retrasos adicionales del proveedor."
+        },
+        {
+          "id": "facts_detail",
+          "text": "La reparación tiene una probabilidad de viabilidad del setenta y cinco por ciento."
+        },
+        {
+          "id": "alternatives",
+          "text": "Podemos comprar una pieza nueva, intentar repararla primero o activar las dos vías en paralelo. Cada alternativa afecta de forma distinta a los plazos, los costes y los recursos."
+        },
+        {
+          "id": "begin",
+          "text": "Pulsa Empezar la comparación para entrar en la parte interactiva. El escenario sigue siendo el mismo; ahora vamos a decidir cómo actuar."
+        }
+      ]
+    },
+    {
+      "id": "challenge",
+      "title": "02 — Decidir: estrategias",
+      "cues": [
+        {
+          "id": "scenario",
+          "text": "En la parte superior de Decidir encontramos el selector de escenarios. Aquí cambiamos las condiciones de partida, no la estrategia que vamos a elegir."
+        },
+        {
+          "id": "scenario_help",
+          "text": "Los demás escenarios permiten simular interrupciones, presión económica, baja viabilidad de reparación o riesgos relacionados. Vamos a utilizar el caso inicial."
+        },
+        {
+          "id": "choices",
+          "text": "Debajo aparecen tres alternativas. La pregunta es sencilla: ¿qué debería hacer el equipo en esta situación?"
+        },
+        {
+          "id": "choose_new",
+          "text": "Primero, elige Sustituir. Esta opción consiste en pedir una pieza nueva y asumir los plazos del proveedor."
+        },
+        {
+          "id": "new_outcome",
+          "text": "La herramienta calcula el tiempo medio de recuperación, la probabilidad de cumplir el objetivo de sesenta días y el desembolso previsto."
+        },
+        {
+          "id": "choose_parallel",
+          "text": "Ahora elige Paralela o mixta. Con esta opción iniciamos la compra y la reparación al mismo tiempo, buscando rapidez a cambio de un mayor coste."
+        },
+        {
+          "id": "parallel_outcome",
+          "text": "Así podemos reducir la dependencia de una única vía, pero siguen existiendo gastos duplicados y compromisos si hay que cancelar un pedido."
+        },
+        {
+          "id": "choose_repair",
+          "text": "Por último, selecciona Reparar primero. Será la estrategia que estudiaremos con detalle durante el resto del recorrido."
+        },
+        {
+          "id": "repair_mean",
+          "text": "El tiempo medio inicial para recuperar un módulo operativo es de cincuenta días. No significa que la reparación física dure cincuenta días."
+        },
+        {
+          "id": "repair_deadline",
+          "text": "El siguiente indicador muestra la probabilidad de recuperar un módulo operativo antes de sesenta días. No es una garantía."
+        },
+        {
+          "id": "repair_cost",
+          "text": "El tercer indicador estima el dinero que se desembolsaría. Estos tres resultados permiten comparar ventajas y desventajas, sin dar por ganadora una alternativa en todos los casos."
+        },
+        {
+          "id": "repair_explain",
+          "text": "Abre la explicación situada debajo de los indicadores. Si la reparación funciona, recuperamos el módulo antes. Si falla, tendremos que recurrir a la sustitución."
+        },
+        {
+          "id": "compare_routes",
+          "text": "El texto de comparación explica en qué se diferencia la estrategia elegida de las otras dos: tiempo de recuperación, gastos y riesgo de incumplir el plazo."
+        },
+        {
+          "id": "decision_caution",
+          "text": "Fíjate en la advertencia: los resultados del modelo dependen de los datos y las condiciones introducidas."
+        }
+      ]
+    },
+    {
+      "id": "conditions",
+      "title": "02 — Decidir: conditions",
+      "cues": [
+        {
+          "id": "open_conditions",
+          "text": "Pulsa Modificar condiciones. Aquí podemos interactuar con el modelo y comprobar cómo se modifica el resultado."
+        },
+        {
+          "id": "inputs",
+          "text": "Los controles básicos incluyen la viabilidad de reparación, su duración, el plazo de la pieza nueva, el riesgo del proveedor y el objetivo de recuperación."
+        },
+        {
+          "id": "repair_initial",
+          "text": "La viabilidad de reparación empieza en el setenta y cinco por ciento. Es una probabilidad que utiliza el modelo, no una certificación técnica."
+        },
+        {
+          "id": "change_probability",
+          "text": "Cambia ese valor del setenta y cinco al noventa por ciento y observa cómo se actualizan los resultados."
+        },
+        {
+          "id": "result_updated",
+          "text": "El tiempo medio baja de cincuenta a treinta y seis coma ocho días. Los demás indicadores también se recalculan."
+        },
+        {
+          "id": "interpret_change",
+          "text": "¿Por qué? Porque ahora damos más peso a los casos en los que se consigue reparar el módulo y menos a los que obligan a comprar una pieza nueva."
+        },
+        {
+          "id": "other_inputs",
+          "text": "Un cambio en el plazo del proveedor o en la probabilidad de interrupción podría alterar esta comparación. Lo importante es poner a prueba las hipótesis."
+        },
+        {
+          "id": "advanced_inputs",
+          "text": "Abre las opciones avanzadas. Aquí puedes definir el tiempo de inspección, los retrasos adicionales y la relación entre diferentes riesgos."
+        },
+        {
+          "id": "cost_fields",
+          "text": "En las obligaciones económicas aparecen los gastos de inspección, reparación, compra, logística y posibles recargos por interrupciones."
+        },
+        {
+          "id": "contract_fields",
+          "text": "La sección contractual establece qué sucede si una vía termina antes que la otra: cancelaciones, compromisos adquiridos y tratamiento de inventario."
+        },
+        {
+          "id": "environment_inputs",
+          "text": "Los parámetros ambientales recogen materiales, residuos y estimaciones parciales de emisiones. El análisis también deja claros sus límites e incertidumbres."
+        },
+        {
+          "id": "back_compare",
+          "text": "Volvamos a la comparación. La estrategia Reparar primero sigue seleccionada."
+        },
+        {
+          "id": "reset_assumption",
+          "text": "Ahora recuperamos las condiciones iniciales, deshaciendo el cambio anterior."
+        }
+      ]
+    },
+    {
+      "id": "technical",
+      "title": "02 — Decidir: technical analysis",
+      "cues": [
+        {
+          "id": "open_analysis",
+          "text": "Abrimos Ver análisis. Esta parte permite profundizar en cómo se calculan los resultados que acabamos de ver."
+        },
+        {
+          "id": "branch_table",
+          "text": "La primera pestaña desglosa la estrategia seleccionada. Cada fila corresponde a una situación que podría darse."
+        },
+        {
+          "id": "branch_probability",
+          "text": "Observa las probabilidades de cada situación. El éxito o fracaso de la reparación se combina con la posibilidad de que el proveedor sufra una interrupción."
+        },
+        {
+          "id": "branch_costs",
+          "text": "La herramienta calcula el tiempo y los compromisos económicos de cada situación. Después los pondera según su probabilidad para obtener los valores medios."
+        },
+        {
+          "id": "sensitivity_tab",
+          "text": "En la segunda pestaña estudiamos cuándo puede convenir reparar o sustituir. Analizamos la sensibilidad del resultado ante cambios en las condiciones."
+        },
+        {
+          "id": "sensitivity_graph",
+          "text": "El gráfico muestra cómo varía un resultado cuando cambia un único parámetro y ayuda a identificar cuáles influyen más en la decisión."
+        },
+        {
+          "id": "sensitivity_test",
+          "text": "Los dos selectores del gráfico nos permiten escoger la variable que modificamos y el indicador que queremos analizar."
+        },
+        {
+          "id": "thresholds",
+          "text": "Debajo encontramos los umbrales de decisión: los puntos a partir de los cuales dos alternativas pueden ofrecer plazos o costes parecidos."
+        },
+        {
+          "id": "environment_tab",
+          "text": "Pasamos a Impacto ambiental. Evitar la compra de una pieza nueva podría reducir la necesidad de materiales."
+        },
+        {
+          "id": "environment_mechanism",
+          "text": "El análisis compara la demanda de materiales, los residuos generados y determinadas emisiones de gases de efecto invernadero frente a comprar una pieza nueva."
+        },
+        {
+          "id": "environment_limits",
+          "text": "Estos cálculos no constituyen por sí solos un beneficio ambiental demostrado. Para confirmarlo tendríamos que verificar los datos y los límites de la comparación."
+        },
+        {
+          "id": "method_tab",
+          "text": "En Método y fórmulas encontramos el modelo de probabilidades, el significado de las variables y las hipótesis utilizadas en los cálculos."
+        },
+        {
+          "id": "method_explain",
+          "text": "Esta transparencia es esencial: una explicación convincente sobre resiliencia debe apoyarse en un mecanismo que podamos comprender y reproducir."
+        },
+        {
+          "id": "technical_end",
+          "text": "Ya tenemos la comparación operativa y sabemos cuáles son sus limitaciones. El siguiente paso consiste en revisar las evidencias."
+        }
+      ]
+    },
+    {
+      "id": "validate",
+      "title": "03 — Check evidence",
+      "cues": [
+        {
+          "id": "validate_nav",
+          "text": "Selecciona Comprobar. Aquí distinguimos lo que predice el modelo de lo que realmente respaldan las evidencias disponibles."
+        },
+        {
+          "id": "validate_intro",
+          "text": "Que un resultado esté bien calculado no significa automáticamente que se haya demostrado un beneficio económico, ambiental u operativo."
+        },
+        {
+          "id": "evidence_documented",
+          "text": "La primera categoría recoge información documentada. Podemos consultar las fuentes que respaldan cada afirmación."
+        },
+        {
+          "id": "evidence_hypothesis",
+          "text": "La segunda recoge hipótesis que todavía deben contrastarse; por ejemplo, si una reparación concreta está técnicamente autorizada."
+        },
+        {
+          "id": "evidence_modelled",
+          "text": "La tercera recoge los resultados calculados por el modelo, como las estimaciones de tiempo de recuperación y desembolso."
+        },
+        {
+          "id": "supported_vs_pending",
+          "text": "La sección de conclusiones diferencia lo que podemos afirmar con la información disponible de lo que aún queda por demostrar."
+        },
+        {
+          "id": "engineering",
+          "text": "Ingeniería tendría que confirmar la viabilidad de la reparación, su duración, los requisitos de calidad y la vida útil adicional aprobada."
+        },
+        {
+          "id": "procurement",
+          "text": "Compras comprobaría los plazos reales, los precios, los riesgos de suministro y las posibles penalizaciones por cancelación."
+        },
+        {
+          "id": "environment_team",
+          "text": "Medioambiente contrastaría los datos de materiales, residuos y emisiones, y definiría una comparación técnicamente coherente."
+        },
+        {
+          "id": "programme",
+          "text": "Los equipos de Programa analizarían si recuperar el módulo se traduce en una mejora operativa concreta y medible."
+        },
+        {
+          "id": "advanced_evidence",
+          "text": "Abre la documentación técnica opcional. Incluye las fuentes, los registros de evidencia y los criterios necesarios para validar las conclusiones."
+        },
+        {
+          "id": "validate_end",
+          "text": "Esta revisión ayuda a comunicar las conclusiones con rigor y evita atribuir al análisis beneficios que aún no están demostrados."
+        }
+      ]
+    },
+    {
+      "id": "translate",
+      "title": "04 — Translate for decisions",
+      "cues": [
+        {
+          "id": "translate_nav",
+          "text": "Llegamos a Traducir, la cuarta etapa. Aquí adaptamos un mismo resultado analítico a distintos públicos sin cambiar los datos."
+        },
+        {
+          "id": "audiences",
+          "text": "Podemos dirigir el mensaje a un cliente de Defensa, un responsable de Programa, Ingeniería o Dirección ejecutiva."
+        },
+        {
+          "id": "audience_engineering",
+          "text": "Selecciona Ingeniería. La explicación se centra ahora en los requisitos técnicos, los mecanismos que intervienen y las comprobaciones pendientes."
+        },
+        {
+          "id": "engineering_message",
+          "text": "Observa que los resultados no cambian al seleccionar otro público. Lo que cambia es la explicación y las preguntas que debemos responder."
+        },
+        {
+          "id": "audience_exec",
+          "text": "Ahora selecciona Dirección ejecutiva. El enfoque pasa a las opciones estratégicas, las vulnerabilidades y el respaldo de las conclusiones."
+        },
+        {
+          "id": "executive_message",
+          "text": "La resiliencia no se presenta como un eslogan: relacionamos una decisión concreta con un riesgo y sus posibles consecuencias."
+        },
+        {
+          "id": "strategy_choice",
+          "text": "También podemos elegir la estrategia que queremos explicar: sustitución, reparación primero o actuación en paralelo."
+        },
+        {
+          "id": "summary",
+          "text": "La conclusión principal y la recomendación proceden del modelo. Su validez depende de las evidencias que las sustentan."
+        },
+        {
+          "id": "comparison",
+          "text": "Más abajo, la comparación de las tres alternativas muestra sus ventajas, sus inconvenientes y las condiciones necesarias para decidir, sin imponer una ganadora."
+        },
+        {
+          "id": "profile_tab",
+          "text": "La pestaña Perfil de estrategia diferencia las ventajas calculadas, los inconvenientes y las incertidumbres de la opción seleccionada."
+        },
+        {
+          "id": "causal_tab",
+          "text": "En Razonamiento causal seguimos la relación entre una iniciativa de sostenibilidad, sus efectos ambientales y los posibles resultados de resiliencia."
+        },
+        {
+          "id": "causal_caution",
+          "text": "Cada eslabón se puede examinar. Así distinguimos las relaciones plausibles de los beneficios que realmente se han demostrado."
+        },
+        {
+          "id": "trace_tab",
+          "text": "Trazabilidad de evidencias relaciona cada afirmación con sus fuentes y resultados calculados para que el razonamiento pueda revisarse."
+        },
+        {
+          "id": "validation_tab",
+          "text": "El Plan de validación indica qué comprobaciones quedan pendientes y quién debería responsabilizarse de ellas."
+        },
+        {
+          "id": "limitations",
+          "text": "En Método y limitaciones encontramos información adicional. Las incertidumbres deben seguir visibles, incluso en un informe para Dirección."
+        }
+      ]
+    },
+    {
+      "id": "export",
+      "title": "04 — Revisar y exportar",
+      "cues": [
+        {
+          "id": "export_open",
+          "text": "Por último, abre Revisar y exportar. Aquí convertimos el análisis en un informe que podemos compartir."
+        },
+        {
+          "id": "export_summary",
+          "text": "El resumen recoge el público destinatario, la estrategia elegida, el escenario, el resultado y el alcance de las conclusiones."
+        },
+        {
+          "id": "export_readiness",
+          "text": "Las comprobaciones automáticas verifican la preparación del archivo, pero no demuestran por sí solas la validez de los datos."
+        },
+        {
+          "id": "export_pdf",
+          "text": "El PDF está pensado para leer y comentar el análisis. Incluye las conclusiones, las fuentes, las limitaciones y la comparación entre alternativas."
+        },
+        {
+          "id": "export_json",
+          "text": "El archivo JSON conserva los datos y los cálculos estructurados para poder reproducir el ejercicio y facilitar una revisión técnica."
+        },
+        {
+          "id": "end",
+          "text": "Así completamos el recorrido: investigar, comparar, modificar condiciones, comprobar las evidencias y comunicar las conclusiones con rigor."
+        }
+      ]
+    }
+  ]
+}
