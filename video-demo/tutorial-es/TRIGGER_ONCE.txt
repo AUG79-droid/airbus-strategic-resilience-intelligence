@@ -1,0 +1,4 @@
+Generar una única versión completa en castellano de España del tutorial aprobado en inglés.
+Interfaz español real, 82 acciones sincronizadas, voz es_ES, subtítulos debajo de la aplicación.
+No modificar app/ ni el tutorial inglés.
+2026-11-08 — prueba inicial.
