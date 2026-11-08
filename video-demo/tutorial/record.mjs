@@ -162,8 +162,8 @@ try {
       await focus(preset);
       await preset.selectOption('balanced');
       await page.waitForFunction(()=>{
-        const input = document.querySelector('[data-testid="risk-repair-feasibility"]');
-        return !!input && Number(input.value) === 75;
+        const preset = document.querySelector('[data-testid="preset-select"]');
+        return !!preset && preset.value === 'balanced';
       },null,{timeout:12000});
       const metric = await page.locator('.decision-desk__metrics strong').first().innerText();
       if(!metric.includes('50'))throw new Error('Baseline not restored: '+metric);
