@@ -157,6 +157,19 @@ try {
     contract_fields: ()=>expandDetail(2),
     environment_inputs: ()=>expandDetail(3),
     back_compare: ()=>click(page.getByTestId('change-conditions')),
+    reset_assumption: async()=>{
+      const preset = page.getByTestId('preset-select');
+      await focus(preset);
+      await preset.selectOption('balanced');
+      await page.waitForFunction(()=>{
+        const input = document.querySelector('[data-testid="risk-repair-feasibility"]');
+        return !!input && Number(input.value) === 75;
+      },null,{timeout:12000});
+      const metric = await page.locator('.decision-desk__metrics strong').first().innerText();
+      if(!metric.includes('50'))throw new Error('Baseline not restored: '+metric);
+      await focus('.decision-desk__metrics');
+      console.log('Restored initial conditions: 75% feasibility; '+metric);
+    },
 
     // 2c. Optional technical analysis.
     open_analysis: async()=>{
@@ -245,6 +258,10 @@ try {
       if(!(await page.getByTestId('export-confirm').isChecked()))throw new Error('Report was not acknowledged');
     },
     export_pdf: async()=>{
+      // The UI requires explicit review consent. Keep the functional
+      // operation even though the revised voiceover does not narrate it.
+      const confirmation=page.getByTestId('export-confirm');
+      if(!(await confirmation.isChecked()))await click(confirmation);
       const button=page.getByTestId('download-pdf');
       await focus(button);
       const [download]=await Promise.all([
