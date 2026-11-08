@@ -1,4 +1,4 @@
-name: ASRI complete guided English tutorial
+name: ASRI revised English tutorial
 
 on:
   workflow_dispatch:
@@ -62,9 +62,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ASRI-Complete-Tutorial-English
+          name: ASRI-Revised-Tutorial-English
           path: |
-            video-demo/tutorial/output/ASRI_Complete_Guided_Tutorial_EN.mp4
+            video-demo/tutorial/output/ASRI_Guided_Tutorial_Revised_EN.mp4
             video-demo/tutorial/output/tutorial-report.json
             video-demo/tutorial/output/recording-timing.json
             video-demo/tutorial/output/timeline.json
@@ -75,4 +75,4 @@ jobs:
             video-demo/tutorial/output/example-decision-report.pdf
             video-demo/tutorial/output/example-decision-data.json
           if-no-files-found: warn
-          retention-days: 5
+          retention-days: 7
