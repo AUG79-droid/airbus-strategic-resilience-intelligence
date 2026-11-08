@@ -131,8 +131,8 @@ def main() -> None:
                     formatted = wrap_caption(part)
                     caption_number += 1
                     subtitles.append(
-                        f"{caption_number}\\n{srttime(caption_start)} --> {srttime(caption_end)}\\n"
-                        f"{formatted.replace(chr(92) + 'N', chr(10))}\\n"
+                        f"{caption_number}\n{srttime(caption_start)} --> {srttime(caption_end)}\n"
+                        f"{formatted.replace(chr(92) + 'N', chr(10))}\n"
                     )
                     ass_events.append(
                         f"Dialogue: 0,{asstime(caption_start)},{asstime(caption_end)},Captions,,0,0,0,,{formatted}"
@@ -190,10 +190,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     (OUT / "captions.ass").write_text(ass_header + "\n".join(ass_events) + "\n", encoding="utf-8")
     (OUT / "voice-credits.txt").write_text(
-        "Piper TTS — voz en castellano de España: es_ES-davefx-medium.\\n"
-        "Conjunto de entrenamiento OHF-Voice voice-datasets: CC0.\\n"
-        "https://huggingface.co/rhasspy/piper-voices/tree/main/es/es_ES/davefx/medium\\n"
-        "El caso DEMO-60 es una simulación; no contiene resultados operativos reales de Airbus.\\n",
+        "Piper TTS — voz en castellano de España: es_ES-davefx-medium.\n"
+        "Conjunto de entrenamiento OHF-Voice voice-datasets: CC0.\n"
+        "https://huggingface.co/rhasspy/piper-voices/tree/main/es/es_ES/davefx/medium\n"
+        "El caso DEMO-60 es una simulación; no contiene resultados operativos reales de Airbus.\n",
         encoding="utf-8",
     )
     print(f"TUTORIAL SCRIPT: {len(data['chapters'])} chapters; {len(all_cues)} spoken cues.", flush=True)
