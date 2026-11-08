@@ -1,0 +1,124 @@
+name: ASRI - tutorial completo con locutor sereno
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "video-demo/tutorial-es/LOCUTOR_FULL_VIDEO_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: asri-locutor-sereno-completo
+  cancel-in-progress: false
+
+jobs:
+  synthesize:
+    name: Narrar 82 frases - lote ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 48
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Recuperar misma voz sintetica aprobada
+        uses: actions/download-artifact@v4
+        with:
+          name: ASRI-Locutor-Sereno-Castellano
+          run-id: 42505805912
+          github-token: ${{ github.token }}
+          path: video-demo/tutorial-es/reference
+
+      - name: Instalar herramientas gratuitas de voz
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install --disable-pip-version-check "gradio_client>=1.10,<3"
+          python -m py_compile video-demo/tutorial-es/synth_voice_clone.py
+
+      - name: Generar en castellano conservando timbre aprobado
+        run: python video-demo/tutorial-es/synth_voice_clone.py --shard ${{ matrix.shard }} --shards 4
+
+      - name: Guardar segmentos terminados por separado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-Locutor-Segmentos-${{ matrix.shard }}
+          path: video-demo/tutorial-es/output/segment-*.wav
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 1
+
+  video:
+    name: Grabar aplicacion ES y montar video con nueva voz
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: synthesize
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Recuperar todos los fragmentos narrados
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ASRI-Locutor-Segmentos-*
+          merge-multiple: true
+          path: video-demo/tutorial-es/output
+
+      - name: Preparar navegador y editor libre
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          npm install --prefix video-demo --no-fund --no-audit --ignore-scripts
+          node video-demo/node_modules/playwright-core/cli.js install --with-deps chromium
+
+      - name: Validar ensamblador y codigo de grabacion
+        run: |
+          python -m py_compile video-demo/tutorial-es/stitch_narration.py video-demo/tutorial-es/assemble_newsreader.py
+          node --check video-demo/tutorial-es/record.mjs
+
+      - name: Unir las 82 frases con subtitulos sincronizados
+        run: python video-demo/tutorial-es/stitch_narration.py
+
+      - name: Grabar clics de la aplicacion en su interfaz espanola
+        run: node video-demo/tutorial-es/record.mjs
+
+      - name: Montar video Full HD con el locutor sereno
+        run: python video-demo/tutorial-es/assemble_newsreader.py
+
+      - name: Publicar video, subtitulos y registro de calidad
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-Tutorial-Castellano-Locutor-Sereno
+          path: |
+            video-demo/tutorial-es/output/ASRI_Tutorial_Castellano_Locutor_Sereno.mp4
+            video-demo/tutorial-es/output/subtitles.srt
+            video-demo/tutorial-es/output/timeline.json
+            video-demo/tutorial-es/output/voice-credits.txt
+            video-demo/tutorial-es/output/tutorial-report.json
+            video-demo/tutorial-es/output/recording-timing.json
+            video-demo/tutorial-es/output/tutorial-start.png
+            video-demo/tutorial-es/output/result-90-percent.png
+            video-demo/tutorial-es/output/example-decision-report.pdf
+            video-demo/tutorial-es/output/example-decision-data.json
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 2
