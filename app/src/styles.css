@@ -2821,7 +2821,7 @@ button {
 .export-review__summary--simple { display: block; }
 .export-review__summary--simple dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .export-review__summary--simple dl div { padding: 13px 19px; }
-.export-review__summary--simple dt { font-size: 10px; }
+.export-review__summary--simple dt { font-size: 13px; line-height: 1.45; }
 .export-review__summary--simple dd { font-size: 18px; }
 .export-review__scope { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); }
 .export-review__scope > div { padding: 18px 20px; min-width: 0; }
