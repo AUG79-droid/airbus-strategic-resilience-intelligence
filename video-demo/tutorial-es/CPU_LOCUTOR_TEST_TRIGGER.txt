@@ -1,0 +1,1 @@
+Comprobar Qwen Voice Cloning 1.7B por CPU con muestra sintética aprobada y sin cuota externa.
