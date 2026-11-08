@@ -1,0 +1,43 @@
+name: ASRI - comprobar misma voz serena
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "video-demo/tutorial-es/VOICE_CLONE_TEST_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  voice-clone-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Recuperar LA MISMA muestra sintética que aprobó la usuaria
+        uses: actions/download-artifact@v4
+        with:
+          name: ASRI-Locutor-Sereno-Castellano
+          run-id: 42505805912
+          github-token: {{ github.token }}
+          path: video-demo/tutorial-es/reference
+      - name: Preparar herramientas de clonación de voz sintética
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y ffmpeg
+          python -m pip install --disable-pip-version-check "gradio_client>=1.10,<3"
+      - name: Comprobar una frase con la voz aprobada
+        run: python video-demo/tutorial-es/clone_voice_probe.py
+      - name: Publicar audio corto de verificación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-Prueba-Misma-Voz-Serena
+          path: video-demo/tutorial-es/clone-probe/*.mp3
+          retention-days: 5
+          if-no-files-found: warn
