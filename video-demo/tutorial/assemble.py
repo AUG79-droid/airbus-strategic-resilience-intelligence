@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "output"
 WAV = OUT / "narration.wav"
 VIDEO = OUT / "browser.webm"
-FINAL = OUT / "ASRI_Complete_Guided_Tutorial_EN.mp4"
+FINAL = OUT / "ASRI_Guided_Tutorial_Revised_EN.mp4"
 
 
 def probe(file: Path) -> float:
