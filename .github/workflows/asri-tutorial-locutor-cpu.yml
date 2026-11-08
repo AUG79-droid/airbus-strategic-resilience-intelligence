@@ -1,0 +1,132 @@
+name: ASRI - tutorial final locutor sereno CPU
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "video-demo/tutorial-es/CPU_FULL_VIDEO_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: asri-tutorial-castellano-cpu
+  cancel-in-progress: false
+
+jobs:
+  voice:
+    name: Voz serena 1.7B en servidor local - lote ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Recuperar muestra ORIGINAL de locutor sereno
+        uses: actions/download-artifact@v4
+        with:
+          name: ASRI-Locutor-Sereno-Castellano
+          run-id: 42505805912
+          github-token: ${{ github.token }}
+          path: video-demo/tutorial-es/reference
+
+      - name: Compilar sintetizador Qwen CPU gratuito
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq git build-essential libopenblas-dev ffmpeg curl
+          git clone --depth 1 https://github.com/gabriele-mastrapasqua/qwen3-tts.git /tmp/qwen-c
+          make -C /tmp/qwen-c blas
+          /tmp/qwen-c/qwen_tts --self-test
+          python -m py_compile video-demo/tutorial-es/synth_voice_cpu.py
+
+      - name: Descargar 1.7B Base para clonar la misma voz sin quota externa
+        run: |
+          cd /tmp/qwen-c
+          bash download_model.sh --model base-large
+          du -sh qwen3-tts-1.7b-base
+
+      - name: Generar veinte o veintiuna frases en castellano
+        run: python video-demo/tutorial-es/synth_voice_cpu.py --shard ${{ matrix.shard }} --shards 4
+
+      - name: Guardar segmentos ya terminados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-CPU-Voice-Shard-${{ matrix.shard }}
+          path: video-demo/tutorial-es/output/segment-*.wav
+          if-no-files-found: warn
+          compression-level: 1
+          retention-days: 7
+
+  video:
+    needs: voice
+    name: Grabar interfaz ES y montar video castellano
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Reunir los 82 segmentos
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ASRI-CPU-Voice-Shard-*
+          merge-multiple: true
+          path: video-demo/tutorial-es/output
+
+      - name: Preparar grabador de la aplicacion y montador de video
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          npm install --prefix video-demo --no-fund --no-audit --ignore-scripts
+          node video-demo/node_modules/playwright-core/cli.js install --with-deps chromium
+
+      - name: Validar los scripts
+        run: |
+          python -m py_compile video-demo/tutorial-es/stitch_narration.py video-demo/tutorial-es/assemble_newsreader.py
+          node --check video-demo/tutorial-es/record.mjs
+
+      - name: Unir voces y subtitulos con tiempo exacto
+        run: python video-demo/tutorial-es/stitch_narration.py
+
+      - name: Grabar acciones reales de la app en castellano de Espana
+        run: node video-demo/tutorial-es/record.mjs
+
+      - name: Exportar video en Full HD con subtitulos fuera de pantalla
+        run: python video-demo/tutorial-es/assemble_newsreader.py
+
+      - name: Descargar video y evidencias de calidad
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-Tutorial-Castellano-Locutor-Sereno-Definitivo
+          path: |
+            video-demo/tutorial-es/output/ASRI_Tutorial_Castellano_Locutor_Sereno.mp4
+            video-demo/tutorial-es/output/subtitles.srt
+            video-demo/tutorial-es/output/timeline.json
+            video-demo/tutorial-es/output/voice-credits.txt
+            video-demo/tutorial-es/output/tutorial-report.json
+            video-demo/tutorial-es/output/recording-timing.json
+            video-demo/tutorial-es/output/tutorial-start.png
+            video-demo/tutorial-es/output/result-90-percent.png
+            video-demo/tutorial-es/output/example-decision-report.pdf
+            video-demo/tutorial-es/output/example-decision-data.json
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 2
