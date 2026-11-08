@@ -22,7 +22,7 @@ LEAD = 1.20
 CUE_PAUSE = 0.90
 CHAPTER_PAUSE = 2.0
 TAIL = 2.0
-CAPTION_WRAP = 69
+CAPTION_WRAP = 78
 
 
 def download(url: str, target: Path) -> None:
