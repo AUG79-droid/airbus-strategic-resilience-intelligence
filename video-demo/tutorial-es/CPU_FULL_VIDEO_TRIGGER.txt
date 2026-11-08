@@ -1,0 +1,3 @@
+Rehacer video completo con la voz sintética serena aprobada mediante Qwen3 1.7B Base en CPU GitHub.
+82 fragmentos, interfaz española, subtítulos bajo la pantalla, sin cuota GPU de terceros.
+2026-11-08.
