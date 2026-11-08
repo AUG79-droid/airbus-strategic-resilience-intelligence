@@ -24,7 +24,7 @@ jobs:
         with:
           name: ASRI-Locutor-Sereno-Castellano
           run-id: 42505805912
-          github-token: {{ github.token }}
+          github-token: ${{ github.token }}
           path: video-demo/tutorial-es/reference
       - name: Preparar herramientas de clonación de voz sintética
         run: |
