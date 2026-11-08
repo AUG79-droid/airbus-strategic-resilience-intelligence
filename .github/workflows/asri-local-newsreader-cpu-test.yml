@@ -1,0 +1,57 @@
+name: ASRI - comprobar locutor sin cuota GPU externa
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "video-demo/tutorial-es/CPU_LOCUTOR_TEST_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  cpu-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Obtener la muestra sintética exacta aprobada
+        uses: actions/download-artifact@v4
+        with:
+          name: ASRI-Locutor-Sereno-Castellano
+          run-id: 42505805912
+          github-token: ${{ github.token }}
+          path: video-demo/tutorial-es/reference
+      - name: Compilar un motor de voz independiente y gratuito para CPU
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq git build-essential libopenblas-dev ffmpeg curl
+          git clone --depth 1 https://github.com/gabriele-mastrapasqua/qwen3-tts.git /tmp/qwen-c
+          make -C /tmp/qwen-c blas
+          /tmp/qwen-c/qwen_tts --self-test
+      - name: Descargar modelo base de alta fidelidad
+        run: |
+          cd /tmp/qwen-c
+          bash download_model.sh --model base-large
+          du -sh qwen3-tts-1.7b-base
+          free -h
+      - name: Generar voz local usando referencia que gustó
+        run: |
+          mkdir -p video-demo/tutorial-es/cpu-probe
+          ffmpeg -hide_banner -v error -y -i video-demo/tutorial-es/reference/ASRI_Locutor_Sereno_Castellano.mp3 -ar 24000 -ac 1 video-demo/tutorial-es/cpu-probe/reference.wav
+          /tmp/qwen-c/qwen_tts -d /tmp/qwen-c/qwen3-tts-1.7b-base \
+            --ref-audio video-demo/tutorial-es/cpu-probe/reference.wav \
+            -l Spanish --int8 -j4 --seed 42 --temperature 0.45 \
+            --text "En esta sección vamos a comparar tres estrategias de recuperación. Primero, la sustitución. Después, la reparación. Por último, las dos vías en paralelo. Cada alternativa ofrece diferentes plazos y compromisos económicos." \
+            -o video-demo/tutorial-es/cpu-probe/locutor_sereno_sin_cuota.wav
+          ffmpeg -hide_banner -v error -y -i video-demo/tutorial-es/cpu-probe/locutor_sereno_sin_cuota.wav -c:a libmp3lame -q:a 3 video-demo/tutorial-es/cpu-probe/locutor_sereno_sin_cuota.mp3
+          ls -lh video-demo/tutorial-es/cpu-probe/locutor_sereno_sin_cuota.mp3
+      - name: Descargar muestra para revisión
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-Locutor-Sereno-CPU-Sin-Cuota
+          path: video-demo/tutorial-es/cpu-probe/locutor_sereno_sin_cuota.mp3
+          if-no-files-found: warn
+          retention-days: 5
