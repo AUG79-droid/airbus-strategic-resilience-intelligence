@@ -1,0 +1,4 @@
+Crear el tutorial completo usando la MISMA voz sintética de locutor sereno aprobada, recuperada como muestra exacta.
+82 fragmentos, interfaz española, sincronización por fotogramas, subtítulos fuera de pantalla.
+No tocar la app ni otras versiones del video.
+2026-11-08.
