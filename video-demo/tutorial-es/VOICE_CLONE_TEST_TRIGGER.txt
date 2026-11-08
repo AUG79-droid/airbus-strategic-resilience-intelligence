@@ -1,0 +1,1 @@
+Verificar si la muestra aprobada de locutor sereno puede reutilizarse sin cambiar de voz, antes de crear el tutorial completo.
