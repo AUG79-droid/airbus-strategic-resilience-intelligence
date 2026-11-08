@@ -1,5 +1,5 @@
 {
-  "version": "tutorial-ES-ES-v1",
+  "version": "tutorial-ES-ES-natural-voice-v2",
   "language": "es-ES",
   "case": "DEMO-60",
   "fictional": true,
@@ -10,7 +10,7 @@
       "cues": [
         {
           "id": "hero",
-          "text": "Bienvenidos a Strategic Resilience Intelligence."
+          "text": "Bienvenidos a la herramienta de inteligencia para la resiliencia estratégica."
         },
         {
           "id": "purpose",
@@ -362,11 +362,11 @@
         },
         {
           "id": "export_pdf",
-          "text": "El PDF está pensado para leer y comentar el análisis. Incluye las conclusiones, las fuentes, las limitaciones y la comparación entre alternativas."
+          "text": "El informe en formato pe de efe está pensado para leer y comentar el análisis. Incluye las conclusiones, las fuentes, las limitaciones y la comparación entre alternativas."
         },
         {
           "id": "export_json",
-          "text": "El archivo JSON conserva los datos y los cálculos estructurados para poder reproducir el ejercicio y facilitar una revisión técnica."
+          "text": "El archivo de datos estructurados conserva los valores introducidos y los cálculos, para que podamos reproducir el ejercicio y facilitar su revisión técnica."
         },
         {
           "id": "end",
