@@ -1,3 +1,5 @@
 Start the first complete, slow English guided tutorial.
 Expected: 7 chapters, 83 individually narrated cues; 4 real product stages; two-line captions outside application viewport; real PDF and JSON export.
 Do not modify any files under app/.
+
+Revised Word-approved narration, 82 cues, fresh TTS timing and restored 75% baseline. Run date: 2026-11-08.
