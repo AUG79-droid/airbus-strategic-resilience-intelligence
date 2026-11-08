@@ -1,0 +1,43 @@
+name: ASRI - locutor sereno en castellano
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "video-demo/tutorial-es/VOICE_NEWSREADER_TRIGGER.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    name: Probar narrador grave y sereno
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout de guion independiente
+        uses: actions/checkout@v4
+      - name: Preparar Python aislado
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar herramientas libres
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install --disable-pip-version-check 'gradio_client>=1.10,<3'
+      - name: Verificar sintaxis
+        run: python -m py_compile video-demo/tutorial-es/voice_newsreader_preview.py
+      - name: Sintetizar una única muestra con voz de informativo
+        run: python video-demo/tutorial-es/voice_newsreader_preview.py
+      - name: Facilitar escucha sin generar el vídeo completo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-Locutor-Sereno-Castellano
+          path: |
+            video-demo/tutorial-es/newsreader-preview/*.mp3
+            video-demo/tutorial-es/newsreader-preview/Guion_de_la_prueba.txt
+            video-demo/tutorial-es/newsreader-preview/AVISO.txt
+          if-no-files-found: warn
+          retention-days: 7
