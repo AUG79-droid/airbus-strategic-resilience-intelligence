@@ -83,7 +83,10 @@ export function UniversalControls({locale,data,setData}:Props){
     </header>
     {SECTION_ORDER.map((section,index)=>{
       const defs=UNIVERSAL_PARAMETERS.filter(p=>p.section===section);
-      return <details className="cy-universal__section" key={section} defaultOpen={index===0}>
+      return <details className="cy-universal__section" key={section}
+        ref={(element)=>{if(element && index===0 && !element.dataset.initialised){
+          element.open=true;element.dataset.initialised='1';
+        }}}> 
         <summary><span>0{index+1}</span>
           <strong>{SECTION_NAMES[section][locale]}</strong>
           <small>{defs.filter(d=>data.parameters[d.id]?.applicability==='applies').length} / {defs.length} {t('activos','active')}</small>
