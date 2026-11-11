@@ -136,7 +136,7 @@ export const MODEL_TEMPLATES: Record<CaseKind, { title: string; guidance: string
     metrics: [
       metric('resilience','Detection to actionable alert','minutes','lower','resilience'),
       metric('operational','Communication uptime during incident','%','higher','operational',0,100),
-      metric('operational','False alerts per 100 events','count','lower','operational',0,100),
+      metric('falseAlerts','False alerts per 100 events','count','lower','operational',0,100),
       metric('cost','Operating cost per exercise','€','lower','cost')
     ]
   }
