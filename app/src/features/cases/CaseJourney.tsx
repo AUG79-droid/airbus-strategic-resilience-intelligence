@@ -2,7 +2,7 @@ import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { downloadText, downloadBytes } from '../export/download';
 import type { Locale, ViewId } from '../../app/types';
 import {
-  MODEL_TEMPLATES, comparisons, createCase, validateCaseImport,
+  comparisons, createCase, templateInfo, validateCaseImport,
   type StrategicCase, type CaseKind, type EvidenceItem, type Audience,
   type MetricDefinition, type OptionComparison
 } from './model';
@@ -194,7 +194,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
       status:'pending',nature:'estimate',limitations:''
     }]}));
   };
-  const chooseKind=(kind:CaseKind)=>{setData(createCase(kind));setSelectedOption('option-a');setMessage('');};
+  const chooseKind=(kind:CaseKind)=>{setData(createCase(kind,locale));setSelectedOption('option-a');setMessage('');};
   const loadPreset=(kind:PresetKey)=>{setData(fromPreset(kind,locale));setSelectedOption('option-a');setMessage('');};
   const convertToReal=()=>setData(current=>({
     ...current,
@@ -270,7 +270,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
       </section>
       <section className="cy-panel">
         <h3>{t('Ficha del caso','Case definition')}</h3>
-        <p className="cy-help">{MODEL_TEMPLATES[data.kind].guidance}</p>
+        <p className="cy-help">{templateInfo(data.kind,locale).guidance}</p>
         <div className="cy-fields">
           {input('title',t('Nombre del caso','Case title'),'e.g. Fuel supply resilience')}
           {input('programme',t('Producto, programa o actividad','Product, programme or activity'))}
@@ -282,7 +282,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
           {input('timeHorizon',t('Periodo de análisis','Assessment period'))}
           {input('owner',t('Equipo responsable','Owning team'))}
         </div>
-        <p className="cy-help"><strong>{t('Requisito específico:','Specific requirement:')}</strong> {MODEL_TEMPLATES[data.kind].requirement}</p>
+        <p className="cy-help"><strong>{t('Requisito específico:','Specific requirement:')}</strong> {templateInfo(data.kind,locale).requirement}</p>
         <p className="cy-help">{t('Siguiente etapa: tendrás que introducir una referencia y dos alternativas con datos comparables.','Next: enter comparable values for a reference and two alternatives.')}</p>
       </section>
     </div>}
