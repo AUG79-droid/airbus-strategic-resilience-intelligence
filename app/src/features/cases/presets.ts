@@ -121,6 +121,49 @@ export function presetTitle(kind:PresetKey,locale:'es'|'en'):string {
   return locale==='es'?ES_PRESETS[kind].title:PRESETS[kind].title;
 }
 
+
+/**
+ * Synthetic inputs for the shared advanced simulator. All four example families
+ * have the exact same parameter catalogue. Not-applicable controls remain null.
+ * No value is a programme/supplier observation or empirical calibration.
+ */
+const EXAMPLE_CONTROLS:Record<PresetKey,Record<string,[number,number,number]>>={
+  ecodesign:{
+    baseRecovery:[100,65,50],supplyLead:[110,78,64],recoveryTarget:[100,100,100],
+    technicalSuccess:[75,90,95],failureDelay:[35,28,23],
+    shockProbability:[45,28,20],shockDelay:[50,40,20],
+    baseCost:[195000,175000,210000],logisticsCost:[5000,6000,7000],
+    shockSurcharge:[20000,15000,12000],failureCost:[25000,12000,8000],
+    cancellationProbability:[15,20,10],cancellationFee:[15000,9000,10000],
+    materialKg:[18,12,14],wasteKg:[8,3,4],ghgKg:[200,145,170],lifeExtension:[0,500,600]
+  },
+  climate:{
+    baseRecovery:[30,18,12],recoveryTarget:[24,24,24],
+    technicalSuccess:[75,85,93],failureDelay:[15,12,8],
+    shockProbability:[50,38,27],shockDelay:[16,12,8],
+    baseCost:[45000,65000,70000],logisticsCost:[4000,5000,5000],
+    investmentCost:[0,100000,200000],shockSurcharge:[20000,15000,12000],
+    materialKg:[0,550,850],ghgKg:[1200,1500,2100]
+  },
+  saf:{
+    baseRecovery:[15,12,10],supplyLead:[20,18,14],recoveryTarget:[15,15,15],
+    technicalSuccess:[95,80,90],failureDelay:[10,12,8],
+    shockProbability:[30,35,20],shockDelay:[15,15,12],
+    baseCost:[32000,42000,48500],logisticsCost:[2000,3000,4000],
+    investmentCost:[0,6000,10000],shockSurcharge:[5000,9000,7000],
+    reservationFee:[0,1000,1500],cancellationProbability:[10,25,15],
+    cancellationFee:[2000,4000,3000],ghgKg:[10000,6500,7100]
+  },
+  wildfire:{
+    baseRecovery:[40,19,15],recoveryTarget:[30,30,30],
+    technicalSuccess:[85,90,96],failureDelay:[20,15,12],
+    shockProbability:[25,20,12],shockDelay:[20,18,12],
+    baseCost:[35000,85000,120000],logisticsCost:[3000,7000,10000],
+    investmentCost:[0,20000,35000],shockSurcharge:[10000,12000,8000],
+    ghgKg:[5000,7000,9000]
+  }
+};
+
 export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCase {
   const p:Preset=locale==='es'?{...ES_PRESETS[kind],values:PRESETS[kind].values}:PRESETS[kind];
   const result=createCase(kind,locale);
@@ -132,7 +175,11 @@ export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCas
   result.hypothetical=true;
   result.options=result.options.map((o,i)=>({
     ...o,name:p.names[i],explanation:p.explanations[i],
-    measures:Object.fromEntries(result.metrics.map((m,j)=>[m.id,{value:p.values[i][j],evidenceId:''}]))
+    measures:Object.fromEntries(result.metrics.map((m,j)=>[m.id,{value:p.values[i][j],evidenceId:''}])),
+    parameterValues:Object.fromEntries(Object.keys(o.parameterValues).map(id=>[id,{
+      value:result.parameters[id].applicability==='applies'?(EXAMPLE_CONTROLS[kind][id]?.[i]??null):null,
+      evidenceId:''
+    }]))
   }));
   // We intentionally provide NO 'reviewed' documents, gates or false source links.
   return result;
