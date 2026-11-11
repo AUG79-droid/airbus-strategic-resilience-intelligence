@@ -291,7 +291,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
       {data.hypothetical&&<p className="cy-example-notice">{sampleWarning}</p>}
       <section className="cy-panel">
         <h3>{t('Modelo de análisis','Analysis model')}: {kinds[data.kind][es?0:1]}</h3>
-        <p>{MODEL_TEMPLATES[data.kind].guidance}</p>
+        <p>{templateInfo(data.kind,locale).guidance}</p>
         <p className="cy-help">{t('El sistema compara valores introducidos para la misma unidad; no predice disponibilidad real, emisiones ni certificaciones. No se asignan pesos arbitrarios para declarar una opción ganadora.',
           'The tool compares inputs for the same functional unit; it does not predict actual readiness, emissions or certification. No arbitrary weights are used to declare a winner.')}</p>
         <div className="cy-indicator-grid">{data.metrics.map(m=><div className="cy-indicator" key={m.id}>
@@ -365,7 +365,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
           <input type="checkbox" checked={data.gates[key]} onChange={e=>setData(current=>({
             ...current,gates:{...current.gates,[key]:e.target.checked}
           }))}/><span>{label}</span></label>)}</div>
-        <p className="cy-help"><strong>{t('Requisito del modelo: ','Model-specific requirement: ')}</strong>{MODEL_TEMPLATES[data.kind].requirement}</p>
+        <p className="cy-help"><strong>{t('Requisito del modelo: ','Model-specific requirement: ')}</strong>{templateInfo(data.kind,locale).requirement}</p>
       </section>
       <section className="cy-panel">
         <div className="cy-section-heading"><h3>{t('Registro de evidencias del caso','Case evidence register')}</h3>
