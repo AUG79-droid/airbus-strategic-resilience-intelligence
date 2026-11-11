@@ -11,7 +11,6 @@ import { buildStrategicTranslation } from '../features/translator/translator';
 import type { AudienceId, TranslationTraceItem } from '../features/translator/types';
 import type { StrategyId } from '../domain';
 import { ExportReview } from '../features/export/ExportReview';
-import { GtsCaseStudies } from './GtsCaseStudies';
 
 interface ViewProps { content: Copy; locale: Locale; }
 type TranslatorSection = 'profile' | 'causal' | 'trace' | 'validation';
@@ -71,7 +70,7 @@ export function TranslateView({ content: _content, locale }: ViewProps) {
   }
 
   return <section className="translator" aria-labelledby="translate-title">
-    <header className="translator-header"><div><p className="kicker">PHASE 05 / STRATEGIC TRANSLATION</p><h2 id="translate-title">{t.title}</h2><p>{t.intro}</p><button type="button" className="gts-cases__jump" onClick={() => document.getElementById('gts-cases-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>{locale === 'es' ? 'Explorar los cuatro casos GTS' : 'Explore four GTS use cases'} ↓</button></div><div className="translator-header__context"><strong>{t.fictional}</strong><span>{t.scenario}: {scenarioLabel}</span></div></header>
+    <header className="translator-header"><div><p className="kicker">PHASE 05 / STRATEGIC TRANSLATION</p><h2 id="translate-title">{t.title}</h2><p>{t.intro}</p></div><div className="translator-header__context"><strong>{t.fictional}</strong><span>{t.scenario}: {scenarioLabel}</span></div></header>
 
     <nav className="audience-selector" aria-label={t.audience}>{audiences.map((item, index) => <button type="button" key={item} data-testid={`audience-${item}`} className={audience === item ? 'is-active' : ''} aria-pressed={audience === item} onClick={() => setAudience(item)}><span>0{index + 1}</span><div><strong>{t.audiences[item]}</strong><small>{t.audienceNotes[item]}</small></div></button>)}</nav>
 
@@ -98,8 +97,6 @@ export function TranslateView({ content: _content, locale }: ViewProps) {
     </article>
 
     <details className="translator-limitations"><summary>{t.limitations}<span>+</span></summary><div><p>{t.noValidated}</p><ul>{translation.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul></div></details>
-
-    <GtsCaseStudies locale={locale} />
 
     <ExportReview locale={locale} audience={audience} strategy={strategy} scenarioLabel={scenarioLabel} scenario={lab.scenario} result={lab.result} environmental={lab.environmental} translation={translation} assumptions={evidence.assumptions} modelOutputs={evidence.modelOutputs} records={evidence.records} sources={evidence.sources} claims={evidence.claims} />
   </section>;
