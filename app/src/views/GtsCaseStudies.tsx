@@ -17,6 +17,7 @@ interface CaseContent {
   exposure: string;
   hypothesis: string;
   narratives: Record<AudienceId, string>;
+  evidenceByAudience: Record<AudienceId, string>;
   indicators: string[];
   validation: string[];
   boundary: string;
@@ -70,7 +71,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
           "url": "https://www.protect.airbus.com/sustainability/eco-design-life-cycle-assessment/",
           "fact": "Métodos de ecodiseño, LCA y evaluación de materias críticas."
         }
-      ]
+      ],
+      "evidenceByAudience": {
+        "defenceCustomer": "Registros de disponibilidad de referencia, plazos de recuperación, aceptación del operador y evidencias de cualificación del subsistema.",
+        "programmeManager": "Mapa de suministradores, riesgos y costes de soporte, impacto de cualquier cambio autorizado en coste y calendario.",
+        "engineering": "BOM, requisitos y resultados de cualificación, análisis de reparabilidad y ACV comparativo de la misma función.",
+        "executiveLeadership": "Evaluación consolidada de exposición industrial y costes de ciclo de vida con reducción de riesgo cuantificada y revisada."
+      }
     },
     "en": {
       "title": "Eurodrone · Eco-design",
@@ -118,7 +125,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
           "url": "https://www.protect.airbus.com/sustainability/eco-design-life-cycle-assessment/",
           "fact": "Eco-design, life-cycle assessment and critical-material assessment methods."
         }
-      ]
+      ],
+      "evidenceByAudience": {
+        "defenceCustomer": "Baseline availability, recovery time, operator acceptance and verified subsystem qualification.",
+        "programmeManager": "Supplier map, support risks and costs, and authorised-change impact on schedule and budget.",
+        "engineering": "BOM, qualification requirements and results, repairability study and functional-equivalent comparative LCA.",
+        "executiveLeadership": "Reviewed industrial dependency exposure and quantified life-cycle risk reduction and cost trade-offs."
+      }
     }
   },
   "climate": {
@@ -158,7 +171,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
           "url": "https://www.easa.europa.eu/en/domains/environment/climate-adaptation-and-resilience",
           "fact": "Riesgos meteorológicos y enfoque de seguridad, centrado sobre todo en aviación civil."
         }
-      ]
+      ],
+      "evidenceByAudience": {
+        "defenceCustomer": "Ensayos representativos de misión bajo condiciones adversas, disponibilidad y tiempos de recuperación verificados.",
+        "programmeManager": "Matriz de requisitos, registro de riesgos, hitos de mitigación y efectos demostrados sobre coste y plazos.",
+        "engineering": "Envolvente ambiental, modos de fallo, resultados de ensayos, límites de operación y validación de mitigaciones.",
+        "executiveLeadership": "Estimación de exposición sobre contratos de servicio y escenarios de continuidad sustentada en datos verificables."
+      }
     },
     "en": {
       "title": "Product climate adaptation",
@@ -196,7 +215,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
           "url": "https://www.easa.europa.eu/en/domains/environment/climate-adaptation-and-resilience",
           "fact": "Weather-related safety challenges, primarily in civil aviation."
         }
-      ]
+      ],
+      "evidenceByAudience": {
+        "defenceCustomer": "Representative mission tests in extreme conditions, verified availability and recovery times.",
+        "programmeManager": "Requirements matrix, risk log, mitigation milestones and verified schedule and cost effects.",
+        "engineering": "Environmental envelopes, failure modes, test evidence, operating limits and validated mitigations.",
+        "executiveLeadership": "Verified service-contract exposure and continuity scenarios with defensible risk estimates."
+      }
     }
   },
   "saf": {
@@ -241,7 +266,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
           "url": "https://www.easa.europa.eu/en/document-library/general-publications/refueleu-aviation-annual-technical-report-2026",
           "fact": "Datos públicos de oferta de SAF en la UE; no disponibilidad específica para misiones militares."
         }
-      ]
+      ],
+      "evidenceByAudience": {
+        "defenceCustomer": "Disponibilidad contractual de combustible por base y misión, límites de uso aprobados y procedimiento alternativo probado.",
+        "programmeManager": "Contratos y volúmenes por base, autorizaciones por plataforma, planificación y sobrecoste medido.",
+        "engineering": "Documentación de compatibilidad y aprobación de combustible por plataforma, condiciones de uso y trazabilidad.",
+        "executiveLeadership": "Análisis de coste total, exposición de abastecimiento y huella de ciclo de vida acreditada por lote y metodología."
+      }
     },
     "en": {
       "title": "SAF · Operational readiness",
@@ -284,7 +315,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
           "url": "https://www.easa.europa.eu/en/document-library/general-publications/refueleu-aviation-annual-technical-report-2026",
           "fact": "EU SAF supply background, not mission-specific military fuel availability."
         }
-      ]
+      ],
+      "evidenceByAudience": {
+        "defenceCustomer": "Contracted mission/base fuel availability, approved use limits and tested fallback supply.",
+        "programmeManager": "Base-level contracts and volumes, platform approvals, schedule and measured incremental cost.",
+        "engineering": "Platform-specific fuel compatibility and approval evidence, operating conditions and traceability.",
+        "executiveLeadership": "Total cost, supply exposure and batch-specific life-cycle emissions using documented methods."
+      }
     }
   },
   "wildfire": {
@@ -324,7 +361,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
           "url": "https://space-solutions.airbus.com/industries/climate-risks-and-disasters/",
           "fact": "Capacidades de observación para detección, seguimiento y evaluación de incendios."
         }
-      ]
+      ],
+      "evidenceByAudience": {
+        "defenceCustomer": "Pruebas con servicios de emergencia: latencia, utilidad de alertas, falsas alarmas y continuidad operativa.",
+        "programmeManager": "Resultados de ensayo extremo a extremo, aceptación del usuario, presupuesto e interoperabilidad de sistemas.",
+        "engineering": "Registros de latencia, geolocalización, precisión, pérdida de enlaces y recuperación del sistema.",
+        "executiveLeadership": "Resultados comparados con el procedimiento actual y análisis económico validado de adopción y escalabilidad."
+      }
     },
     "en": {
       "title": "Wildfires · Connected response",
@@ -362,7 +405,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
           "url": "https://space-solutions.airbus.com/industries/climate-risks-and-disasters/",
           "fact": "Earth-observation capabilities for detection, monitoring and damage assessment."
         }
-      ]
+      ],
+      "evidenceByAudience": {
+        "defenceCustomer": "Emergency-user trials: latency, actionable-alert quality, false alarms and operational continuity.",
+        "programmeManager": "End-to-end trial results, user acceptance, delivery budget and system interoperability.",
+        "engineering": "Latency, geolocation, accuracy, link-loss and recovery logs.",
+        "executiveLeadership": "Results versus standard practice and validated adoption economics and scalability."
+      }
     }
   }
 };
@@ -378,7 +427,7 @@ const ui = {
     intro: 'Explora cuatro oportunidades sugeridas para GTS. Cada propuesta cambia su narrativa según la audiencia; ninguna utiliza las cifras del escenario DEMO-60 ni constituye una evaluación aprobada de Airbus.',
     cases: 'Elige un caso', audience: 'Selecciona la audiencia', background: 'Qué sabemos (fuentes públicas)',
     initiative:'Iniciativa que se propone evaluar', risk:'Vulnerabilidad que queremos abordar', hypothesis:'Hipótesis de resiliencia por comprobar',
-    narrative:'Narrativa estratégica adaptada', metrics:'Cómo mediríamos el resultado', validation:'Qué falta para validarlo',
+    narrative:'Narrativa estratégica adaptada', proof:'Evidencia necesaria para esta audiencia', metrics:'Cómo mediríamos el resultado', validation:'Qué falta para validarlo',
     sources:'Evidencias públicas y sus límites', boundary:'Afirmación que NO podemos hacer todavía',
     state:'HIPÓTESIS / NO VALIDADA', note:'Las fuentes respaldan exclusivamente los hechos públicos indicados. No validan los beneficios específicos propuestos ni alimentan automáticamente el registro de evidencias de DEMO-60.'
   },
@@ -387,7 +436,7 @@ const ui = {
     intro: 'Explore four GTS opportunities. Each case adapts its narrative to the selected audience; none uses DEMO-60 figures or constitutes an Airbus-approved assessment.',
     cases:'Choose a case', audience:'Choose an audience', background:'What we know (public sources)',
     initiative:'Initiative to assess', risk:'Strategic vulnerability', hypothesis:'Resilience hypothesis to test',
-    narrative:'Audience-specific strategic narrative', metrics:'How we would measure the result', validation:'What still needs validation',
+    narrative:'Audience-specific strategic narrative', proof:'Evidence required for this audience', metrics:'How we would measure the result', validation:'What still needs validation',
     sources:'Public evidence and its limits', boundary:'What we CANNOT claim yet',
     state:'HYPOTHESIS / NOT VALIDATED', note:'Sources support only the stated public facts. They do not validate the proposed case-specific benefits and do not automatically populate the DEMO-60 evidence register.'
   }
@@ -424,6 +473,7 @@ export function GtsCaseStudies({ locale }: { locale: Locale }) {
       <article className="gts-cases__detail">
         <header><div><h3>{c.title}</h3><p>{c.tagline}</p></div><strong className="gts-cases__status">{t.state}</strong></header>
         <section><h4>{t.narrative} · {labels[locale][audience]}</h4><p className="gts-cases__narrative">{c.narratives[audience]}</p></section>
+        <section className="gts-cases__proof"><h4>{t.proof} · {labels[locale][audience]}</h4><p>{c.evidenceByAudience[audience]}</p></section>
         <div className="gts-cases__chain">
           <section><h4>{t.initiative}</h4><p>{c.initiative}</p></section>
           <section><h4>{t.risk}</h4><p>{c.exposure}</p></section>
