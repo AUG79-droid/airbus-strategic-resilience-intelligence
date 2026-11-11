@@ -1,4 +1,4 @@
-import { defaultParameterStates, emptyParameterValues, UNIVERSAL_PARAMETERS, type ParamMap, type ParamValues } from './universal';
+import { calculateUniversal, defaultParameterStates, emptyParameterValues, UNIVERSAL_PARAMETERS, type DerivedValue, type ParamMap, type ParamValues } from './universal';
 // Independent custom-case model. This is a transparent comparative calculator, not
 // a predictive aerospace certification, LCA, mission-availability or emissions model.
 export type CaseKind = 'general' | 'ecodesign' | 'climate' | 'saf' | 'wildfire';
@@ -65,7 +65,7 @@ export interface IndicatorComparison {
   robustness: 'stable' | 'sensitive' | 'insufficient';
   evidenceReady: boolean;
   observedEvidence: boolean;
-  issue?: string;
+  issue?: 'excluded' | 'missing';
 }
 export type ComparisonVerdict = 'incomplete' | 'tradeoff' | 'improves' | 'worsens' | 'equivalent';
 export interface OptionComparison {
@@ -221,56 +221,85 @@ export function evidenceObserved(caseData: StrategicCase, measure: Measure): boo
   return evidenceReviewed(caseData,measure) && record?.nature === 'observed';
 }
 
+// Source coverage is checked against the parameters actually used in a formula.
+const COMPUTED_INDICATORS:{
+  id:string; label:string; unit:string; direction:Direction;
+  category:MetricDefinition['category']; sourceIds:string[];
+}[]=[
+  {id:'expectedRecovery',label:'Tiempo medio de recuperación / Expected recovery',unit:'time',direction:'lower',category:'resilience',
+    sourceIds:['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay']},
+  {id:'deadlineAttainment',label:'Probabilidad de cumplir el plazo / Deadline attainment',unit:'%',direction:'higher',category:'operational',
+    sourceIds:['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay']},
+  {id:'expectedCost',label:'Coste esperado / Expected cost',unit:'€',direction:'lower',category:'cost',
+    sourceIds:['baseCost','logisticsCost','investmentCost','shockProbability','shockSurcharge','technicalSuccess','failureCost',
+      'reservationFee','cancellationProbability','cancellationFee']},
+  {id:'materialKg',label:'Material virgen / Virgin material',unit:'kg',direction:'lower',category:'environment',sourceIds:['materialKg']},
+  {id:'wasteKg',label:'Residuos / Waste',unit:'kg',direction:'lower',category:'environment',sourceIds:['wasteKg']},
+  {id:'ghgKg',label:'GEI parciales / Bounded GHG',unit:'kg CO₂e',direction:'lower',category:'environment',sourceIds:['ghgKg']},
+  {id:'lifeExtension',label:'Vida útil adicional / Additional service life',unit:'hours',direction:'higher',category:'operational',sourceIds:['lifeExtension']}
+];
+const OUTPUT_KEYS=['recovery','deadline','cost','material','waste','ghg','lifeExtension'] as const;
+function parameterEvidence(caseData:StrategicCase,option:Option,ids:string[],kind:'reviewed'|'observed'):boolean{
+  return ids.filter(id=>caseData.parameters[id]?.applicability==='applies').every(id=>{
+    const measure=option.parameterValues[id];
+    return !!measure && (kind==='reviewed'?evidenceReviewed(caseData,measure):evidenceObserved(caseData,measure));
+  });
+}
 export function compareOption(caseData: StrategicCase, candidate: Option): OptionComparison {
-  const baseline = caseData.options[0];
-  if (!baseline || !caseData.options.some(x=>x.id===candidate.id) || candidate.id===baseline.id) {
+  const baseline=caseData.options[0];
+  if(!baseline||candidate.id===baseline.id||!caseData.options.some(o=>o.id===candidate.id)){
     throw new Error('A non-baseline option within the case is required.');
   }
-  const missing: string[] = [];
-  const rows = caseData.metrics.map((def): IndicatorComparison => {
-    const base = baseline.measures[def.id] ?? {value:null,evidenceId:''};
-    const alt = candidate.measures[def.id] ?? {value:null,evidenceId:''};
-    const baseValid=validNumber(base.value,def),altValid=validNumber(alt.value,def);
-    if(!baseValid || !altValid) {
-      missing.push(def.label+': missing or invalid comparable input');
-      return {metric:def,baseline:baseValid?base.value:null,candidate:altValid?alt.value:null,
-        delta:null,percentChange:null,improvement:null,robustness:'insufficient',
-        evidenceReady:false,observedEvidence:false,issue:'Missing / out-of-bounds value'};
-    }
-    const b=base.value as number,a=alt.value as number;
-    const delta=a-b;
-    const improvement=def.direction==='lower'?b-a:a-b;
-    // Absolute uncertainty interval for two independently perturbed inputs.
-    // This is a user-selected sensitivity margin, NOT a statistical confidence interval.
-    const margin=(Math.abs(a)+Math.abs(b))*caseData.robustnessPercent/100;
-    const evidenceReady=evidenceReviewed(caseData,base)&&evidenceReviewed(caseData,alt);
-    const observedEvidence=evidenceObserved(caseData,base)&&evidenceObserved(caseData,alt);
-    if(!evidenceReady) missing.push(def.label+': reviewed, traceable evidence needed for BOTH values');
-    return {
-      metric:def, baseline:b,candidate:a,delta,
-      percentChange:b===0?null:delta/Math.abs(b)*100,improvement,
-      robustness:Math.abs(improvement)>margin?'stable':'sensitive',
-      evidenceReady,observedEvidence
+  const baseOut=calculateUniversal(caseData,baseline);
+  const altOut=calculateUniversal(caseData,candidate);
+  const missing:string[]=[];
+  const rows=COMPUTED_INDICATORS.map((definition,index):IndicatorComparison=>{
+    const key=OUTPUT_KEYS[index];
+    const b=baseOut[key] as DerivedValue,a=altOut[key] as DerivedValue;
+    const metric:MetricDefinition={
+      id:definition.id,label:definition.label,unit:definition.unit,
+      direction:definition.direction,category:definition.category
     };
+    if(b.state==='excluded'&&a.state==='excluded'){
+      return {metric,baseline:null,candidate:null,delta:null,percentChange:null,improvement:null,
+        robustness:'insufficient',evidenceReady:true,observedEvidence:true,issue:'excluded'};
+    }
+    if(b.state!=='calculated'||a.state!=='calculated'){
+      missing.push(definition.label+': '+[...b.missing,...a.missing].join(', '));
+      return {metric,baseline:b.value,candidate:a.value,delta:null,percentChange:null,improvement:null,
+        robustness:'insufficient',evidenceReady:false,observedEvidence:false,issue:'missing'};
+    }
+    const delta=a.value!-b.value!;
+    const improvement=definition.direction==='lower'?-delta:delta;
+    const margin=(Math.abs(a.value!)+Math.abs(b.value!))*caseData.robustnessPercent/100;
+    const evidenceReady=parameterEvidence(caseData,baseline,definition.sourceIds,'reviewed')&&
+      parameterEvidence(caseData,candidate,definition.sourceIds,'reviewed');
+    const observedEvidence=parameterEvidence(caseData,baseline,definition.sourceIds,'observed')&&
+      parameterEvidence(caseData,candidate,definition.sourceIds,'observed');
+    if(!evidenceReady)missing.push(definition.label+': missing traceable review for baseline and alternative');
+    return {metric,baseline:b.value,candidate:a.value,delta,
+      percentChange:b.value===0?null:delta/Math.abs(b.value!)*100,improvement,
+      robustness:Math.abs(improvement)>margin?'stable':'sensitive',evidenceReady,observedEvidence};
   });
-  const incomplete=rows.some(x=>x.improvement===null);
-  const better=rows.some(x=>x.improvement!==null && x.improvement>1e-9);
-  const worse=rows.some(x=>x.improvement!==null && x.improvement < -1e-9);
+  const active=rows.filter(r=>r.issue!=='excluded');
+  const incomplete=active.length===0||active.some(r=>r.improvement===null);
+  const better=active.some(r=>r.improvement!==null&&r.improvement>1e-9);
+  const worse=active.some(r=>r.improvement!==null&&r.improvement< -1e-9);
   const verdict:ComparisonVerdict=incomplete?'incomplete':better&&worse?'tradeoff':
     better?'improves':worse?'worsens':'equivalent';
   const caseFields=['title','programme','decision','initiative','vulnerability','mechanism','boundary','timeHorizon','owner'] as const;
   const caseDefined=caseFields.every(key=>caseData[key].trim().length>0);
-  for(const key of caseFields) if(!caseData[key].trim()) missing.push('Investigate: '+key+' is missing');
+  for(const key of caseFields)if(!caseData[key].trim())missing.push('Investigate: '+key+' is missing');
   const gatesReady=Object.values(caseData.gates).every(Boolean);
-  if(!gatesReady) missing.push('Scope, technical, method and reviewer gates are not all confirmed');
-  const reviewedData=rows.length>0&&rows.every(x=>x.evidenceReady);
-  const observedData=rows.length>0&&rows.every(x=>x.observedEvidence);
-  return {
-    option:candidate,rows,verdict,gatesReady,reviewedData,observedData,
-    // This only identifies a *candidate* for expert acceptance; it does not validate a benefit.
-    canDescribeAsMeasured:!caseData.hypothetical && caseDefined && reviewedData && observedData && gatesReady && !incomplete,
-    missing
-  };
+  if(!gatesReady)missing.push('Scope, technical, method and reviewer gates are not all confirmed');
+  const missingReasons=UNIVERSAL_PARAMETERS.filter(p=>caseData.parameters[p.id].applicability==='notApplicable'&&
+    !caseData.parameters[p.id].reason.trim());
+  if(missingReasons.length)missing.push('N/A exclusions require a reason: '+missingReasons.map(p=>p.id).join(', '));
+  const reviewedData=active.length>0&&active.every(r=>r.evidenceReady);
+  const observedData=active.length>0&&active.every(r=>r.observedEvidence);
+  return {option:candidate,rows,verdict,gatesReady,reviewedData,observedData,
+    canDescribeAsMeasured:!caseData.hypothetical&&caseDefined&&reviewedData&&observedData&&
+      gatesReady&&!incomplete&&missingReasons.length===0,missing};
 }
 
 export function comparisons(caseData: StrategicCase):OptionComparison[] {
