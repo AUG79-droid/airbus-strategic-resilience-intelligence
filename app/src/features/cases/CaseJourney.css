@@ -146,3 +146,12 @@
 @media(max-width:850px){.cy-universal__option-grid{grid-template-columns:1fr}.cy-preset-grid{grid-template-columns:1fr}
  .cy-universal__param>header{display:grid;gap:15px}.cy-applicability{max-width:none;min-width:0;width:100%;flex:auto}
  .cy-universal__section>summary{flex-wrap:wrap}.cy-universal__section>summary>small{flex:1 0 100%}}
+
+
+/* Case form only: comfortably sized editable explanations; no change to other fields. */
+.cy-root textarea[data-case-field] { min-height: 100px; line-height: 1.55; }
+.cy-root textarea[data-case-field="initiative"],
+.cy-root textarea[data-case-field="mechanism"] { min-height: 150px; }
+.cy-root textarea[data-case-field="decision"],
+.cy-root textarea[data-case-field="vulnerability"],
+.cy-root textarea[data-case-field="boundary"] { min-height: 124px; }
