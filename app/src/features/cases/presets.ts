@@ -65,8 +65,64 @@ export const PRESETS: Record<PresetKey,Preset> = {
   }
 };
 
-export function fromPreset(kind: PresetKey): StrategicCase {
-  const p=PRESETS[kind];
+
+// Localised case briefs: all values remain invented in both languages.
+const ES_PRESETS: Record<PresetKey,Omit<Preset,'values'>> = {
+  ecodesign:{
+    title:'Eurodrone · Ecodiseño y dependencia de materiales críticos',
+    programme:'Subsistema hipotético de soporte de Eurodrone — sin datos del programa',
+    decision:'¿Podría una reparación cualificada y la diversificación de suministro reducir vulnerabilidades del soporte a largo plazo?',
+    initiative:'Evaluar reparabilidad, alternativas de materiales trazables y abastecimiento cualificado de un único componente de soporte.',
+    vulnerability:'Plazos prolongados de reposición y dependencia de fuentes de suministro concentradas.',
+    mechanism:'Una reparación aprobada o un proveedor alternativo podría reducir reposiciones y necesidades de material nuevo.',
+    boundary:'Mismo componente ficticio, función equivalente y horizonte de soporte. Cualquier cambio requiere control formal del programa.',
+    timeHorizon:'Periodo hipotético de soporte de 12 meses',
+    names:['Sustitución convencional','Reparación cualificada','Reparación y proveedor alternativo'],
+    explanations:['Componente nuevo con una única fuente','Reparación autorizada cuando resulte viable','Reparación más una fuente de suministro adicional cualificada']
+  },
+  climate:{
+    title:'Adaptación climática · Escenario de calor extremo',
+    programme:'Actividad hipotética de soporte de aeronaves en tierra',
+    decision:'¿Qué medida protege mejor la actividad de soporte durante un episodio de calor extremo?',
+    initiative:'Evaluar protección térmica de equipos, mantenimiento adaptado e infraestructura de apoyo bajo el mismo episodio.',
+    vulnerability:'Interrupciones por meteorología extrema y recuperación lenta del servicio.',
+    mechanism:'Las medidas probadas podrían conservar horas de servicio y acelerar la recuperación, con costes y consumo de materiales adicionales.',
+    boundary:'Mismo episodio ficticio de calor de 10 días, base y perfil de misión. No extrapolar a disponibilidad de flota.',
+    timeHorizon:'Un episodio de 10 días',
+    names:['Configuración actual','Protección térmica del equipo','Protección y cambios operativos'],
+    explanations:['Restricciones operativas existentes','Protección térmica de equipamiento crítico','Protección térmica y procedimientos de soporte adaptados']
+  },
+  saf:{
+    title:'SAF · Resiliencia de abastecimiento para una misión equivalente',
+    programme:'Base y misión militar hipotéticas — sin asumir aprobación de la flota',
+    decision:'¿Puede una vía autorizada de SAF reducir el impacto de ciclo de vida sin comprometer la disponibilidad de combustible?',
+    initiative:'Evaluar mezclas autorizadas, contratos, trazabilidad y suministro de contingencia antes de desplegar.',
+    vulnerability:'Proveedores limitados, disponibilidad incierta, costes adicionales y autorizaciones específicas por plataforma.',
+    mechanism:'Una vía de combustible de menor huella podría reducir emisiones; la diversificación podría mejorar acceso si está autorizada.',
+    boundary:'Misma demanda energética y alcance ficticios por misión; las cifras no indican certificación ni disponibilidad militar real.',
+    timeHorizon:'Una misión equivalente y planificación anual de suministro',
+    names:['Contrato de combustible actual','SAF de un solo proveedor','SAF y suministro alternativo'],
+    explanations:['Combustible autorizado actual con una única fuente','SAF hipotético sujeto a aprobación de plataforma','SAF hipotético con respaldo contratado de modo independiente']
+  },
+  wildfire:{
+    title:'Incendios forestales · Detección y respuesta conectada',
+    programme:'Ejercicio hipotético de emergencias con múltiples organismos',
+    decision:'¿Puede la integración de datos aéreos y satelitales acelerar alertas útiles sin debilitar las comunicaciones?',
+    initiative:'Comparar avisos actuales con observación integrada por satélite, dron y centro de mando.',
+    vulnerability:'Avisos tardíos, información fragmentada, interrupciones de comunicaciones y falsos positivos.',
+    mechanism:'El intercambio de información validada podría reducir latencia, siempre que se controlen falsas alarmas y costes.',
+    boundary:'Misma zona ficticia, incidencias y equipos. No atribuir hectáreas salvadas ni reducción de víctimas.',
+    timeHorizon:'Un ejercicio operacional controlado',
+    names:['Coordinación actual','Observación integrada','Integración y comunicaciones redundantes'],
+    explanations:['Vigilancia y comunicación convencional por radio','Intercambio conjunto de información aérea y satelital','Observación conjunta con redundancia de comunicaciones']
+  }
+};
+export function presetTitle(kind:PresetKey,locale:'es'|'en'):string {
+  return locale==='es'?ES_PRESETS[kind].title:PRESETS[kind].title;
+}
+
+export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCase {
+  const p:Preset=locale==='es'?{...ES_PRESETS[kind],values:PRESETS[kind].values}:PRESETS[kind];
   const result=createCase(kind);
   result.id='SYNTH-'+kind.toUpperCase();
   result.title=p.title;result.programme=p.programme;
