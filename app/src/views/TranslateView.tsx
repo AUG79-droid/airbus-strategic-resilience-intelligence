@@ -71,7 +71,7 @@ export function TranslateView({ content: _content, locale }: ViewProps) {
   }
 
   return <section className="translator" aria-labelledby="translate-title">
-    <header className="translator-header"><div><p className="kicker">PHASE 05 / STRATEGIC TRANSLATION</p><h2 id="translate-title">{t.title}</h2><p>{t.intro}</p></div><div className="translator-header__context"><strong>{t.fictional}</strong><span>{t.scenario}: {scenarioLabel}</span></div></header>
+    <header className="translator-header"><div><p className="kicker">PHASE 05 / STRATEGIC TRANSLATION</p><h2 id="translate-title">{t.title}</h2><p>{t.intro}</p><button type="button" className="gts-cases__jump" onClick={() => document.getElementById('gts-cases-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>{locale === 'es' ? 'Explorar los cuatro casos GTS' : 'Explore four GTS use cases'} ↓</button></div><div className="translator-header__context"><strong>{t.fictional}</strong><span>{t.scenario}: {scenarioLabel}</span></div></header>
 
     <nav className="audience-selector" aria-label={t.audience}>{audiences.map((item, index) => <button type="button" key={item} data-testid={`audience-${item}`} className={audience === item ? 'is-active' : ''} aria-pressed={audience === item} onClick={() => setAudience(item)}><span>0{index + 1}</span><div><strong>{t.audiences[item]}</strong><small>{t.audienceNotes[item]}</small></div></button>)}</nav>
 
