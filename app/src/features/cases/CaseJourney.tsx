@@ -343,6 +343,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
           <ul>{c.rows.map(row=><li key={row.metric.id}>
             <span>{row.metric.label}</span>
             <b>{row.delta===null?t('Sin datos','Missing'): `${row.delta>0?'+':''}${present(row.delta,locale)} ${row.metric.unit}`}</b>
+            {row.delta!==null&&<small>{present(row.baseline,locale)} → {present(row.candidate,locale)} {row.metric.unit}{row.percentChange===null?'':` · ${row.percentChange>0?'+':''}${present(row.percentChange,locale)}%`}</small>}
             <small>{row.robustness==='stable'?t('Diferencia robusta al margen supuesto','Stable under chosen margin'):
               row.robustness==='sensitive'?t('Resultado sensible al margen supuesto','Sensitive to chosen margin'):t('No calculable','Not computable')}</small>
           </li>)}</ul>
