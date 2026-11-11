@@ -1,3 +1,4 @@
+import { defaultParameterStates, emptyParameterValues, UNIVERSAL_PARAMETERS, type ParamMap, type ParamValues } from './universal';
 // Independent custom-case model. This is a transparent comparative calculator, not
 // a predictive aerospace certification, LCA, mission-availability or emissions model.
 export type CaseKind = 'general' | 'ecodesign' | 'climate' | 'saf' | 'wildfire';
@@ -20,6 +21,7 @@ export interface Measure { value: number | null; evidenceId: string; }
 export interface Option {
   id: string; name: string; explanation: string;
   measures: Record<string, Measure>;
+  parameterValues: ParamValues;
 }
 export interface EvidenceItem {
   id: string; title: string; reference: string; owner: string; reviewer: string;
@@ -45,6 +47,7 @@ export interface StrategicCase {
   timeHorizon: string;
   owner: string;
   metrics: MetricDefinition[];
+  parameters: ParamMap;
   options: Option[];
   evidence: EvidenceItem[];
   gates: ReviewGates;
@@ -184,7 +187,8 @@ function makeOptions(metrics: MetricDefinition[], locale:'en'|'es'): Option[] {
   const names=locale==='es'?['Situación actual','Alternativa A','Alternativa B']:['Current reference','Alternative A','Alternative B'];
   return names.map((name,index) => ({
     id: ['baseline','option-a','option-b'][index], name, explanation: '',
-    measures: Object.fromEntries(metrics.map(m => [m.id, {value: null,evidenceId:''}]))
+    measures: Object.fromEntries(metrics.map(m => [m.id, {value: null,evidenceId:''}])),
+    parameterValues: emptyParameterValues()
   }));
 }
 
@@ -194,6 +198,7 @@ export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): S
     version:1, id: 'CASE-'+Date.now().toString(36), kind, title:'',
     programme:'', decision:'', initiative:'', vulnerability:'', mechanism:'',
     boundary:'', timeHorizon:'', owner:'', metrics,
+    parameters:defaultParameterStates(kind),
     options:makeOptions(metrics,locale), evidence:[], gates:emptyGates(),
     robustnessPercent:10, hypothetical:false
   };
@@ -308,5 +313,24 @@ export function validateCaseImport(value: unknown): StrategicCase {
   if(typeof x.robustnessPercent!=='number'||!Number.isFinite(x.robustnessPercent)||
     x.robustnessPercent<0||x.robustnessPercent>100||typeof x.hypothetical!=='boolean') throw new Error('Invalid sensitivity settings');
   if(['comparableBoundary','technicalEligibility','measurementMethod','independentReview'].some(k=>typeof x.gates?.[k as keyof ReviewGates]!=='boolean'))throw new Error('Invalid review gates');
-  return structuredClone(x as StrategicCase);
+  // Upgrade saved cases from the original four-KPI builder safely.
+  const upgraded=structuredClone(x as StrategicCase);
+  upgraded.parameters??=defaultParameterStates(upgraded.kind);
+  if(typeof upgraded.parameters!=='object'||Array.isArray(upgraded.parameters))throw new Error('Invalid applicability catalogue');
+  for(const item of UNIVERSAL_PARAMETERS){
+    const p=upgraded.parameters[item.id];
+    if(!p||!['applies','notApplicable','unknown'].includes(p.applicability)||
+      typeof p.reason!=='string'||p.reason.length>1000)throw new Error('Invalid applicability for '+item.id);
+  }
+  for(const option of upgraded.options){
+    option.parameterValues??=emptyParameterValues();
+    if(!option.parameterValues||typeof option.parameterValues!=='object')throw new Error('Invalid parameter values');
+    for(const p of UNIVERSAL_PARAMETERS){
+      const m=option.parameterValues[p.id];
+      if(!m||typeof m.evidenceId!=='string'||m.evidenceId.length>100||
+        (m.value!==null&&(typeof m.value!=='number'||!Number.isFinite(m.value))))
+        throw new Error('Invalid parameter '+p.id);
+    }
+  }
+  return upgraded;
 }
