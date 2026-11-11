@@ -82,6 +82,7 @@ describe('Create your own strategic case', () => {
   it('requires linked observed data for both baseline and alternative, all gates and no hypothetical flag', () => {
     const c=fromPreset('ecodesign');
     c.hypothetical=false;
+    c.owner='Independent case assessor';
     c.gates={comparableBoundary:true,technicalEligibility:true,measurementMethod:true,independentReview:true};
     c.evidence=[
       {id:'BASE',title:'Observed baseline',reference:'REF-BASE',owner:'Owner',reviewer:'Reviewer',
