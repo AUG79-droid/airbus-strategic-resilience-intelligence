@@ -136,7 +136,7 @@ export const MODEL_TEMPLATES: Record<CaseKind, { title: string; guidance: string
     metrics: [
       metric('resilience','Detection to actionable alert','minutes','lower','resilience'),
       metric('operational','Communication uptime during incident','%','higher','operational',0,100),
-      metric('environment','False alerts per 100 events','count','lower','environment',0,100),
+      metric('operational','False alerts per 100 events','count','lower','operational',0,100),
       metric('cost','Operating cost per exercise','€','lower','cost')
     ]
   }
@@ -168,7 +168,7 @@ export function validNumber(value: number | null, def: MetricDefinition): boolea
 export function evidenceReviewed(caseData: StrategicCase, measure: Measure): boolean {
   const record = caseData.evidence.find(x=>x.id===measure.evidenceId);
   return !!record && record.status === 'reviewed' && !!record.reference.trim() &&
-    !!record.owner.trim() && !!record.reviewer.trim() && /^\\d{4}-\\d{2}-\\d{2}$/.test(record.reviewedOn) &&
+    !!record.owner.trim() && !!record.reviewer.trim() && /^\d{4}-\d{2}-\d{2}$/.test(record.reviewedOn) &&
     !!record.title.trim();
 }
 
