@@ -142,6 +142,44 @@ export const MODEL_TEMPLATES: Record<CaseKind, { title: string; guidance: string
   }
 };
 
+
+export const MODEL_TEMPLATES_ES: Record<CaseKind,{title:string;guidance:string;requirement:string;labels:string[]}> = {
+  general:{
+    title:'Modelo comparativo configurable',
+    guidance:'Compara resultados para la misma unidad, periodo y alcance; modifica los indicadores para tu iniciativa.',
+    requirement:'Confirmar la viabilidad técnica y una situación de referencia equivalente antes de comparar.',
+    labels:['Tiempo para recuperar el servicio','Prestación del servicio lograda','Demanda de material por unidad funcional','Coste total por unidad funcional']
+  },
+  ecodesign:{
+    title:'Modelo de materiales críticos y resiliencia del soporte',
+    guidance:'Compara opciones cualificadas para el MISMO subsistema y perímetro de ciclo de vida. Dos proveedores no garantizan independencia.',
+    requirement:'Cualificación de Ingeniería, requisitos funcionales equivalentes y aprobación del control de cambios.',
+    labels:['Plazo de reposición del componente crítico','Fuentes de suministro independientes cualificadas','Material virgen por unidad funcional','Coste de soporte de ciclo de vida por unidad']
+  },
+  climate:{
+    title:'Modelo de continuidad bajo condiciones extremas',
+    guidance:'Utiliza la MISMA plataforma, misión, intensidad meteorológica y periodo de observación en cada alternativa.',
+    requirement:'Envolvente operativa comprobada y ensayos ambientales aprobados para la plataforma concreta.',
+    labels:['Tiempo con capacidad de misión durante el evento','Recuperación tras la interrupción meteorológica','Demanda adicional de material para la adaptación','Coste de adaptación durante el ciclo de vida']
+  },
+  saf:{
+    title:'Modelo de disponibilidad de combustible y misión',
+    guidance:'Usa un perfil de misión equivalente; exige autorización de combustible, cobertura de suministro y factores de ciclo de vida trazables.',
+    requirement:'Mezcla y combustible autorizados por plataforma, motores y condiciones; calidad y suministro comprobados.',
+    labels:['Misiones con combustible autorizado disponible','Localizaciones de suministro cualificadas','Emisiones de GEI de ciclo de vida por misión equivalente','Coste de combustible y logística por misión']
+  },
+  wildfire:{
+    title:'Modelo de detección y coordinación en crisis',
+    guidance:'Compara el MISMO evento o ejercicio, región, organización de respuesta y criterio de alerta.',
+    requirement:'Aceptación del operador, conectividad segura y rendimiento integral comprobado en las condiciones definidas.',
+    labels:['Tiempo desde la detección hasta una alerta útil','Disponibilidad de comunicaciones durante el incidente','Falsas alarmas por cada 100 eventos','Coste operativo por ejercicio']
+  }
+};
+export function templateInfo(kind:CaseKind, locale:'en'|'es'){
+  return locale==='es'?MODEL_TEMPLATES_ES[kind]:MODEL_TEMPLATES[kind];
+}
+
+
 function makeOptions(metrics: MetricDefinition[]): Option[] {
   return ['Current reference','Alternative A','Alternative B'].map((name,index) => ({
     id: ['baseline','option-a','option-b'][index], name, explanation: '',
@@ -149,8 +187,8 @@ function makeOptions(metrics: MetricDefinition[]): Option[] {
   }));
 }
 
-export function createCase(kind: CaseKind = 'general'): StrategicCase {
-  const metrics = MODEL_TEMPLATES[kind].metrics.map(m=>({...m}));
+export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): StrategicCase {
+  const metrics = MODEL_TEMPLATES[kind].metrics.map((m,i)=>({...m,label:locale==='es'?MODEL_TEMPLATES_ES[kind].labels[i]:m.label}));
   return {
     version:1, id: 'CASE-'+Date.now().toString(36), kind, title:'',
     programme:'', decision:'', initiative:'', vulnerability:'', mechanism:'',
