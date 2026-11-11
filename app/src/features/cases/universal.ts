@@ -76,10 +76,11 @@ const activeByKind:Record<string,string[]>={
   saf:['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','baseCost','logisticsCost','investmentCost','shockSurcharge','reservationFee','cancellationProbability','cancellationFee','ghgKg'],
   wildfire:['baseRecovery','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','baseCost','logisticsCost','investmentCost','shockSurcharge','ghgKg']
 };
-export function defaultParameterStates(kind:string):ParamMap{
+export function defaultParameterStates(kind:string,locale:'en'|'es'='en'):ParamMap{
   const active=activeByKind[kind]??activeByKind.general;
   return Object.fromEntries(UNIVERSAL_PARAMETERS.map(p=>[p.id,{
-    applicability:active.includes(p.id)?'applies':'notApplicable',reason:''
+    applicability:active.includes(p.id)?'applies':'notApplicable',
+    reason:active.includes(p.id)?'':(locale==='es'?'Fuera del alcance habitual de este modelo (comprobar al validar).':'Outside the standard scope of this model (verify during review).')
   }]));
 }
 export function emptyParameterValues():ParamValues{
