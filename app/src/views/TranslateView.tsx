@@ -11,6 +11,7 @@ import { buildStrategicTranslation } from '../features/translator/translator';
 import type { AudienceId, TranslationTraceItem } from '../features/translator/types';
 import type { StrategyId } from '../domain';
 import { ExportReview } from '../features/export/ExportReview';
+import { GtsCaseStudies } from './GtsCaseStudies';
 
 interface ViewProps { content: Copy; locale: Locale; }
 type TranslatorSection = 'profile' | 'causal' | 'trace' | 'validation';
@@ -97,6 +98,8 @@ export function TranslateView({ content: _content, locale }: ViewProps) {
     </article>
 
     <details className="translator-limitations"><summary>{t.limitations}<span>+</span></summary><div><p>{t.noValidated}</p><ul>{translation.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul></div></details>
+
+    <GtsCaseStudies locale={locale} />
 
     <ExportReview locale={locale} audience={audience} strategy={strategy} scenarioLabel={scenarioLabel} scenario={lab.scenario} result={lab.result} environmental={lab.environmental} translation={translation} assumptions={evidence.assumptions} modelOutputs={evidence.modelOutputs} records={evidence.records} sources={evidence.sources} claims={evidence.claims} />
   </section>;
