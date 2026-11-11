@@ -27,13 +27,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
     "es": {
       "title": "Eurodrone · Ecodiseño",
       "tagline": "Diseñar hoy para depender menos mañana",
-      "publicContext": "Airbus lidera Eurodrone y comunicó la revisión preliminar de diseño (PDR) y el uso de un gemelo digital. Airbus también publica principios generales de ecodiseño y circularidad. Ninguna de estas fuentes demuestra un ahorro o mejora de resiliencia específico de Eurodrone.",
-      "initiative": "Evaluar alternativas de materiales y arquitectura de un subsistema mediante análisis de ciclo de vida, reparabilidad, sustitución cualificada y trazabilidad de materias críticas.",
+      "publicContext": "Airbus lidera Eurodrone y comunicó la revisión preliminar de diseño (PDR) y el uso de un gemelo digital. OCCAR confirmó la revisión crítica (CDR) en octubre de 2025, con cierre de la fase de diseño. Airbus publica principios generales de ecodiseño, pero no hay evidencia pública de un beneficio específico de Eurodrone.",
+      "initiative": "Evaluar cambios autorizados y opciones de soporte de un subsistema mediante análisis de ciclo de vida, reparabilidad, sustitución cualificada y trazabilidad de materias críticas.",
       "exposure": "Dependencia de proveedores o materiales críticos, tiempos largos de reposición y reparaciones difíciles durante décadas de servicio.",
       "hypothesis": "Si una alternativa mantiene todos los requisitos técnicos y de seguridad, podría acortar la recuperación de capacidad y reducir exposición a suministros críticos. Hay que contrastarla con masa, coste, mantenibilidad y huella ambiental.",
       "narratives": {
         "defenceCustomer": "La propuesta no es simplemente reducir el impacto ambiental del Eurodrone: es examinar si el diseño permite sostener la capacidad de misión cuando falla el suministro de un componente crítico. El valor para el cliente solo podrá afirmarse cuando haya pruebas de disponibilidad y soporte.",
-        "programmeManager": "Incorporar una evaluación de ecodiseño en una decisión concreta de arquitectura podría hacer visibles dependencias y costes de soporte antes de consolidar el diseño. La recomendación es un estudio comparativo con criterios técnicos, coste total y riesgo de calendario.",
+        "programmeManager": "Una evaluación de ecodiseño en cambios autorizados, industrialización o decisiones de soporte permitiría analizar dependencias y costes durante la vida en servicio. La recomendación es un estudio comparativo compatible con la CDR y los requisitos del programa.",
         "engineering": "Comparar una configuración de referencia con otra alternativa: material, reparabilidad, interfaces, cualificación y análisis de ciclo de vida de la misma unidad funcional. Sin equivalencia de prestaciones y seguridad no hay recomendación técnica.",
         "executiveLeadership": "El ecodiseño puede explorarse como palanca de autonomía industrial y soporte sostenible, no como un beneficio ya conseguido. La decisión propuesta es financiar una prueba limitada y exigir evidencia de reducción de vulnerabilidad antes de escalar."
       },
@@ -50,6 +50,11 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
       ],
       "boundary": "No se atribuye a Eurodrone ningún beneficio ambiental, de disponibilidad o de coste sin datos específicos validados.",
       "sources": [
+        {
+          "name": "OCCAR · Eurodrone CDR (2025)",
+          "url": "https://occar.int/news/eurodrone-achieves-major-milestone-with-successful-critical-design-review-cdr-completion",
+          "fact": "La revisión crítica de diseño se completó en octubre de 2025; no atribuye ventajas ambientales."
+        },
         {
           "name": "Airbus · Eurodrone PDR (2024)",
           "url": "https://www.airbus.com/en/newsroom/press-releases/2024-05-airbus-achieves-eurodrones-preliminary-design-review",
@@ -70,13 +75,13 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
     "en": {
       "title": "Eurodrone · Eco-design",
       "tagline": "Design now for fewer dependencies later",
-      "publicContext": "Airbus leads Eurodrone and publicly reported the Preliminary Design Review and digital twin work. Airbus also publishes general eco-design and circularity principles. These sources do not demonstrate any Eurodrone-specific environmental or resilience improvement.",
-      "initiative": "Evaluate material and architecture options for one subsystem using life-cycle assessment, repairability, qualified substitution and critical-material traceability.",
+      "publicContext": "Airbus leads Eurodrone and reported the Preliminary Design Review and digital twin work. OCCAR confirmed completion of the Critical Design Review in October 2025, closing the design phase. Airbus publishes general eco-design principles, but these do not establish Eurodrone-specific benefits.",
+      "initiative": "Assess authorised changes and support options for a subsystem using life-cycle assessment, repairability, qualified substitution and critical-material traceability.",
       "exposure": "Dependence on critical suppliers or materials, extended replenishment lead times and difficult repairs across a long service life.",
       "hypothesis": "If an alternative satisfies all technical and safety requirements, it might shorten capability recovery and reduce exposure to critical supplies. Mass, cost, maintainability and environmental impacts must also be assessed.",
       "narratives": {
         "defenceCustomer": "The case is not merely about a lower environmental footprint: it asks whether design choices can preserve mission capability when a critical component becomes unavailable. Customer value requires evidence on availability and support.",
-        "programmeManager": "Testing eco-design at a defined architecture decision could expose dependencies and support costs before design is frozen. A controlled trade study should include technical requirements, life-cycle costs and schedule risk.",
+        "programmeManager": "A targeted eco-design review of authorised changes, industrialisation or in-service support options could reveal supply dependencies and costs. Any trade study must respect the completed CDR, technical requirements and programme controls.",
         "engineering": "Compare a reference configuration with one alternative across material, repairability, interfaces, qualification and life-cycle impacts for the same functional unit. No technical recommendation without equivalent performance and safety.",
         "executiveLeadership": "Explore eco-design as a possible contributor to industrial autonomy and sustainable support, not as an achieved benefit. Fund a bounded test and require proof of lower vulnerability before scaling."
       },
@@ -93,6 +98,11 @@ const studies: Record<CaseId, Record<Locale, CaseContent>> = {
       ],
       "boundary": "No environmental, availability or cost improvement is claimed for Eurodrone without validated programme-specific data.",
       "sources": [
+        {
+          "name": "OCCAR · Eurodrone CDR (2025)",
+          "url": "https://occar.int/news/eurodrone-achieves-major-milestone-with-successful-critical-design-review-cdr-completion",
+          "fact": "Critical Design Review completed in October 2025; no programme-specific environmental benefit established."
+        },
         {
           "name": "Airbus · Eurodrone PDR (2024)",
           "url": "https://www.airbus.com/en/newsroom/press-releases/2024-05-airbus-achieves-eurodrones-preliminary-design-review",
