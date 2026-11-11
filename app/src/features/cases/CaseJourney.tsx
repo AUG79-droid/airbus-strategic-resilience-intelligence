@@ -240,13 +240,13 @@ export function CaseJourney({locale,view,data,setData}:Props){
   );
   return <section className="cy-root" data-testid="custom-case-journey" aria-label={t('Crea tu propio caso estratégico','Create your own strategic case')}>
     <header className="cy-intro">
-      <p className="kicker">CREATE YOUR OWN STRATEGIC CASE</p>
+      <p className="kicker">{t('CREA TU PROPIO CASO ESTRATÉGICO','CREATE YOUR OWN STRATEGIC CASE')}</p>
       <h2>{phaseTitles[view][es?0:1]}</h2>
       <p>{t('Un mismo caso recorre las cuatro etapas. Empieza con tu iniciativa, compara con una situación de referencia, registra evidencias y genera argumentos para el público seleccionado.',
         'One case follows all four stages: frame the initiative, compare against a baseline, review evidence and translate findings for a decision audience.')}</p>
       <p className="cy-security"><strong>{t('Seguridad de la información:','Information security:')}</strong>{' '}
-        {t('Esta demo pública funciona en el navegador. No introduzcas información confidencial, datos personales ni documentos internos sin un entorno Airbus autorizado. El archivo JSON se descarga localmente; los datos de esta sesión no se envían a un servidor de ASRI.',
-          'This public demo runs in the browser. Do not enter confidential, personal or internal documents without an Airbus-approved environment. JSON is downloaded locally; session inputs are not sent to an ASRI server.')}</p>
+        {t('Esta demostración pública funciona en el navegador. No introduzcas datos confidenciales de Airbus ni información personal. ASRI no guarda automáticamente tu trabajo: puedes descargar una copia local desde el apartado opcional de guardado.',
+          'This public browser demo does not have corporate access controls. Do not enter Airbus-confidential or personal information. ASRI does not automatically save your work; use the optional save section to download a local copy.')}</p>
     </header>
 
     {view==='investigate' && <div className="cy-stage">
