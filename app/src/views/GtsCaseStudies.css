@@ -36,3 +36,6 @@
 
 .gts-cases__proof { padding: 15px 19px; border: 1px solid #b6cabb; background: #f7faf5; }
 .gts-cases__proof h4 { font-size: 16px; margin-bottom: 5px; }
+
+.gts-cases__jump { display: inline-block; margin-top: 15px; padding: 11px 17px; border: 1px solid var(--pine); background: #eaf2e2; color: var(--pine-deep); font-size: 16px; font-weight: 800; border-radius: 3px; }
+.gts-cases__jump:hover { background: var(--lime); }
