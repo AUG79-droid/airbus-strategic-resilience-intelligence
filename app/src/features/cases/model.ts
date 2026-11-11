@@ -198,7 +198,7 @@ export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): S
     version:1, id: 'CASE-'+Date.now().toString(36), kind, title:'',
     programme:'', decision:'', initiative:'', vulnerability:'', mechanism:'',
     boundary:'', timeHorizon:'', owner:'', metrics,
-    parameters:defaultParameterStates(kind),
+    parameters:defaultParameterStates(kind,locale),
     options:makeOptions(metrics,locale), evidence:[], gates:emptyGates(),
     robustnessPercent:10, hypothetical:false
   };
