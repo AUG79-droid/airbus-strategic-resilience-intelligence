@@ -246,21 +246,16 @@ export function CaseJourney({locale,view,data,setData}:Props){
     </header>
 
     {view==='investigate' && <div className="cy-stage">
-      <section className="cy-panel">
-        <div className="cy-section-heading"><h3>{t('Empieza desde cero','Start from scratch')}</h3><p>{t('Elige la familia analítica. Se cargan indicadores apropiados que podrás modificar.','Choose a model family. Relevant but editable KPIs are prepared.')}</p></div>
-        <div className="cy-model-grid">{caseKinds.map(kind=><button key={kind} type="button"
-          className={data.kind===kind&&!data.hypothetical?'is-active':''}
-          onClick={()=>chooseKind(kind)}>{kinds[kind][es?0:1]}</button>)}</div>
-        <div className="cy-inline-tools">
-          <button type="button" onClick={exportJson}>{t('Guardar el caso en JSON','Save case as JSON')}</button>
-          <label className="cy-file-picker">{t('Recuperar caso desde JSON','Restore case from JSON')}
-            <input aria-label={t('Importar JSON de caso','Import case JSON')} type="file" accept=".json,application/json"
-              onChange={e=>{void importCase(e.target.files?.[0]);e.target.value='';}} /></label>
-        </div>
+      <section className="cy-panel cy-start-panel">
+        <h3>{t('Opción 1 · Crear un caso nuevo','Option 1 · Create a new case')}</h3>
+        <p>{t('Para analizar una iniciativa propia. Empezarás con una ficha vacía y elegirás el tipo de análisis más abajo.','For your own initiative. Start with a blank case and choose its analysis type in the case form below.')}</p>
+        <button className="cy-create-case" type="button" onClick={()=>chooseKind('general')}>
+          {t('Crear un caso nuevo','Create a new case')} <span aria-hidden="true">→</span>
+        </button>
       </section>
       <section className="cy-panel">
-        <h3>{t('O empieza con uno de los cuatro casos de Mireia','Or start with one of Mireia’s four cases')}</h3>
-        <p>{t('Cada ejemplo comienza en la etapa 01 y lleva datos totalmente ficticios para practicar en las siguientes etapas.','Each example begins in stage 01 and carries entirely fictional numbers for the remaining stages.')}</p>
+        <h3>{t('Opción 2 · Practicar con los cuatro ejemplos de Mireia','Option 2 · Explore Mireia’s four example cases')}</h3>
+        <p>{t('Selecciona un ejemplo ya preparado: la ficha y los valores hipotéticos se rellenarán automáticamente y podrás recorrer las cuatro etapas.','Select a prepared example: its case definition and illustrative values will load automatically for the full four-stage journey.')}</p>
         <div className="cy-preset-grid">{four.map(id=><button type="button" key={id} onClick={()=>loadPreset(id)}>
           <strong>{kinds[id][es?0:1]}</strong><span>{presetTitle(id,locale)}</span>
         </button>)}</div>
@@ -270,6 +265,13 @@ export function CaseJourney({locale,view,data,setData}:Props){
       </section>
       <section className="cy-panel">
         <h3>{t('Ficha del caso','Case definition')}</h3>
+        {!data.hypothetical ? <label className="cy-field cy-case-type"><span>{t('Tipo de análisis para tu caso','Type of analysis for your case')}</span>
+          <select value={data.kind} onChange={e=>chooseKind(e.target.value as CaseKind)}>
+            {caseKinds.map(kind=><option key={kind} value={kind}>{kinds[kind][es?0:1]}</option>)}
+          </select>
+          <small>{t('Elige la temática adecuada; cambiarla empezará una ficha nueva para evitar mezclar datos de modelos diferentes. Si ninguna encaja, utiliza «Otro / modelo configurable».',
+            'Choose the relevant subject. Changing it starts a new form to avoid mixing different models. Use “Other / editable model” if none fits.')}</small>
+        </label> : <p className="cy-help"><strong>{t('Ejemplo seleccionado:','Selected example:')}</strong> {kinds[data.kind][es?0:1]} · {t('Datos hipotéticos','Hypothetical data')}</p>}
         <p className="cy-help">{templateInfo(data.kind,locale).guidance}</p>
         <div className="cy-fields">
           {input('title',t('Nombre del caso','Case title'),'e.g. Fuel supply resilience')}
@@ -448,7 +450,6 @@ export function CaseJourney({locale,view,data,setData}:Props){
         <p>{t('El JSON contiene entradas y registros de evidencia para reanudar el trabajo. El informe presenta supuestos, comparaciones, limitaciones y texto por audiencia. Ninguna exportación valida los resultados.',
           'JSON contains all inputs and evidence records for continuing work. Reports include assumptions, comparisons, limits and audience narrative. Exports do not validate results.')}</p>
         <div className="cy-inline-tools">
-          <button type="button" onClick={exportJson}>{t('Guardar caso JSON','Save case JSON')}</button>
           <button type="button" onClick={exportMarkdown}>{t('Informe Markdown','Markdown report')}</button>
           <button type="button" disabled={exportBusy} onClick={()=>{void exportPdf();}}>{exportBusy?t('Generando…','Generating…'):t('Informe PDF','PDF report')}</button>
         </div>
@@ -456,6 +457,19 @@ export function CaseJourney({locale,view,data,setData}:Props){
           'Before sharing any file, follow your organisation’s information-classification and protection rules.')}</p>
       </section>
     </div>}
+    <details className="cy-work-files">
+      <summary>{t('Guardar o recuperar mi trabajo (opcional)','Save or resume my work (optional)')}</summary>
+      <div className="cy-work-files__body">
+        <p>{t('ASRI no guarda tu caso en una cuenta. Si cierras la página, puedes perder los cambios. Descarga una copia del caso y vuelve a abrirla otro día. Es un archivo .json: solo sirve para conservar los datos y continuar editándolos, no es el informe para presentar.',
+          'ASRI does not save your case to an account. Closing this page may lose your changes. Download a copy and reopen it later. The .json file stores your case data for further editing; it is not the presentation report.')}</p>
+        <div className="cy-inline-tools">
+          <button type="button" onClick={exportJson}>{t('Guardar una copia de mi caso','Download a copy of my case')}</button>
+          <label className="cy-file-picker">{t('Abrir un caso guardado','Open a saved case')}
+            <input aria-label={t('Abrir archivo de caso guardado','Open saved case file')} type="file" accept=".json,application/json"
+              onChange={e=>{void importCase(e.target.files?.[0]);e.target.value='';}} /></label>
+        </div>
+      </div>
+    </details>
     {message&&<p className="cy-message" role="status">{message}</p>}
   </section>;
 }
