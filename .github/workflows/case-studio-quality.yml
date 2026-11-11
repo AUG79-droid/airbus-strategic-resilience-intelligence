@@ -1,0 +1,55 @@
+name: ASRI Case Studio Quality Gate
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/case-studio-quality.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  statuses: write
+
+concurrency:
+  group: case-studio-quality
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install
+        id: install
+        working-directory: app
+        run: npm ci
+      - name: Run all tests
+        id: tests
+        working-directory: app
+        run: npm test
+      - name: Typecheck and production build
+        id: build
+        working-directory: app
+        run: npm run build
+      - name: Report granular quality status on commit
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INSTALL: ${{ steps.install.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          if [ "$INSTALL" = "success" ] && [ "$TESTS" = "success" ] && [ "$BUILD" = "success" ]; then state=success; else state=failure; fi
+          gh api -X POST "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state="$state" \
+            -f context="asri/case-studio-quality" \
+            -f description="Install: $INSTALL; tests: $TESTS; build: $BUILD" \
+            -f target_url="${{ github.server_url }}/${{ github.repository }}/actions"
