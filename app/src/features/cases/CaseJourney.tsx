@@ -4,7 +4,7 @@ import type { Locale, ViewId } from '../../app/types';
 import {
   comparisons, createCase, templateInfo, validateCaseImport,
   type StrategicCase, type CaseKind, type EvidenceItem, type Audience,
-  type MetricDefinition, type OptionComparison
+  type OptionComparison
 } from './model';
 import { fromPreset, presetTitle, type PresetKey } from './presets';
 import { UniversalControls } from './UniversalControls';
@@ -181,16 +181,8 @@ export function CaseJourney({locale,view,data,setData}:Props){
   const results=useMemo(()=>comparisons(data),[data]);
   const active=results.find(r=>r.option.id===selectedOption)??results[0];
   const setField=(key:keyof StrategicCase,value:unknown)=>setData(current=>({...current,[key]:value}));
-  const patchMetric=(id:string,patch:Partial<MetricDefinition>)=>setData(current=>({
-    ...current,metrics:current.metrics.map(m=>m.id===id?{...m,...patch}:m)
-  }));
   const patchOption=(id:string,key:'name'|'explanation',value:string)=>setData(current=>({
     ...current,options:current.options.map(o=>o.id===id?{...o,[key]:value}:o)
-  }));
-  const patchMeasure=(optionId:string,metricId:string,patch:{value?:number|null;evidenceId?:string})=>setData(current=>({
-    ...current,options:current.options.map(o=>o.id!==optionId?o:{
-      ...o,measures:{...o.measures,[metricId]:{...o.measures[metricId],...patch}}
-    })
   }));
   const patchEvidence=(id:string,patch:Partial<EvidenceItem>)=>setData(current=>({
     ...current,evidence:current.evidence.map(e=>e.id===id?{...e,...patch}:e)
@@ -266,7 +258,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
         </button>
       </section>
       <section className="cy-panel">
-        <h3>{t('Opción 2 · Practicar con los cuatro ejemplos de Mireia','Option 2 · Explore Mireia’s four example cases')}</h3>
+        <h3>{t('Opción 2 · Practicar con cuatro ejemplos','Option 2 · Explore four example cases')}</h3>
         <p>{t('Selecciona un ejemplo ya preparado: la ficha y los valores hipotéticos se rellenarán automáticamente y podrás recorrer las cuatro etapas.','Select a prepared example: its case definition and illustrative values will load automatically for the full four-stage journey.')}</p>
         <div className="cy-preset-grid">{four.map(id=><button type="button" key={id} onClick={()=>loadPreset(id)}>
           <strong>{kinds[id][es?0:1]}</strong><span>{presetTitle(id,locale)}</span>
@@ -401,7 +393,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
           <h4>{c.option.name}</h4>
           <strong>{c.canDescribeAsMeasured?t('Mediciones documentadas declaradas; revisión experta pendiente','User-declared documented measurements; expert acceptance pending'):
             t('Validación incompleta','Validation incomplete')}</strong>
-          <p>{c.rows.filter(x=>x.evidenceReady).length} / {c.rows.length} {t('indicadores con fuentes revisadas en ambas alternativas','indicators with reviewed records for both values')}</p>
+          <p>{c.rows.filter(x=>x.issue!=='excluded'&&x.evidenceReady).length} / {c.rows.filter(x=>x.issue!=='excluded').length} {t('indicadores con fuentes revisadas en ambas alternativas','indicators with reviewed records for both values')}</p>
           <ul>{c.missing.map((item,i)=><li key={i}>{item}</li>)}</ul>
         </article>)}</div>
       </section>
