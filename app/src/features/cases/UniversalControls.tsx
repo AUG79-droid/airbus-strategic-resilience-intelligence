@@ -1,6 +1,6 @@
 import { useMemo, type Dispatch, type SetStateAction } from 'react';
 import type { Locale } from '../../app/types';
-import type { StrategicCase } from './model';
+import { displayOptionName, type StrategicCase } from './model';
 import {
   calculateUniversal, SECTION_NAMES, SECTION_ORDER,
   UNIVERSAL_PARAMETERS, parameterUnit, type Applicability, type ParameterSection,
@@ -117,11 +117,11 @@ export function UniversalControls({locale,data,setData}:Props){
                 const value=option.parameterValues?.[def.id]?.value??null;
                 const invalid=value!==null&&(value<(def.minimum??-Infinity)||value>(def.maximum??Infinity));
                 return <div className="cy-universal__option" key={option.id}>
-                  <strong>{option.name}</strong>
+                  <strong>{displayOptionName(option,locale)}</strong>
                   <label className="cy-field"><span>{t('Valor','Value')} · {parameterUnit(def.unit,data.kind,locale)}</span>
                     <input type="number" step="any" min={def.minimum} max={def.maximum}
                       value={value??''} onChange={e=>setNumber(option.id,def.id,e.target.value)}
-                      aria-label={def.label[locale]+' · '+option.name}/></label>
+                      aria-label={def.label[locale]+' · '+displayOptionName(option,locale)}/></label>
                   <label className="cy-field"><span>{t('Evidencia del valor','Evidence for this value')}</span>
                     <select value={option.parameterValues?.[def.id]?.evidenceId??''} onChange={e=>setEvidence(option.id,def.id,e.target.value)}>
                       <option value="">{t('Pendiente de justificar','No supporting source yet')}</option>
@@ -150,7 +150,7 @@ export function UniversalControls({locale,data,setData}:Props){
       <p>{t('Cada columna refleja una alternativa; al cambiar un dato se recalculan las fórmulas. No se mezclan unidades ni se combinan indicadores con pesos arbitrarios.',
         'Each column is one alternative. Changing an input recalculates the equations. Metrics use consistent units and are not combined with arbitrary weights.')}</p>
       <div className="cy-table-scroll"><table className="cy-input-table cy-universal__output-table">
-        <thead><tr><th>{t('Resultado','Outcome')}</th>{data.options.map(o=><th key={o.id}>{o.name}</th>)}</tr></thead>
+        <thead><tr><th>{t('Resultado','Outcome')}</th>{data.options.map(o=><th key={o.id}>{displayOptionName(o,locale)}</th>)}</tr></thead>
         <tbody>{derivedTitles.map(def=><tr key={def.key}>
           <th scope="row">{es?def.es:def.en}<small>{parameterUnit(def.unit,data.kind,locale)}</small></th>
           {computed.map((result,i)=>{
