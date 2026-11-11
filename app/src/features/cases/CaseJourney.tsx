@@ -7,6 +7,8 @@ import {
   type MetricDefinition, type OptionComparison
 } from './model';
 import { fromPreset, presetTitle, type PresetKey } from './presets';
+import { UniversalControls } from './UniversalControls';
+import { calculateUniversal, parameterUnit } from './universal';
 import './CaseJourney.css';
 
 type Props = {
@@ -57,17 +59,21 @@ function safeFilename(data:StrategicCase):string {
   const title=(data.title||'case').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9-]+/g,'-').slice(0,50);
   return 'ASRI-'+title+'-'+new Date().toISOString().slice(0,10);
 }
+function metricTitle(label:string,locale:Locale){
+  const chunks=label.split(' / ');
+  return chunks.length===2?chunks[locale==='es'?0:1]:label;
+}
 function describeVerdict(c:OptionComparison,locale:Locale){
   return verdicts[c.verdict][locale==='es'?0:1];
 }
 function summary(data:StrategicCase, c:OptionComparison, locale:Locale):string {
   const es=locale==='es';
-  const measurable=c.rows.filter(r=>r.improvement!==null);
+  const measurable=c.rows.filter(r=>r.improvement!==null&&r.issue!=='excluded');
   const positive=measurable.filter(r=>r.improvement!==null&&r.improvement>0);
   const negative=measurable.filter(r=>r.improvement!==null&&r.improvement<0);
-  const main=c.rows.find(r=>r.metric.category==='resilience')??c.rows[0];
+  const main=c.rows.find(r=>r.metric.category==='resilience'&&r.issue!=='excluded')??measurable[0];
   const change=main && main.delta!==null
-    ? `${main.metric.label}: ${present(main.baseline,locale)} → ${present(main.candidate,locale)} ${main.metric.unit} (${main.delta>0?'+':''}${present(main.delta,locale)} ${main.metric.unit})`
+    ? `${metricTitle(main.metric.label,locale)}: ${present(main.baseline,locale)} → ${present(main.candidate,locale)} ${parameterUnit(main.metric.unit,data.kind,locale)} (${main.delta>0?'+':''}${present(main.delta,locale)} ${parameterUnit(main.metric.unit,data.kind,locale)})`
     : (es?'El indicador clave no tiene datos suficientes.':'The main indicator has insufficient data.');
   return es
     ? `${data.title||'Este caso'} evalúa «${data.initiative||'una iniciativa'}» frente a la referencia «${data.options[0]?.name||'situación actual'}». La alternativa «${c.option.name}» ofrece ${positive.length} indicadores mejores y ${negative.length} peores, según los valores declarados. ${change}. ${data.hypothetical?'Todos los valores son hipotéticos; ':'Estos valores han sido declarados por el usuario; '}no debe comunicarse una mejora como beneficio demostrado sin validación técnica y operativa.`
@@ -112,8 +118,14 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     '',es?'## 02 Cuestionar':'## 02 Challenge',
     `Baseline: ${data.options[0].name}`,`Alternative: ${chosen.option.name}`,
     `Verdict: ${describeVerdict(chosen,locale)}`,
-    ...chosen.rows.map(r=>`- ${r.metric.label}: ${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${r.metric.unit} | Δ ${present(r.delta,locale)} | ${r.robustness} | evidence: ${r.evidenceReady?'reviewed':'pending'}`),
+    ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | evidence: ${r.evidenceReady?'reviewed':'pending'}`),
     `Sensitivity: ±${data.robustnessPercent}% user-selected input variation; NOT a statistical confidence interval.`,
+    '',es?'## Controles y aplicabilidad':'## Universal controls and applicability',
+    ...Object.entries(data.parameters).map(([id,state])=>'- '+id+': '+state.applicability+'; '+state.reason),
+    ...data.options.flatMap(option=>{
+      const calc=calculateUniversal(data,option);
+      return [option.name+': '+JSON.stringify(Object.fromEntries(Object.entries(calc).filter(([k])=>k!=='assumptions')))];
+    }),
     '',es?'## 03 Comprobar':'## 03 Check',
     `Review gates: ${JSON.stringify(data.gates)}`,
     `Evidence trace: ${chosen.reviewedData?'all inputs linked to reviewed records':'incomplete'}`,
@@ -292,64 +304,38 @@ export function CaseJourney({locale,view,data,setData}:Props){
     {view==='challenge' && <div className="cy-stage">
       {data.hypothetical&&<p className="cy-example-notice">{sampleWarning}</p>}
       <section className="cy-panel">
-        <h3>{t('Modelo de análisis','Analysis model')}: {kinds[data.kind][es?0:1]}</h3>
-        <p>{templateInfo(data.kind,locale).guidance}</p>
-        <p className="cy-help">{t('El sistema compara valores introducidos para la misma unidad; no predice disponibilidad real, emisiones ni certificaciones. No se asignan pesos arbitrarios para declarar una opción ganadora.',
-          'The tool compares inputs for the same functional unit; it does not predict actual readiness, emissions or certification. No arbitrary weights are used to declare a winner.')}</p>
-        <div className="cy-indicator-grid">{data.metrics.map(m=><div className="cy-indicator" key={m.id}>
-          <label><span>{t('Indicador','Indicator')}</span><input value={m.label} onChange={e=>patchMetric(m.id,{label:e.target.value})} /></label>
-          <label><span>{t('Unidad','Unit')}</span><input value={m.unit} onChange={e=>patchMetric(m.id,{unit:e.target.value})} /></label>
-          <label><span>{t('Mejora cuando','Improves when')}</span><select value={m.direction}
-            onChange={e=>patchMetric(m.id,{direction:e.target.value as MetricDefinition['direction']})}>
-            <option value="lower">{t('Disminuye','Lower')}</option><option value="higher">{t('Aumenta','Higher')}</option>
-          </select></label>
+        <h3>{t('Alternativas que vas a comparar','Alternatives to compare')}</h3>
+        <p>{t('Utiliza la misma unidad funcional, periodo y alcance en todas las alternativas. Estos nombres y descripciones pueden editarse en cualquier caso.',
+          'Use the same unit, period and boundary for all alternatives. You can edit these names and descriptions for any case.')}</p>
+        <div className="cy-options-notes">{data.options.map(o=><div className="cy-option-definition" key={o.id}>
+          <label className="cy-field"><span>{o.id==='baseline'?t('Situación de referencia','Baseline'):t('Alternativa','Alternative')}</span>
+            <input value={o.name} onChange={e=>patchOption(o.id,'name',e.target.value)}/></label>
+          <label className="cy-field"><span>{t('Descripción y supuestos','Description and assumptions')}</span>
+            <textarea rows={3} value={o.explanation} onChange={e=>patchOption(o.id,'explanation',e.target.value)}/></label>
         </div>)}</div>
       </section>
+      <UniversalControls locale={locale} data={data} setData={setData}/>
       <section className="cy-panel">
-        <h3>{t('Escenarios: situación actual frente a alternativas','Scenarios: baseline versus alternatives')}</h3>
-        <p>{t('Introduce valores para una misma unidad funcional y periodo. Elige en cada celda la evidencia asociada, si la tienes. Un campo vacío impide calcular ese indicador.',
-          'Enter values for the same functional unit and time period. Link a source record to each value when available. Blank values cannot be compared.')}</p>
-        <div className="cy-table-scroll"><table className="cy-input-table"><thead><tr><th>{t('Indicador','Indicator')}</th>
-          {data.options.map(o=><th key={o.id}><label className="cy-table-label"><span>{o.id==='baseline'?t('Referencia','Baseline'):t('Alternativa','Alternative')}</span>
-            <input value={o.name} onChange={e=>patchOption(o.id,'name',e.target.value)} /></label></th>)}</tr></thead>
-          <tbody>{data.metrics.map(m=><tr key={m.id}><th scope="row">{m.label}<small>{m.unit}</small></th>
-            {data.options.map(o=><td key={o.id}>
-              <label className="cy-value-label"><span>{t('Valor','Value')}</span><input type="number" inputMode="decimal" step="any"
-                min={m.min} max={m.max} value={o.measures[m.id]?.value??''}
-                aria-label={m.label+' · '+o.name}
-                onChange={e=>patchMeasure(o.id,m.id,{value:fValue(e.target.value)})}/></label>
-              <label className="cy-evidence-select"><span>{t('Fuente / evidencia','Source / evidence')}</span>
-                <select value={o.measures[m.id]?.evidenceId??''}
-                  aria-label={t('Evidencia de ','Evidence for ')+m.label+' · '+o.name}
-                  onChange={e=>patchMeasure(o.id,m.id,{evidenceId:e.target.value})}>
-                  <option value="">{t('Sin evidencia','No evidence')}</option>
-                  {data.evidence.map(item=><option key={item.id} value={item.id}>{item.id} · {item.title||t('Sin título','Untitled')}</option>)}
-                </select></label>
-              {!((o.measures[m.id]?.value===null)||(o.measures[m.id]?.value===undefined)) &&
-                (Number(o.measures[m.id].value)<(m.min??-Infinity)||Number(o.measures[m.id].value)>(m.max??Infinity)) &&
-                <small className="cy-error">{t('Fuera de rango','Out of range')}</small>}
-            </td>)}</tr>)}</tbody></table></div>
-        <div className="cy-options-notes">{data.options.map(o=><label key={o.id} className="cy-field"><span>{o.name} · {t('Descripción / supuestos','Description / assumptions')}</span>
-          <textarea rows={2} value={o.explanation} onChange={e=>patchOption(o.id,'explanation',e.target.value)} /></label>)}</div>
-      </section>
-      <section className="cy-panel">
-        <h3>{t('Resultados comparativos y sensibilidad','Comparative outcomes and sensitivity')}</h3>
-        <label className="cy-field cy-width-short"><span>{t('Variación supuesta de cada dato (%)','Assumed variation of each input (%)')}</span>
-          <input type="number" min="0" max="100" value={data.robustnessPercent} onChange={e=>{
-            const n=Number(e.target.value);if(Number.isFinite(n))setField('robustnessPercent',Math.min(100,Math.max(0,n)));
-          }}/></label>
-        <p className="cy-help">{t('La prueba de sensibilidad aplica ± el porcentaje indicado a ambos valores. No es un intervalo estadístico ni una predicción calibrada.',
-          'Sensitivity uses the chosen ± percentage around both values. It is not a statistical confidence interval or a calibrated forecast.')}</p>
+        <h3>{t('Comparación de las alternativas','Comparison of alternatives')}</h3>
+        <p>{t('Los indicadores se calculan con los controles anteriores. Los que no aplican se excluyen, y los desconocidos bloquean las conclusiones afectadas. No hay un ganador automático si existen compromisos.',
+          'Metrics are calculated from the controls above. Not-applicable inputs are excluded; unknown inputs block affected conclusions. Trade-offs do not produce an automatic winner.')}</p>
+        <label className="cy-field cy-width-short"><span>{t('Margen de sensibilidad supuesto (%)','Assumed sensitivity margin (%)')}</span>
+          <input type="number" min="0" max="100" value={data.robustnessPercent}
+            onChange={e=>{const n=Number(e.target.value);if(Number.isFinite(n))setField('robustnessPercent',Math.min(100,Math.max(0,n)));}}/></label>
+        <p className="cy-help">{t('Este margen sirve para comprobar si pequeñas variaciones de los valores podrían cambiar la interpretación. No equivale a una predicción estadística calibrada.',
+          'This margin tests whether input changes could alter interpretation; it is not a statistically calibrated prediction.')}</p>
         <div className="cy-results">{results.map(c=><article key={c.option.id}>
           <h4>{c.option.name}</h4><strong>{describeVerdict(c,locale)}</strong>
-          <ul>{c.rows.map(row=><li key={row.metric.id}>
-            <span>{row.metric.label}</span>
-            <b>{row.delta===null?t('Sin datos','Missing'): `${row.delta>0?'+':''}${present(row.delta,locale)} ${row.metric.unit}`}</b>
-            {row.delta!==null&&<small>{present(row.baseline,locale)} → {present(row.candidate,locale)} {row.metric.unit}{row.percentChange===null?'':` · ${row.percentChange>0?'+':''}${present(row.percentChange,locale)}%`}</small>}
-            <small>{row.robustness==='stable'?t('Diferencia robusta al margen supuesto','Stable under chosen margin'):
-              row.robustness==='sensitive'?t('Resultado sensible al margen supuesto','Sensitive to chosen margin'):t('No calculable','Not computable')}</small>
+          <ul>{c.rows.filter(row=>row.issue!=='excluded').map(row=><li key={row.metric.id}>
+            <span>{metricTitle(row.metric.label,locale)}</span>
+            <b>{row.delta===null?t('Dato desconocido / incompleto','Unknown / incomplete'):
+              `${row.delta>0?'+':''}${present(row.delta,locale)} ${parameterUnit(row.metric.unit,data.kind,locale)}`}</b>
+            {row.delta!==null&&<small>{present(row.baseline,locale)} → {present(row.candidate,locale)} {parameterUnit(row.metric.unit,data.kind,locale)}
+              {row.percentChange===null?'':` · ${row.percentChange>0?'+':''}${present(row.percentChange,locale)}%`}</small>}
+            <small>{row.robustness==='stable'?t('Diferencia mayor que el margen supuesto','Difference exceeds assumed margin'):
+              row.robustness==='sensitive'?t('Resultado sensible a las condiciones','Sensitive to assumptions'):t('Sin resultado concluyente','No conclusive result')}</small>
           </li>)}</ul>
-          <p className="cy-help">{t('Referencia:','Baseline:')} {data.options[0]?.name}. {t('No se ha demostrado causalidad.','Causality is not demonstrated.')}</p>
+          <p className="cy-help">{t('Referencia:','Baseline:')} {data.options[0].name}. {t('Hipótesis de modelo, no beneficio validado.','Model assumption, not a validated benefit.')}</p>
         </article>)}</div>
       </section>
     </div>}
