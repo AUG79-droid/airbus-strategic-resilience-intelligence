@@ -7,6 +7,8 @@ import { TranslateView } from '../views/TranslateView';
 import { ValidateView } from '../views/ValidateView';
 import type { Locale, ViewId } from './types';
 import type { StrategyId } from '../domain';
+import { CaseJourney } from '../features/cases/CaseJourney';
+import { createCase } from '../features/cases/model';
 
 const workflow: ViewId[] = ['investigate', 'challenge', 'validate', 'translate'];
 type ChallengePanel = 'parameters' | 'technical' | null;
@@ -41,6 +43,8 @@ function viewFromHash(): ViewId {
 
 export function App() {
   const [locale, setLocale] = useState<Locale>('en');
+  const [caseMode, setCaseMode] = useState<'demo' | 'custom'>('demo');
+  const [customCase, setCustomCase] = useState(createCase);
   const [view, setView] = useState<ViewId>(viewFromHash);
   const [challengeScreen, setChallengeScreen] = useState<ChallengeScreen>(screenFromHistory);
   const [challengeChoice, setChallengeChoice] = useState<StrategyId | null>(() => currentHistory().asriChoice ?? null);
@@ -170,7 +174,11 @@ export function App() {
         </aside>
 
         <main id="main-content" className="main-content">
-          {view === 'investigate' && <section className="hero" aria-labelledby="hero-title">
+          <nav className="case-mode-switch" aria-label={locale === 'es' ? 'Seleccionar recorrido' : 'Select a journey'}>
+            <button type="button" className={caseMode === 'demo' ? 'is-active' : ''} aria-pressed={caseMode === 'demo'} onClick={() => { setCaseMode('demo'); navigate('investigate'); }}>DEMO-60</button>
+            <button type="button" className={caseMode === 'custom' ? 'is-active' : ''} aria-pressed={caseMode === 'custom'} onClick={() => { setCaseMode('custom'); navigate('investigate'); }}>{locale === 'es' ? 'Crear tu propio caso estratégico' : 'Create your own strategic case'}</button>
+          </nav>
+          {caseMode === 'demo' && view === 'investigate' && <section className="hero" aria-labelledby="hero-title">
             <div className="hero__copy">
               <p className="eyebrow">{content.eyebrow}</p>
               <h1 id="hero-title">
@@ -186,10 +194,10 @@ export function App() {
             </div>
           </section>}
 
-          <section id="case-workspace" className="case-workspace" aria-label={content.caseLabel}>
+          <section id="case-workspace" className="case-workspace" aria-label={caseMode === 'custom' ? customCase.title || 'Custom strategic case' : content.caseLabel}>
             <div className="case-line">
-              <strong>{content.caseLabel}</strong>
-              <span>{content.caseDescription}</span>
+              <strong>{caseMode === 'custom' ? (customCase.title || (locale === 'es' ? 'NUEVO CASO ESTRATÉGICO' : 'NEW STRATEGIC CASE')) : content.caseLabel}</strong>
+              <span>{caseMode === 'custom' ? (customCase.hypothetical ? (locale === 'es' ? 'CASO HIPOTÉTICO' : 'HYPOTHETICAL CASE') : (locale === 'es' ? 'DATOS Y VALIDACIÓN PENDIENTES' : 'DATA AND VALIDATION PENDING')) : content.caseDescription}</span>
             </div>
             <nav className="workspace-tabs" aria-label={content.navLabel}>
               {workflow.map((item) => (
@@ -205,7 +213,19 @@ export function App() {
               ))}
             </nav>
 
-            <div className="workspace-view" key={`${locale}-${view}`}>
+            <div className="workspace-view" key={`${locale}-${view}-${caseMode}`}>
+              {caseMode === 'custom' ? (
+                <>
+                  <CaseJourney locale={locale} view={view} data={customCase} setData={setCustomCase} />
+                  <nav className="journey-actions" aria-label={locale === 'es' ? 'Navegación del caso' : 'Case navigation'}>
+                    {view !== 'investigate' && <button type="button" className="journey-actions__back" onClick={() => navigate(workflow[workflow.indexOf(view) - 1])}>← {locale === 'es' ? 'Volver' : 'Back'}</button>}
+                    <button type="button" className="journey-actions__next" onClick={() => navigate(view === 'translate' ? 'investigate' : workflow[workflow.indexOf(view) + 1])}>
+                      {view === 'translate' ? (locale === 'es' ? 'Volver a investigar' : 'Back to Investigate') : (locale === 'es' ? 'Continuar: ' : 'Continue: ') + content.views[workflow[workflow.indexOf(view) + 1]].label} →
+                    </button>
+                  </nav>
+                </>
+              ) : (
+                <>
               {view === 'translate' && (
                 <div className="step-direction" role="note">
                   <strong>{locale === 'es' ? 'PASO' : 'STEP'} {workflow.indexOf(view) + 1} / 4 · {content.views[view].label}</strong>
@@ -237,6 +257,8 @@ export function App() {
                     {view === 'translate' ? (locale === 'es' ? 'Volver al caso' : 'Return to case') : (locale === 'es' ? 'Continuar: ' : 'Continue: ') + content.views[workflow[workflow.indexOf(view) + 1]].label} →
                   </button>
                 </nav>
+              )}
+                </>
               )}
             </div>
           </section>
