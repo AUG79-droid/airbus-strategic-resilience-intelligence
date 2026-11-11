@@ -2,7 +2,7 @@ import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { downloadText, downloadBytes } from '../export/download';
 import type { Locale, ViewId } from '../../app/types';
 import {
-  comparisons, createCase, templateInfo, validateCaseImport,
+  comparisons, createCase, displayOptionName, templateInfo, validateCaseImport,
   type StrategicCase, type CaseKind, type EvidenceItem, type Audience,
   type OptionComparison
 } from './model';
@@ -76,8 +76,8 @@ function summary(data:StrategicCase, c:OptionComparison, locale:Locale):string {
     ? `${metricTitle(main.metric.label,locale)}: ${present(main.baseline,locale)} → ${present(main.candidate,locale)} ${parameterUnit(main.metric.unit,data.kind,locale)} (${main.delta>0?'+':''}${present(main.delta,locale)} ${parameterUnit(main.metric.unit,data.kind,locale)})`
     : (es?'El indicador clave no tiene datos suficientes.':'The main indicator has insufficient data.');
   return es
-    ? `${data.title||'Este caso'} evalúa «${data.initiative||'una iniciativa'}» frente a la referencia «${data.options[0]?.name||'situación actual'}». La alternativa «${c.option.name}» ofrece ${positive.length} indicadores mejores y ${negative.length} peores, según los valores declarados. ${change}. ${data.hypothetical?'Todos los valores son hipotéticos; ':'Estos valores han sido declarados por el usuario; '}no debe comunicarse una mejora como beneficio demostrado sin validación técnica y operativa.`
-    : `${data.title||'This case'} examines “${data.initiative||'an initiative'}” against “${data.options[0]?.name||'the current baseline'}”. “${c.option.name}” has ${positive.length} improving and ${negative.length} worsening indicators under the entered assumptions. ${change}. ${data.hypothetical?'Every value is hypothetical; ':'Values are user-provided; '}do not communicate modelled changes as demonstrated benefits without technical and operational validation.`;
+    ? `${data.title||'Este caso'} evalúa «${data.initiative||'una iniciativa'}» frente a la referencia «${(data.options[0]?displayOptionName(data.options[0],locale):'situación actual')}». La alternativa «${displayOptionName(c.option,locale)}» ofrece ${positive.length} indicadores mejores y ${negative.length} peores, según los valores declarados. ${change}. ${data.hypothetical?'Todos los valores son hipotéticos; ':'Estos valores han sido declarados por el usuario; '}no debe comunicarse una mejora como beneficio demostrado sin validación técnica y operativa.`
+    : `${data.title||'This case'} examines “${data.initiative||'an initiative'}” against “${(data.options[0]?displayOptionName(data.options[0],locale):'the current baseline')}”. “${displayOptionName(c.option,locale)}” has ${positive.length} improving and ${negative.length} worsening indicators under the entered assumptions. ${change}. ${data.hypothetical?'Every value is hypothetical; ':'Values are user-provided; '}do not communicate modelled changes as demonstrated benefits without technical and operational validation.`;
 }
 function narrative(data:StrategicCase,c:OptionComparison,audience:Audience,locale:Locale):string{
   const es=locale==='es';
@@ -116,7 +116,7 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     `Mechanism: ${data.mechanism}`,`Scope: ${data.boundary}`,
     `Horizon: ${data.timeHorizon}`,`Owner: ${data.owner}`,
     '',es?'## 02 Cuestionar':'## 02 Challenge',
-    `Baseline: ${data.options[0].name}`,`Alternative: ${chosen.option.name}`,
+    `Baseline: ${displayOptionName(data.options[0],locale)}`,`Alternative: ${displayOptionName(chosen.option,locale)}`,
     `Verdict: ${describeVerdict(chosen,locale)}`,
     ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | evidence: ${r.evidenceReady?'reviewed':'pending'}`),
     `Sensitivity: ±${data.robustnessPercent}% user-selected input variation; NOT a statistical confidence interval.`,
@@ -124,7 +124,7 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     ...Object.entries(data.parameters).map(([id,state])=>'- '+id+': '+state.applicability+'; '+state.reason),
     ...data.options.flatMap(option=>{
       const calc=calculateUniversal(data,option);
-      return [option.name+': '+JSON.stringify(Object.fromEntries(Object.entries(calc).filter(([k])=>k!=='assumptions')))];
+      return [displayOptionName(option,locale)+': '+JSON.stringify(Object.fromEntries(Object.entries(calc).filter(([k])=>k!=='assumptions')))];
     }),
     '',es?'## 03 Comprobar':'## 03 Check',
     `Review gates: ${JSON.stringify(data.gates)}`,
@@ -230,7 +230,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
   const input=(field:keyof StrategicCase,label:string,placeholder='')=>(
     <label className="cy-field" key={String(field)}>
       <span>{label}</span>
-      <textarea rows={field==='boundary'||field==='decision'?2:1} value={String(data[field]??'')}
+      <textarea data-case-field={field} rows={field==='initiative'||field==='mechanism'?5:field==='boundary'||field==='decision'||field==='vulnerability'?4:3} value={String(data[field]??'')}
         placeholder={placeholder} onChange={e=>setField(field,e.target.value)} />
     </label>
   );
@@ -301,7 +301,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
           'Use the same unit, period and boundary for all alternatives. You can edit these names and descriptions for any case.')}</p>
         <div className="cy-options-notes">{data.options.map(o=><div className="cy-option-definition" key={o.id}>
           <label className="cy-field"><span>{o.id==='baseline'?t('Situación de referencia','Baseline'):t('Alternativa','Alternative')}</span>
-            <input value={o.name} onChange={e=>patchOption(o.id,'name',e.target.value)}/></label>
+            <input value={displayOptionName(o,locale)} onChange={e=>patchOption(o.id,'name',e.target.value)}/></label>
           <label className="cy-field"><span>{t('Descripción y supuestos','Description and assumptions')}</span>
             <textarea rows={3} value={o.explanation} onChange={e=>patchOption(o.id,'explanation',e.target.value)}/></label>
         </div>)}</div>
@@ -317,7 +317,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
         <p className="cy-help">{t('Este margen sirve para comprobar si pequeñas variaciones de los valores podrían cambiar la interpretación. No equivale a una predicción estadística calibrada.',
           'This margin tests whether input changes could alter interpretation; it is not a statistically calibrated prediction.')}</p>
         <div className="cy-results">{results.map(c=><article key={c.option.id}>
-          <h4>{c.option.name}</h4><strong>{describeVerdict(c,locale)}</strong>
+          <h4>{displayOptionName(c.option,locale)}</h4><strong>{describeVerdict(c,locale)}</strong>
           <ul>{c.rows.filter(row=>row.issue!=='excluded').map(row=><li key={row.metric.id}>
             <span>{metricTitle(row.metric.label,locale)}</span>
             <b>{row.delta===null?t('Dato desconocido / incompleto','Unknown / incomplete'):
@@ -327,7 +327,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
             <small>{row.robustness==='stable'?t('Diferencia mayor que el margen supuesto','Difference exceeds assumed margin'):
               row.robustness==='sensitive'?t('Resultado sensible a las condiciones','Sensitive to assumptions'):t('Sin resultado concluyente','No conclusive result')}</small>
           </li>)}</ul>
-          <p className="cy-help">{t('Referencia:','Baseline:')} {data.options[0].name}. {t('Hipótesis de modelo, no beneficio validado.','Model assumption, not a validated benefit.')}</p>
+          <p className="cy-help">{t('Referencia:','Baseline:')} {displayOptionName(data.options[0],locale)}. {t('Hipótesis de modelo, no beneficio validado.','Model assumption, not a validated benefit.')}</p>
         </article>)}</div>
       </section>
     </div>}
@@ -390,7 +390,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
         <p>{t('Para confirmar un resultado documental se necesitan datos de referencia y alternativa asociados a fuentes revisadas. La revisión declarada en esta demo no acredita por sí sola un beneficio.',
           'A documented comparison requires both baseline and option values linked to reviewed sources. Self-declared review in this demo does not establish an approved benefit.')}</p>
         <div className="cy-readiness">{results.map(c=><article key={c.option.id}>
-          <h4>{c.option.name}</h4>
+          <h4>{displayOptionName(c.option,locale)}</h4>
           <strong>{c.canDescribeAsMeasured?t('Mediciones documentadas declaradas; revisión experta pendiente','User-declared documented measurements; expert acceptance pending'):
             t('Validación incompleta','Validation incomplete')}</strong>
           <p>{c.rows.filter(x=>x.issue!=='excluded'&&x.evidenceReady).length} / {c.rows.filter(x=>x.issue!=='excluded').length} {t('indicadores con fuentes revisadas en ambas alternativas','indicators with reviewed records for both values')}</p>
@@ -406,7 +406,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
           'Narratives are generated from your case description and values and update when inputs change. They never reuse DEMO-60 results.')}</p>
         <div className="cy-choices">
           <label className="cy-field"><span>{t('Alternativa analizada','Alternative')}</span><select value={active?.option.id??''} onChange={e=>setSelectedOption(e.target.value)}>
-            {results.map(c=><option key={c.option.id} value={c.option.id}>{c.option.name}</option>)}</select></label>
+            {results.map(c=><option key={c.option.id} value={c.option.id}>{displayOptionName(c.option,locale)}</option>)}</select></label>
           <label className="cy-field"><span>{t('Audiencia','Audience')}</span><select value={selectedAudience} onChange={e=>setSelectedAudience(e.target.value as Audience)}>
             {audiences.map(a=><option key={a} value={a}>{audienceNames[a][es?0:1]}</option>)}</select></label>
         </div>
@@ -414,7 +414,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
           <span className="cy-status">{data.hypothetical?t('EJEMPLO 100 % HIPOTÉTICO','100% HYPOTHETICAL CASE'):
             active.canDescribeAsMeasured?t('RESULTADOS CALCULADOS CON DATOS DECLARADOS COMO REVISADOS','RESULTS FROM USER-DECLARED REVIEWED DATA'):
             t('RESULTADO NO VALIDADO','UNVALIDATED RESULT')}</span>
-          <h4>{audienceNames[selectedAudience][es?0:1]} · {active.option.name}</h4>
+          <h4>{audienceNames[selectedAudience][es?0:1]} · {displayOptionName(active.option,locale)}</h4>
           <strong>{describeVerdict(active,locale)}</strong>
           <p>{narrative(data,active,selectedAudience,locale)}</p>
           <h4>{t('Qué falta antes de comunicar un beneficio','What is still required before communicating a benefit')}</h4>
