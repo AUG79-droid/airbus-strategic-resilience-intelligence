@@ -94,3 +94,55 @@
 .cy-work-files__body { padding:18px 20px 22px; }
 .cy-work-files__body p { max-width:900px; font-size:15px; line-height:1.6; color:#384e43; }
 .cy-work-files__body .cy-inline-tools { margin-bottom:0; }
+
+/* Consistent, legible universal analysis: same categories in every case. */
+.cy-preset-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.cy-preset-grid button { min-height:116px;padding:18px 20px;align-content:center;gap:9px; }
+.cy-preset-grid button strong { font-size:18px;line-height:1.32; }
+.cy-preset-grid button span { font-size:16px;line-height:1.55;overflow-wrap:anywhere; }
+.cy-option-definition { border:1px solid #cbd8cc;padding:17px;background:#f8faf5;display:grid;gap:12px; }
+.cy-option-definition .cy-field textarea { min-height:80px; }
+.cy-universal { display:grid;gap:14px;margin:10px 0 0; }
+.cy-universal__head { background:#213f35;color:#f8fbf5;padding:27px 30px; }
+.cy-universal__head .kicker{color:#d2f7a0;font-size:12px;}
+.cy-universal__head h3 { font-size:clamp(24px,2.5vw,31px);line-height:1.2;margin:9px 0 12px; }
+.cy-universal__head p { font-size:16px;line-height:1.6;max-width:970px; }
+.cy-universal__overview { margin-top:12px;color:#d2e6d6; }
+.cy-universal__section { background:#fffefa;border:1px solid #cbd8cd; }
+.cy-universal__section>summary { list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:19px 23px;font-size:18px;line-height:1.35; }
+.cy-universal__section>summary::-webkit-details-marker{display:none}
+.cy-universal__section>summary:after { content:'+';font-size:24px;margin-left:10px;color:#36664b; }
+.cy-universal__section[open]>summary:after{content:'−'}
+.cy-universal__section>summary>span { background:#22473b;color:#fff;font-weight:850;padding:7px 10px;min-width:42px;text-align:center; }
+.cy-universal__section>summary>strong {flex:1;}
+.cy-universal__section>summary>small {font-size:14px;color:#566c60;font-weight:650}
+.cy-universal__section[open]>summary{border-bottom:1px solid #cbd8cd}
+.cy-universal__rows {padding:20px;display:grid;gap:16px;}
+.cy-universal__param {border:1px solid #d6ded4;padding:18px 20px;background:#fafbf8; }
+.cy-universal__param>header {display:flex;align-items:flex-start;justify-content:space-between;gap:22px;flex-wrap:wrap;}
+.cy-universal__param h4{font-size:18px;line-height:1.35;color:#23483c;margin:0 0 5px;}
+.cy-universal__param h4 small{font-size:15px;font-weight:550;color:#557064;}
+.cy-universal__param p{font-size:15px;line-height:1.5;margin:0;}
+.cy-universal__param--notApplicable{background:#f5f6f1;}
+.cy-universal__param--unknown{border-left:4px solid #bd8656;}
+.cy-applicability{min-width:190px;max-width:220px;flex:0 0 210px;}
+.cy-applicability-reason {margin-top:14px;max-width:870px;}
+.cy-applicability-reason small{font-size:13px;color:#5b6a60;line-height:1.4;}
+.cy-unknown { margin-top:12px!important;background:#fff4e5;padding:10px 13px; }
+.cy-universal__option-grid {margin-top:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;}
+.cy-universal__option{display:grid;align-content:start;gap:12px;background:#fff;border:1px solid #cfdbcf;padding:15px;}
+.cy-universal__option>strong{font-size:16px;line-height:1.4;min-height:44px;}
+.cy-universal__option .cy-field span{font-size:14px;}
+.cy-universal__option .cy-field select{max-width:100%;}
+.cy-universal__evidence-body{padding:18px 25px;}
+.cy-universal__evidence-body p{font-size:16px;line-height:1.65;margin-bottom:12px;}
+.cy-universal__results{padding:27px 30px;background:#fffefa;border:1px solid #cbd8cd;}
+.cy-universal__results h3{font-size:25px;margin-bottom:13px;}
+.cy-universal__results p{font-size:16px;line-height:1.6;}
+.cy-universal__output-table th{font-size:16px;}
+.cy-universal__output-table td strong{font-size:18px;display:block;font-variant-numeric:tabular-nums;}
+.cy-universal__output-table td small{font-size:13px;display:block;line-height:1.45;margin-top:7px;}
+.cy-universal__pending {background:#fff3e9!important;color:#6f492e;}
+@media(max-width:850px){.cy-universal__option-grid{grid-template-columns:1fr}.cy-preset-grid{grid-template-columns:1fr}
+ .cy-universal__param>header{display:grid;gap:15px}.cy-applicability{max-width:none;min-width:0;width:100%;flex:auto}
+ .cy-universal__section>summary{flex-wrap:wrap}.cy-universal__section>summary>small{flex:1 0 100%}}
