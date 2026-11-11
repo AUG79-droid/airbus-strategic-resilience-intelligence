@@ -40,7 +40,7 @@ describe('Create your own strategic case', () => {
     const [repair,parallel]=comparisons(c);
     expect(repair.verdict).toBe('improves');
     expect(parallel.verdict).toBe('tradeoff');
-    expect(repair.rows[0].delta).toBe(-32);
+    expect(repair.rows[0].delta).toBeCloseTo(-49.25);
     expect(repair.reviewedData).toBe(false);
     expect(repair.canDescribeAsMeasured).toBe(false);
   });
@@ -51,15 +51,16 @@ describe('Create your own strategic case', () => {
   it('does not divide by zero when calculating a relative delta', () => {
     const c=fromPreset('climate');
     const change=compareOption(c,c.options[1]);
-    expect(change.rows[2].baseline).toBe(0);
-    expect(change.rows[2].percentChange).toBeNull();
+    const material=change.rows.find(r=>r.metric.id==='materialKg');
+    expect(material?.baseline).toBe(0);
+    expect(material?.percentChange).toBeNull();
   });
   it('rejects invalid percentage values rather than producing optimistic findings', () => {
     const c=fromPreset('saf');
-    c.options[1].measures.resilience.value=150;
+    c.options[1].parameterValues.technicalSuccess.value=150;
     const outcome=compareOption(c,c.options[1]);
     expect(outcome.verdict).toBe('incomplete');
-    expect(outcome.missing.some(x=>x.includes('missing or invalid'))).toBe(true);
+    expect(outcome.missing.some(x=>x.includes('invalid or out of bounds'))).toBe(true);
   });
   it('sensitivity is a margin test, never confidence significance', () => {
     const c=fromPreset('ecodesign');
@@ -90,10 +91,12 @@ describe('Create your own strategic case', () => {
       {id:'ALT',title:'Observed alternative',reference:'REF-ALT',owner:'Owner',reviewer:'Reviewer',
         reviewedOn:'2026-11-10',status:'reviewed',nature:'observed',limitations:'Comparable scope'}
     ];
-    c.metrics.forEach(metric=>{
-      c.options[0].measures[metric.id].evidenceId='BASE';
-      c.options[1].measures[metric.id].evidenceId='ALT';
-    });
+    for(const [id,state] of Object.entries(c.parameters)){
+      if(state.applicability==='applies'){
+        c.options[0].parameterValues[id].evidenceId='BASE';
+        c.options[1].parameterValues[id].evidenceId='ALT';
+      }
+    }
     let result=compareOption(c,c.options[1]);
     expect(result.canDescribeAsMeasured).toBe(true);
     c.evidence[1].nature='estimate';
@@ -109,13 +112,59 @@ describe('Create your own strategic case', () => {
   });
   it('recalculates transparently when an alternative becomes worse',()=>{
     const c=fromPreset('ecodesign');
-    c.options[1].measures.resilience.value=200;
+    c.options[1].parameterValues.baseRecovery.value=200;
     expect(comparisons(c)[0].verdict).toBe('tradeoff');
+  });
+
+  it.each(['general','ecodesign','climate','saf','wildfire'] as const)('provides the same 19 parameters for %s',kind=>{
+    const c=kind==='general'?createCase(kind):fromPreset(kind);
+    expect(Object.keys(c.parameters)).toHaveLength(19);
+    expect(c.options.every(o=>Object.keys(o.parameterValues).length===19)).toBe(true);
+  });
+  it('does not treat no-aplica values as numeric zero or demand their evidence',()=>{
+    const c=fromPreset('ecodesign','es');
+    const existing=comparisons(c)[0].rows.find(r=>r.metric.id==='ghgKg');
+    expect(existing?.issue).toBeUndefined();
+    c.parameters.ghgKg={applicability:'notApplicable',reason:'No se dispone de una frontera GEI comparable'};
+    const row=comparisons(c)[0].rows.find(r=>r.metric.id==='ghgKg');
+    expect(row?.issue).toBe('excluded');
+    expect(row?.delta).toBeNull();
+    expect(row?.evidenceReady).toBe(true);
+  });
+  it('blocks a result when an applicable input is unknown, even if it contains a stale value',()=>{
+    const c=fromPreset('saf');
+    c.parameters.shockProbability={applicability:'unknown',reason:''};
+    const rows=comparisons(c)[0].rows;
+    expect(rows.find(r=>r.metric.id==='expectedRecovery')?.issue).toBe('missing');
+    expect(rows.find(r=>r.metric.id==='expectedCost')?.issue).toBe('missing');
+    expect(comparisons(c)[0].verdict).toBe('incomplete');
+  });
+  it('marks inconsistent pair applicability as unknown rather than silently removing a term',()=>{
+    const c=fromPreset('ecodesign');
+    c.parameters.shockDelay={applicability:'notApplicable',reason:'Unrelated to this scenario'};
+    const recovery=comparisons(c)[0].rows.find(r=>r.metric.id==='expectedRecovery');
+    expect(recovery?.issue).toBe('missing');
+  });
+  it('changing an applied risk changes derived recovery and costs, but not excluded fields',()=>{
+    const c=fromPreset('ecodesign');
+    const before=compareOption(c,c.options[1]);
+    c.options[1].parameterValues.shockProbability.value=90;
+    const after=compareOption(c,c.options[1]);
+    expect(after.rows[0].candidate).not.toBe(before.rows[0].candidate);
+    expect(after.rows.find(r=>r.metric.id==='expectedCost')?.candidate)
+      .not.toBe(before.rows.find(r=>r.metric.id==='expectedCost')?.candidate);
+  });
+  it('preserves N/A reasons and the nineteen inputs across JSON save and restore',()=>{
+    const c=fromPreset('wildfire','es');
+    c.parameters.materialKg={applicability:'notApplicable',reason:'No se evalúan materiales'};
+    const imported=validateCaseImport(JSON.parse(JSON.stringify(c)));
+    expect(imported.parameters.materialKg.reason).toBe('No se evalúan materiales');
+    expect(imported.options[0].parameterValues.baseRecovery.value).toBe(40);
   });
   it('round-trips a case JSON through strict versioned validation',()=>{
     const c=fromPreset('wildfire');
     const imported=validateCaseImport(JSON.parse(JSON.stringify(c)));
-    expect(imported.options[1].measures.resilience.value).toBe(19);
+    expect(imported.options[1].parameterValues.baseRecovery.value).toBe(19);
     expect(imported.evidence).toHaveLength(0);
   });
   it('rejects malformed, excessive and non-finite imports',()=>{
