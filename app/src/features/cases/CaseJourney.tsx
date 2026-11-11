@@ -6,7 +6,7 @@ import {
   type StrategicCase, type CaseKind, type EvidenceItem, type Audience,
   type MetricDefinition, type OptionComparison
 } from './model';
-import { fromPreset, PRESETS, type PresetKey } from './presets';
+import { fromPreset, presetTitle, type PresetKey } from './presets';
 import './CaseJourney.css';
 
 type Props = {
@@ -262,7 +262,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
         <h3>{t('O empieza con uno de los cuatro casos de Mireia','Or start with one of Mireia’s four cases')}</h3>
         <p>{t('Cada ejemplo comienza en la etapa 01 y lleva datos totalmente ficticios para practicar en las siguientes etapas.','Each example begins in stage 01 and carries entirely fictional numbers for the remaining stages.')}</p>
         <div className="cy-preset-grid">{four.map(id=><button type="button" key={id} onClick={()=>loadPreset(id)}>
-          <strong>{kinds[id][es?0:1]}</strong><span>{PRESETS[id].title}</span>
+          <strong>{kinds[id][es?0:1]}</strong><span>{presetTitle(id,locale)}</span>
         </button>)}</div>
         {data.hypothetical&&<p className="cy-example-notice">{sampleWarning}{' '}
           <button type="button" onClick={convertToReal}>{t('Convertirlo en plantilla vacía para datos reales','Convert to an empty real-data template')}</button>
