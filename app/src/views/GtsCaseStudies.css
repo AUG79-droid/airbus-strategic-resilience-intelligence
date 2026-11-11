@@ -33,3 +33,6 @@
 .gts-cases__detail footer strong { display: block; margin-bottom: 7px; font-size: 16px; color: #80412a; }
 @media (max-width: 950px) { .gts-cases__chain { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .gts-cases__validation { grid-template-columns: 1fr; } .gts-cases__buttons button { width: 100%; } }
+
+.gts-cases__proof { padding: 15px 19px; border: 1px solid #b6cabb; background: #f7faf5; }
+.gts-cases__proof h4 { font-size: 16px; margin-bottom: 5px; }
