@@ -23,6 +23,17 @@ export interface Option {
   measures: Record<string, Measure>;
   parameterValues: ParamValues;
 }
+export function displayOptionName(option:Pick<Option,'id'|'name'>,locale:'es'|'en'):string {
+  // Translate only built-in default names; preserve user-defined scenario names.
+  const defaults:Record<string,{es:string;en:string}>={
+    baseline:{es:'Situación actual',en:'Current reference'},
+    'option-a':{es:'Alternativa A',en:'Alternative A'},
+    'option-b':{es:'Alternativa B',en:'Alternative B'}
+  };
+  const named=defaults[option.id];
+  if(!named)return option.name;
+  return option.name===named.es||option.name===named.en?named[locale]:option.name;
+}
 export interface EvidenceItem {
   id: string; title: string; reference: string; owner: string; reviewer: string;
   reviewedOn: string; status: EvidenceStatus; nature: EvidenceNature; limitations: string;
