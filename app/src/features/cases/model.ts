@@ -180,8 +180,9 @@ export function templateInfo(kind:CaseKind, locale:'en'|'es'){
 }
 
 
-function makeOptions(metrics: MetricDefinition[]): Option[] {
-  return ['Current reference','Alternative A','Alternative B'].map((name,index) => ({
+function makeOptions(metrics: MetricDefinition[], locale:'en'|'es'): Option[] {
+  const names=locale==='es'?['Situación actual','Alternativa A','Alternativa B']:['Current reference','Alternative A','Alternative B'];
+  return names.map((name,index) => ({
     id: ['baseline','option-a','option-b'][index], name, explanation: '',
     measures: Object.fromEntries(metrics.map(m => [m.id, {value: null,evidenceId:''}]))
   }));
@@ -193,7 +194,7 @@ export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): S
     version:1, id: 'CASE-'+Date.now().toString(36), kind, title:'',
     programme:'', decision:'', initiative:'', vulnerability:'', mechanism:'',
     boundary:'', timeHorizon:'', owner:'', metrics,
-    options:makeOptions(metrics), evidence:[], gates:emptyGates(),
+    options:makeOptions(metrics,locale), evidence:[], gates:emptyGates(),
     robustnessPercent:10, hypothetical:false
   };
 }
@@ -252,6 +253,9 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
   const worse=rows.some(x=>x.improvement!==null && x.improvement < -1e-9);
   const verdict:ComparisonVerdict=incomplete?'incomplete':better&&worse?'tradeoff':
     better?'improves':worse?'worsens':'equivalent';
+  const caseFields=['title','programme','decision','initiative','vulnerability','mechanism','boundary','timeHorizon','owner'] as const;
+  const caseDefined=caseFields.every(key=>caseData[key].trim().length>0);
+  for(const key of caseFields) if(!caseData[key].trim()) missing.push('Investigate: '+key+' is missing');
   const gatesReady=Object.values(caseData.gates).every(Boolean);
   if(!gatesReady) missing.push('Scope, technical, method and reviewer gates are not all confirmed');
   const reviewedData=rows.length>0&&rows.every(x=>x.evidenceReady);
@@ -259,7 +263,7 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
   return {
     option:candidate,rows,verdict,gatesReady,reviewedData,observedData,
     // This only identifies a *candidate* for expert acceptance; it does not validate a benefit.
-    canDescribeAsMeasured:!caseData.hypothetical && reviewedData && observedData && gatesReady && !incomplete,
+    canDescribeAsMeasured:!caseData.hypothetical && caseDefined && reviewedData && observedData && gatesReady && !incomplete,
     missing
   };
 }
