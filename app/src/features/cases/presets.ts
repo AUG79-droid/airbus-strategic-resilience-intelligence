@@ -123,7 +123,7 @@ export function presetTitle(kind:PresetKey,locale:'es'|'en'):string {
 
 export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCase {
   const p:Preset=locale==='es'?{...ES_PRESETS[kind],values:PRESETS[kind].values}:PRESETS[kind];
-  const result=createCase(kind);
+  const result=createCase(kind,locale);
   result.id='SYNTH-'+kind.toUpperCase();
   result.title=p.title;result.programme=p.programme;
   result.decision=p.decision;result.initiative=p.initiative;
