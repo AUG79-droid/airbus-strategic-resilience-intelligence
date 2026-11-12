@@ -97,4 +97,45 @@ describe('Extended strategic translator',()=>{
     expect(insight[0].body).not.toMatch(/recuperación de [0-9]+/);
     expect(insight[5].body).toContain('pendientes');
   });
+  it.each(['general','ecodesign','climate','saf','wildfire'] as const)('provides an editable-case deep analysis regardless of type %s',kind=>{
+    const c=fromPreset(kind==='general'?'ecodesign':kind,'es');
+    c.kind=kind;
+    c.id='CASE-custom-'+kind;
+    c.hypothetical=false;
+    c.title='Aportación de sostenibilidad a operaciones especiales';
+    c.vulnerability='Dependencia de red de refrigeración externa';
+    c.mechanism='Crear una alternativa local de refrigeración';
+    c.boundary='Un centro de soporte durante doce meses';
+    c.decision='Seleccionar inversión local o externa';
+    c.owner='Equipo del caso';
+    c.metrics[0].label='Horas de indisponibilidad del centro';
+    c.options[0].measures[c.metrics[0].id].value=100;
+    c.options[1].measures[c.metrics[0].id].value=75;
+    const output=strategicInsights(c,comparisons(c)[0],'executiveLeadership','es');
+    expect(output).toHaveLength(7);
+    expect(output[0].body).toContain(c.boundary);
+    expect(output[1].body).toContain(c.vulnerability);
+    expect(output[1].body).toContain(c.mechanism);
+    expect(output[4].body).toContain('Horas de indisponibilidad del centro');
+    expect(output[4].body).toContain('75');
+    expect(output[4].body).toContain(c.decision);
+    expect(output[6].body).toContain(c.decision);
+    expect(output[6].body).toContain(c.owner);
+    expect(output[6].body).not.toMatch(/SAF|Eurodrone|incendios forestales/);
+  });
+  it('reports custom KPI worsening accurately and never fabricates values for blank KPIs',()=>{
+    const c=createCase('general','es');
+    c.title='Nuevo escenario energético';
+    c.id='CASE-custom';
+    c.metrics[0].label='Interrupciones del servicio';
+    c.metrics[0].direction='lower';
+    c.options[0].measures[c.metrics[0].id].value=5;
+    c.options[1].measures[c.metrics[0].id].value=9;
+    const x=strategicInsights(c,comparisons(c)[0],'programmeManager','es');
+    expect(x[4].body).toContain('Interrupciones del servicio');
+    expect(x[4].body).toContain('desfavorable');
+    expect(x[4].body).not.toContain('Material demand per functional unit');
+    expect(x[0].body).not.toMatch(/50 días/);
+  });
+
 });
