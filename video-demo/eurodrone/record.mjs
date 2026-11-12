@@ -18,7 +18,7 @@ await fs.mkdir(out,{recursive:true});
 const timeline=JSON.parse(await fs.readFile(path.join(out,'timeline.json'),'utf8'));
 if(timeline.language!==(spanish?'es-ES':'en-GB'))throw new Error('Narration language mismatched');
 const cues=timeline.chapters.flatMap(ch=>ch.cues);
-if(timeline.chapters.length!==7||cues.length<60||timeline.chapters.find(ch=>ch.id==='translate')?.cues.length<20)throw new Error('Complete revised tutorial with strategic Translate chapter required');
+if(timeline.chapters.length!==7||cues.length<85||timeline.chapters.find(ch=>ch.id==='translate')?.cues.length<40)throw new Error('Complete revised tutorial with strategic Translate chapter required');
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const messages=[];
 const checks=[];
@@ -55,7 +55,7 @@ try{
  await page.waitForFunction((locale)=>document.documentElement.lang===locale,
    spanish?'es':'en',{timeout:12000});
  checks.push(spanish?'Spanish UI selected':'British English UI selected');
- checks.push('Translate prioritised: 26 narrated actions across decision audiences');
+ checks.push('Current Translate prioritised: 41 narrated actions with seven in-depth conclusions');
 
  const loc=x=>typeof x==='string'?page.locator(x).first():x;
  async function focus(selector){
@@ -158,49 +158,99 @@ try{
    next_check:async()=>{await goStep(2);await page.locator('.cy-checks').waitFor({timeout:18000});},
    check_intro:()=>focus('.cy-checks'),
    gates:()=>focus('.cy-checks label'),
-   not_approved:()=>focus('.cy-checks label:last-child'),
+   not_approved:async()=>{
+     const gates=page.locator('.cy-checks input[type="checkbox"]');
+     if(await gates.count()!==4)throw new Error('Expected four simulation review gates');
+     for(let i=0;i<4;i++)if(!(await gates.nth(i).isChecked()))throw new Error('Eurodrone simulated review gate '+i+' not checked');
+     await focus('.cy-checks label:last-child');
+     checks.push('All four Eurodrone exercise review gates completed, no real approval asserted');
+   },
    evidence_intro:()=>focus('.cy-section-heading'),
    add_evidence:async()=>{
-     await click('.cy-section-heading button');
-     const first=page.locator('.cy-records article').first();
-     await first.waitFor({timeout:10000});
-     const field=first.locator('input').first();
-     await focus(field);
-     await field.fill(spanish?'Ejemplo hipotético, pendiente de verificar':'Hypothetical sample, not verified');
-     checks.push('Pending evidence record created without falsely marking it reviewed');
+     const records=page.locator('.cy-records article');
+     if(await records.count()!==18)throw new Error('Eurodrone exercise should have exactly 18 fictional evidence records');
+     const status=await records.first().locator('select').last().inputValue();
+     if(status!=='reviewed')throw new Error('Simulated source is not marked as reviewed within exercise');
+     await focus('.cy-records article');
+     checks.push('All 18 prepared fictional evidence records loaded without creating pending records');
    },
-   evidence_pending:()=>focus('.cy-records article'),
-   readiness:()=>focus('.cy-readiness'),
-   next_translate:async()=>{await goStep(3);await page.locator('.cy-output').waitFor({timeout:18000});},
-   translate_intro:()=>focus('.cy-output'),
-   translate_priority:()=>focus('.cy-output strong'),
-   translate_logic:()=>focus('.cy-output p'),
-   translate_causal:()=>focus('.cy-output p'),
-   translate_conditions:()=>focus('.cy-output ul'),
-   customer_focus:()=>focus('.cy-output h4'),
-   customer_question:()=>focus('.cy-output p'),
-   customer_value:()=>focus('.cy-output strong'),
-   engineering_focus:()=>focus('.cy-output h4'),
-   engineering_question:()=>focus('.cy-output p'),
-   engineering_value:()=>focus('.cy-output ul'),
-   programme_focus:()=>focus('.cy-output h4'),
-   programme_question:()=>focus('.cy-output p'),
-   programme_value:()=>focus('.cy-output strong'),
-   leadership_focus:()=>focus('.cy-output h4'),
-   leadership_question:()=>focus('.cy-output p'),
-   leadership_value:()=>focus('.cy-output strong'),
+   evidence_pending:async()=>{
+     const records=page.locator('.cy-records article');
+     const statuses=await records.locator('select').all();
+     const reviewed=await Promise.all(records.locator('select').filter({has:page.locator('option[value="reviewed"]')}).all().then(async opts=>Promise.all(opts.map(x=>x.inputValue()))));
+     if(reviewed.length!==18||reviewed.some(x=>x!=='reviewed'))throw new Error('Incomplete synthetic reviewed evidence '+JSON.stringify(reviewed));
+     await focus(records.last());
+     checks.push('All option evidence records reviewed within example');
+   },
+   readiness:async()=>{
+     const text=await page.locator('.cy-readiness').innerText();
+     const status=spanish?'Ejercicio completado':'Exercise complete';
+     if(text.split(status).length-1!==2)throw new Error('Expected both alternatives to show exercise complete: '+text.slice(0,800));
+     if(/missing traceable review|Validation incomplete|Validación incompleta|Scope, technical, method/.test(text))throw new Error('Old pending evidence still visible');
+     await focus('.cy-readiness');
+     await page.screenshot({path:path.join(out,'check-complete.png')});
+     checks.push('Both comparisons show completed simulated exercise with no missing evidence');
+   },
+   next_translate:async()=>{
+     await goStep(3);
+     await page.locator('.cy-deep-dive__item').first().waitFor({timeout:18000});
+     if(await page.locator('.cy-deep-dive__item').count()!==7)throw new Error('Expected seven expanded Translate conclusions');
+     const section=await page.locator('.cy-output').innerText();
+     if(!section.includes(spanish?'EJERCICIO COMPLETO':'COMPLETE EXERCISE'))throw new Error('Translate should show a complete exercise');
+     if(/missing traceable review|What is still required before communicating a benefit/.test(section))throw new Error('Outdated pending evidence shown in Translate');
+     checks.push('Translate shows seven in-depth conclusions and complete exercise status, no pending checklist');
+     await page.screenshot({path:path.join(out,'translate-new-overview.png')});
+   },
+   translate_intro:()=>focus('.cy-strategic-message h3'),
+   translate_priority:()=>focus('.cy-strategic-meaning'),
+   translate_logic:()=>focus('.cy-strategic-finding'),
+   translate_causal:()=>focus('.cy-strategic-sustainability'),
+   translate_conditions:()=>focus('.cy-strategic-assumption'),
+   customer_focus:()=>focus('.cy-strategic-message h3'),
+   customer_question:()=>focus('.cy-strategic-decision'),
+   customer_value:()=>focus('.cy-strategic-finding'),
+   engineering_focus:()=>focus('.cy-strategic-message h3'),
+   engineering_question:()=>focus('.cy-strategic-decision'),
+   engineering_value:()=>focus('.cy-deep-dive__item--action'),
+   programme_focus:()=>focus('.cy-strategic-message h3'),
+   programme_question:()=>focus('.cy-strategic-finding'),
+   programme_value:()=>focus('.cy-deep-dive__item--economics'),
+   leadership_focus:()=>focus('.cy-strategic-message h3'),
+   leadership_question:()=>focus('.cy-strategic-decision'),
+   leadership_value:()=>focus('.cy-deep-dive__item--action'),
    translation_summary:()=>focus('.cy-choices'),
-   translation_conclusion:()=>focus('.cy-output p'),
+   translation_conclusion:()=>focus('.cy-strategic-meaning'),
+   customer_scope:()=>focus('.cy-strategic-assumption'),
+   deep_intro:()=>focus('.cy-deep-dive__intro'),
+   bottleneck:async()=>{await focus('.cy-deep-dive__item--bottleneck');await page.screenshot({path:path.join(out,'translate-bottleneck.png')});},
+   supply_choice:()=>focus('.cy-deep-dive__item--bottleneck'),
+   risk_assumptions:()=>focus('.cy-deep-dive__item--risk'),
+   tradeoff_economics:()=>focus('.cy-deep-dive__item--economics'),
+   environment_tradeoff:()=>focus('.cy-deep-dive__item--environment'),
+   compare_options:()=>focus('.cy-deep-dive__item--alternatives'),
+   evidence_confidence:()=>focus('.cy-deep-dive__item--evidence'),
+   decision_action:()=>focus('.cy-deep-dive__item--action'),
+   leadership_risks:()=>focus('.cy-deep-dive__item--risk'),
+   leadership_evidence:()=>focus('.cy-deep-dive__item--evidence'),
+   option_b_compare:()=>focus('.cy-deep-dive__item--alternatives'),
+   option_b_cost:()=>focus('.cy-deep-dive__item--economics'),
+   translate_evolution:()=>focus('.cy-deep-dive__intro'),
    customer:()=>selectAudience('defenceCustomer'),
    engineering:()=>selectAudience('engineering'),
    programme:()=>selectAudience('programmeManager'),
    leadership:()=>selectAudience('executiveLeadership'),
    choose_option_b:async()=>{
      const field=page.locator('.cy-choices select').first();
+     const oldSummary=await page.locator('.cy-strategic-finding').innerText();
      await focus(field);await field.selectOption('option-b');await sleep(270);
-     await focus('.cy-output');
+     const newSummary=await page.locator('.cy-strategic-finding').innerText();
+     if(oldSummary===newSummary)throw new Error('Translate did not update when selecting option B');
+     await focus('.cy-strategic-finding');
+     await page.screenshot({path:path.join(out,'translate-other-option.png')});
+     checks.push('Translate recalculated to repair plus alternative supplier');
+
    },
-   limitations:()=>focus('.cy-output ul'),
+   limitations:()=>focus('.cy-strategic-assumption'),
    export_intro:()=>focus(page.locator('.cy-panel').filter({hasText:spanish?'Exportar un análisis reproducible':'Export a reproducible analysis'}).last()),
    export_pdf:async()=>{
       await downloaded(page.getByRole('button',{name:spanish?'Informe PDF':'PDF report'}),'eurodrone-report.pdf');
@@ -208,7 +258,7 @@ try{
    export_markdown:async()=>{
       await downloaded(page.getByRole('button',{name:spanish?'Informe Markdown':'Markdown report'}),'eurodrone-report.md');
    },
-   report_caution:()=>focus('.cy-output'),
+   report_caution:()=>focus('.cy-strategic-assumption'),
    save_draft:async()=>{
      const details=page.locator('.cy-work-files');
      if(!(await details.evaluate(el=>el.open)))await click(details.locator('summary'));
