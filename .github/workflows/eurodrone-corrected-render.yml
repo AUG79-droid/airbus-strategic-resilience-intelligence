@@ -1,0 +1,131 @@
+name: Eurodrone video tutorials — corrected render, same voices
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - video-demo/eurodrone/RENDER_CORRECTED_TRIGGER.txt
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: eurodrone-two-videos-corrected
+  cancel-in-progress: false
+
+jobs:
+  english_video:
+    name: Corrected English MP4 — original British narrator
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check English text and recorder syntax
+        run: |
+          python -m py_compile video-demo/eurodrone/build_audio.py video-demo/eurodrone/render_video.py
+          node --check video-demo/eurodrone/record.mjs
+          python - <<'PY'
+          import json
+          data=json.load(open('video-demo/eurodrone/en/chapters.json'))
+          cues=[cue for ch in data['chapters'] for cue in ch['cues']]
+          assert len(cues)==52 and len({c['id'] for c in cues})==52
+          print('52 original British voice cues')
+          PY
+      - name: Install original British Piper voice and ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install --disable-pip-version-check piper-tts==1.3.0
+      - name: Install Playwright Chromium
+        run: |
+          npm install --prefix video-demo --no-fund --no-audit --ignore-scripts
+          node video-demo/node_modules/playwright-core/cli.js install --with-deps chromium
+      - name: Narrate in same British English voice
+        run: python video-demo/eurodrone/build_audio.py en
+      - name: Record corrected Eurodrone walkthrough and verify live result changes
+        run: node video-demo/eurodrone/record.mjs en
+      - name: Assemble and verify Full HD British MP4
+        run: python video-demo/eurodrone/render_video.py en
+      - name: Upload verified English MP4, subtitles and traceability
+        uses: actions/upload-artifact@v4
+        with:
+          name: Eurodrone-English-Tutorial-Corrected-MP4
+          path: |
+            video-demo/eurodrone/en/output/ASRI_Eurodrone_Tutorial_English.mp4
+            video-demo/eurodrone/en/output/tutorial-report.json
+            video-demo/eurodrone/en/output/subtitles.srt
+            video-demo/eurodrone/en/output/voice-credits.txt
+            video-demo/eurodrone/en/output/recording-timing.json
+            video-demo/eurodrone/en/output/edited-recovery.png
+            video-demo/eurodrone/en/output/eurodrone-report.pdf
+            video-demo/eurodrone/en/output/eurodrone-case.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 2
+  spanish_video:
+    name: Corrected Spanish MP4 — same approved serene narrator
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Reuse the exact 52 voice clips from successful Spanish synthesis
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 43126286733
+          github-token: ${{ github.token }}
+          pattern: Eurodrone-Serene-Spanish-Voice-*
+          merge-multiple: true
+          path: video-demo/eurodrone/es/output
+      - name: Check 52 voice clips and script integrity
+        run: |
+          python -m py_compile video-demo/eurodrone/build_audio.py video-demo/eurodrone/render_video.py
+          node --check video-demo/eurodrone/record.mjs
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.load(open('video-demo/eurodrone/es/chapters.json'))
+          cues=[cue for ch in d['chapters'] for cue in ch['cues']]
+          files=list(Path('video-demo/eurodrone/es/output').glob('segment-*.wav'))
+          assert len(cues)==len(files)==52,(len(cues),len(files))
+          print('52 unchanged approved synthetic voice clips verified')
+          PY
+      - name: Install FFmpeg and Playwright Chromium
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          npm install --prefix video-demo --no-fund --no-audit --ignore-scripts
+          node video-demo/node_modules/playwright-core/cli.js install --with-deps chromium
+      - name: Reuse the exact approved Spanish segments and synchronized captions
+        run: python video-demo/eurodrone/build_audio.py es
+      - name: Record corrected Eurodrone walkthrough in Spanish
+        run: node video-demo/eurodrone/record.mjs es
+      - name: Assemble and verify serene Castilian Full HD MP4
+        run: python video-demo/eurodrone/render_video.py es
+      - name: Upload verified Spanish MP4, subtitles and traceability
+        uses: actions/upload-artifact@v4
+        with:
+          name: Eurodrone-Castellano-Tutorial-Corrected-MP4
+          path: |
+            video-demo/eurodrone/es/output/ASRI_Eurodrone_Tutorial_Castellano_Locutor_Sereno.mp4
+            video-demo/eurodrone/es/output/tutorial-report.json
+            video-demo/eurodrone/es/output/subtitles.srt
+            video-demo/eurodrone/es/output/voice-credits.txt
+            video-demo/eurodrone/es/output/recording-timing.json
+            video-demo/eurodrone/es/output/edited-recovery.png
+            video-demo/eurodrone/es/output/eurodrone-report.pdf
+            video-demo/eurodrone/es/output/eurodrone-case.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 2
