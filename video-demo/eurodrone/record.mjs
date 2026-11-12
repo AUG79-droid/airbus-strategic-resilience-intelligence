@@ -132,12 +132,17 @@ try{
      const field=altRecoveryInput();
      firstRecovery=await field.inputValue();
      if(!firstRecovery||!Number.isFinite(Number(firstRecovery)))throw new Error('Missing original recovery input');
-     await focus(field);await field.fill(String(Number(firstRecovery)-12));await field.press('Tab');
+     await focus(field);
+     // The supply lead time is 78 days in this example: lowering repair time
+     // below that bound cannot change the final result. Raise recovery to
+     // exceed the binding supply constraint so the output must update.
+     await field.fill(String(Number(firstRecovery)+25));await field.press('Tab');
      await sleep(200);
    },
    updated_result:async()=>{
      await focus('.cy-universal__results');recoveryAfter=await resultsValue();
-     if(recoveryBefore===recoveryAfter)throw new Error('Edited recovery did not change calculated result');
+     if(recoveryBefore===recoveryAfter)throw new Error('Edited recovery did not change calculated result: before='+recoveryBefore+', after='+recoveryAfter+', oldInput='+firstRecovery);
+     console.log('Verified model response to changed recovery:',recoveryBefore,'→',recoveryAfter);
      await page.screenshot({path:path.join(out,'edited-recovery.png')});
      checks.push('Fictional input changed live comparison');
    },
