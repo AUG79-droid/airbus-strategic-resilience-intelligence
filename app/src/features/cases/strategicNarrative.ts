@@ -202,8 +202,7 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
   const deadline=measure(c,'deadlineAttainment');
   const material=measure(c,'materialKg');
   const supply=variable(data,c,'supplyLead');
-  const hours= data.kind==='wildfire'?(es?'minutos':'minutes')
-    :data.kind==='climate'?(es?'horas':'hours'):(es?'días':'days');
+  const hours=es?'días':'days';
   const recoveryText=recovery
     ?(es
       ?`El tiempo medio estimado de recuperación del componente pasa de ${n(recovery.baseline!,locale)} a ${n(recovery.candidate!,locale)} ${hours} (${n(Math.abs(recovery.delta!),locale)} ${hours} ${recovery.delta!<0?'menos':'más'}).`
