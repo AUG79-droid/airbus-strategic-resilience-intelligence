@@ -30,7 +30,7 @@ describe('Create your own strategic case', () => {
       expect(c.boundary.length).toBeGreaterThan(10);
       expect(c.options).toHaveLength(3);
       expect(c.metrics).toHaveLength(4);
-      expect(c.evidence).toHaveLength(0);
+      expect(c.evidence).toHaveLength(kind==='ecodesign'?18:0);
       expect(comparisons(c)).toHaveLength(2);
       expect(comparisons(c).every(x=>!x.canDescribeAsMeasured)).toBe(true);
     }
@@ -41,8 +41,52 @@ describe('Create your own strategic case', () => {
     expect(repair.verdict).toBe('improves');
     expect(parallel.verdict).toBe('tradeoff');
     expect(repair.rows[0].delta).toBeCloseTo(-49.25);
-    expect(repair.reviewedData).toBe(false);
-    expect(repair.canDescribeAsMeasured).toBe(false);
+    expect(repair.reviewedData).toBe(true); // Simulated evidence reviewed within the exercise
+    expect(repair.observedData).toBe(false); // No synthetic source is real observed evidence
+    expect(repair.canDescribeAsMeasured).toBe(false); // Never treat a mock case as a validated benefit
+  });
+  it.each(['es','en'] as const)('Eurodrone %s has fully filled but explicitly FICTIONAL evidence and approvals',locale=>{
+    const c=fromPreset('ecodesign',locale);
+    expect(c.hypothetical).toBe(true);
+    expect(c.owner.length).toBeGreaterThan(10);
+    expect(c.owner.toLowerCase()).toMatch(/fictic|fictional/);
+    expect(c.evidence).toHaveLength(18);
+    expect(new Set(c.evidence.map(e=>e.id)).size).toBe(18);
+    expect(c.evidence.every(e=>
+      e.id.startsWith('SIM-EURO-') &&
+      e.reference.includes('fictional / ficticio') &&
+      e.reviewer.toLowerCase().match(/fictic|fictional/) &&
+      e.status==='reviewed' &&
+      e.nature==='estimate' &&
+      e.reviewedOn==='2026-11-01' &&
+      e.limitations.length>100
+    )).toBe(true);
+    expect(Object.values(c.gates).every(Boolean)).toBe(true);
+    for(const option of c.options){
+      const applicable=Object.entries(c.parameters).filter(([,status])=>status.applicability==='applies');
+      expect(applicable).toHaveLength(17);
+      for(const [parameter] of applicable){
+        const measure=option.parameterValues[parameter];
+        expect(measure.value).not.toBeNull();
+        expect(c.evidence.some(e=>e.id===measure.evidenceId)).toBe(true);
+      }
+    }
+    for(const comparison of comparisons(c)){
+      expect(comparison.gatesReady).toBe(true);
+      expect(comparison.reviewedData).toBe(true);
+      expect(comparison.observedData).toBe(false);
+      expect(comparison.canDescribeAsMeasured).toBe(false);
+      expect(comparison.missing).toEqual([]);
+      expect(comparison.rows.filter(x=>x.issue!=='excluded').every(x=>x.evidenceReady)).toBe(true);
+    }
+  });
+  it('changing a simulated document to pending correctly reopens an evidence gap',()=>{
+    const c=fromPreset('ecodesign','es');
+    c.evidence.find(e=>e.id==='SIM-EURO-OPS-REF')!.status='pending';
+    const comparison=compareOption(c,c.options[1]);
+    expect(comparison.reviewedData).toBe(false);
+    expect(comparison.missing.some(x=>x.includes('missing traceable review'))).toBe(true);
+    expect(comparison.canDescribeAsMeasured).toBe(false);
   });
   it('shows tradeoffs for SAF and wildfire sample options rather than universal wins', () => {
     expect(comparisons(fromPreset('saf'))[0].verdict).toBe('tradeoff');
