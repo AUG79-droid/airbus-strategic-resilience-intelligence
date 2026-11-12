@@ -1,2 +1,3 @@
-Eurodrone full English narrated tutorial, using original Piper British en_GB-alba-medium voice.
-Story: 7 chapters; all 4 ASRI stages; 52 synced real UI actions; 1920x1080.
+Rebuild final Eurodrone strategic tutorial — British English, same Piper en_GB-alba-medium voice.
+Source: user's corrected Spanish Word (12 November 2026). One Eurodrone case only, no separate DEMO-60 reference, revised 70-cue script with 26 cues in Translate. Narrate, capture, subtitle and QA through all four stages.
+Revision: 2026-11-12 final-Translate-script-v2.
