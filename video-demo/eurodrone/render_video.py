@@ -35,7 +35,7 @@ for f in [wav,webm,out/'timeline.json',out/'subtitles.srt',
 timeline=json.loads((out/'timeline.json').read_text(encoding='utf-8'))
 recording=json.loads((out/'recording-timing.json').read_text(encoding='utf-8'))
 expected=sum(len(c['cues']) for c in timeline['chapters'])
-if len(timeline['chapters'])!=7 or expected!=52 or recording['cues']!=expected:
+if len(timeline['chapters'])!=7 or expected<60 or sum(len(ch['cues']) for ch in timeline['chapters'] if ch['id']=='translate')<20 or recording['cues']!=expected:
     raise RuntimeError(f'Incomplete tutorial. {len(timeline["chapters"])} chapters, {expected} cues, {recording["cues"]} recorded')
 if lang=='es' and not timeline['voice'].startswith('Qwen3-TTS'):
     raise RuntimeError('Spanish newsreader narrator was not preserved')
@@ -83,6 +83,7 @@ result={
     'resolution':'1920x1080','visible_app_area':'1920x970',
     'captions':'two-line maximum, separate 110-pixel lower band',
     'fictional_case':True,'checks':recording['checks'],
+    'strategic_translation_cues':sum(len(ch['cues']) for ch in timeline['chapters'] if ch['id']=='translate'),
     'audio_video_synchronized_by_marker_frames':marker_frames,
     'note':'Technical render verified. Does not claim independent review of programme-specific figures.'
 }
