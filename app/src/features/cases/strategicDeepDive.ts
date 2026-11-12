@@ -104,6 +104,12 @@ const actions:Record<StrategicCase['kind'],Record<Audience,[string,string]>>={
 /** Seven independent conclusions. Every optional numeric sentence is removed if data is missing. */
 export function strategicInsights(data:StrategicCase,c:OptionComparison,audience:Audience,locale:Locale):StrategicInsight[]{
   const es=locale==='es',unit=units(data.kind,locale);
+  const customCase=!data.hypothetical || !data.id.startsWith('SYNTH-');
+  const filled=(value:string)=>value.trim().length>0;
+  const concreteContext=customCase&&filled(data.vulnerability)
+    ?(es?` La vulnerabilidad descrita en este caso es: «${data.vulnerability}».`:
+      ` The vulnerability defined in this case is: “${data.vulnerability}”.`)
+    :'';
   const recovery=metric(c,'expectedRecovery');
   const cost=metric(c,'expectedCost');
   const target=metric(c,'deadlineAttainment');
@@ -111,7 +117,11 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   const success=input(data,c,'technicalSuccess'),shock=input(data,c,'shockProbability');
   const failure=input(data,c,'failureDelay'),shockDelay=input(data,c,'shockDelay');
   const insights:StrategicInsight[]=[];
-  const scope=scopeByKind[data.kind][es?0:1];
+  const scope=customCase
+    ?(es
+      ?(filled(data.boundary)?`actividad y perímetro definidos en «${data.boundary}»`:'actividad del caso aún sin perímetro definido')
+      :(filled(data.boundary)?`activity within “${data.boundary}”`:'case activity without a defined boundary'))
+    :scopeByKind[data.kind][es?0:1];
 
   // Operational bottleneck - distinguish supply lead from base work, no incorrect "repair always improves".
   let bottleneck=es
@@ -141,6 +151,10 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
 
   // Conditional exposure: parameter inputs, not empirical interruption probabilities.
   const riskPieces:string[]=[];
+  if(concreteContext)riskPieces.push(concreteContext.trim());
+  if(customCase&&filled(data.mechanism))riskPieces.push(es
+    ?`El mecanismo propuesto para abordarla es: «${data.mechanism}». Su eficacia todavía depende de las comprobaciones del caso.`
+    :`The proposed response mechanism is: “${data.mechanism}”. Its effectiveness remains subject to the case's validation checks.`);
   if(shock)riskPieces.push(es
     ?`La probabilidad supuesta de disrupción externa cambia del ${percent(shock.b,locale)} al ${percent(shock.v,locale)}.`
     :`Assumed external disruption probability changes from ${percent(shock.b,locale)} to ${percent(shock.v,locale)}.`);
@@ -192,7 +206,7 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
     ['materialKg','material virgen','virgin material'],
     ['wasteKg','residuos generados','waste generated'],
     ['ghgKg','GEI incluidos en el perímetro','GHG within the defined boundary'],
-    ['lifeExtension','vida útil adicional autorizada','approved additional service life']
+    ['lifeExtension','vida útil adicional modelizada','modelled additional service life']
   ];
   const envPieces:string[]=[];
   for(const [id,esLabel,enLabel] of envIds){
@@ -228,6 +242,31 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
         :` Its expected cost is ${difference===0?'the same':difference<0?'lower':'higher'}${difference===0?'':` by €${fmt(Math.abs(difference),locale,0)}`}.`;
     }
   }
+  // The generic builder allows user-specific metrics in addition to the
+  // universal derived outcomes. Report their actual values, never interpolate.
+  if(customCase){
+    const values=data.metrics.flatMap(definition=>{
+      const baseline=data.options[0]?.measures?.[definition.id]?.value;
+      const candidate=c.option.measures?.[definition.id]?.value;
+      if(typeof baseline!=='number'||typeof candidate!=='number'||
+        !Number.isFinite(baseline)||!Number.isFinite(candidate)||
+        (definition.min!==undefined&&(baseline<definition.min||candidate<definition.min))||
+        (definition.max!==undefined&&(baseline>definition.max||candidate>definition.max)))return [];
+      const delta=candidate-baseline;
+      const favourable=delta===0?'neutral':(definition.direction==='higher'?delta>0:delta<0)?'positive':'negative';
+      const tendency=es?(favourable==='positive'?'favorable':favourable==='negative'?'desfavorable':'sin cambio'):
+        (favourable==='positive'?'favourable':favourable==='negative'?'unfavourable':'unchanged');
+      return [es
+        ?`«${definition.label}»: ${fmt(baseline,locale)} → ${fmt(candidate,locale)} ${definition.unit}; evolución ${tendency} según el objetivo del indicador declarado.`
+        :`“${definition.label}”: ${fmt(baseline,locale)} → ${fmt(candidate,locale)} ${definition.unit}; ${tendency} against the indicator's declared direction.`];
+    });
+    if(values.length)alternativeText+=es
+      ?` Otros indicadores específicos registrados en el caso: ${values.join(' ')}`
+      :` Additional user-defined case indicators: ${values.join(' ')}`;
+    if(filled(data.decision))alternativeText+=es
+      ?` La decisión que este caso pretende fundamentar es: «${data.decision}».`
+      :` The decision this case is intended to inform is: “${data.decision}”.`;
+  }
   alternativeText+=es
     ?' No hay ganador universal: depende del objetivo operativo, las restricciones técnicas y la tolerancia al coste.'
     :' There is no universal winner: it depends on the operating objective, technical limits and cost tolerance.';
@@ -253,10 +292,18 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   insights.push({id:'evidence',title:es?'6. ¿Hasta dónde es defendible la conclusión?':'6. How far can the claim be defended?',body:readiness});
 
   // A concrete NEXT decision, specialised by both audience and initiative.
-  const action=actions[data.kind][audience][es?0:1];
+  const action=(customCase?actions.general:actions[data.kind])[audience][es?0:1];
+  const requestedDecision=customCase&&filled(data.decision)
+    ?(es?` Decisión concreta planteada en Investigate: «${data.decision}».`:
+      ` Specific decision stated in Investigate: “${data.decision}”.`)
+    :'';
+  const responsible=customCase&&filled(data.owner)
+    ?(es?` Equipo indicado para coordinar: ${data.owner}.`:
+      ` Listed coordination owner: ${data.owner}.`)
+    :'';
   const gateText=es
     ?' Decisión propuesta: avanzar a una validación acotada, con responsables, criterios de aceptación y los datos que faltan.'
     :' Proposed decision: progress to a bounded validation with owners, acceptance criteria and the required data.';
-  insights.push({id:'action',title:es?'7. ¿Qué decisión permite tomar?':'7. What decision does it enable?',body:action+gateText});
+  insights.push({id:'action',title:es?'7. ¿Qué decisión permite tomar?':'7. What decision does it enable?',body:action+requestedDecision+responsible+gateText});
   return insights;
 }
