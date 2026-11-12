@@ -10,35 +10,35 @@
       "cues": [
         {
           "id": "welcome",
-          "text": "Welcome to ASRI. This tutorial follows a complete eco-design and supply resilience case from start to finish."
+          "text": "In ASRI, we will examine supply chain resilience and eco-design using the Eurodrone case."
         },
         {
           "id": "mode",
-          "text": "Select Create Your Own Strategic Case. This journey is separate from the original maintenance demonstration."
+          "text": "We select Create Your Own Strategic Case to evaluate decisions from an operational perspective."
         },
         {
           "id": "examples",
-          "text": "Investigate presents four examples. We will use Eurodrone to examine critical materials and long-term support."
+          "text": "In Investigate, we choose Eurodrone and focus on decisions involving critical materials."
         },
         {
           "id": "choose",
-          "text": "Select Eco-design and Critical Materials. The app loads a case and three fictional options."
+          "text": "Select Eco-design and Critical Materials. ASRI loads the case definition and three comparable alternatives."
         },
         {
           "id": "case_title",
-          "text": "The case concerns a hypothetical support subsystem. No figures here come from an actual Eurodrone programme."
+          "text": "The case definition identifies a support subsystem and the scope of the decision under review."
         },
         {
           "id": "case_decision",
-          "text": "The decision is whether qualified repair and supplier diversification might reduce long-term vulnerability."
+          "text": "The question is whether repair and supplier diversification can reduce in-service vulnerabilities."
         },
         {
           "id": "case_boundary",
-          "text": "Before comparing options, define the same component, functional requirements and assessment period."
+          "text": "Before comparing, we set the same component, functional requirement and assessment period."
         },
         {
           "id": "next_challenge",
-          "text": "We continue to Challenge, where operating and economic assumptions drive the comparison."
+          "text": "We continue to Challenge, where operating and economic conditions drive the results."
         }
       ]
     },
@@ -48,35 +48,35 @@
       "cues": [
         {
           "id": "alternatives",
-          "text": "We compare the baseline, qualified repair, and repair combined with an additional qualified supplier."
+          "text": "We compare the current baseline, qualified repair and a combined option with an alternative supplier."
         },
         {
           "id": "model_intro",
-          "text": "All cases share the same six sections. What changes is which parameters apply to a particular decision."
+          "text": "All six sections follow the same structure. Only the applicable parameters differ."
         },
         {
           "id": "operational",
-          "text": "Open Operational Conditions. Every input contains values for all three options, measured in matching units."
+          "text": "Open Operational Conditions. Each input shows the three options using equivalent units."
         },
         {
           "id": "recovery",
-          "text": "Recovery time describes how long each option would take without additional failures or disruptions."
+          "text": "Recovery time indicates how long each option takes without additional incidents."
         },
         {
           "id": "supply",
-          "text": "The supply lead time captures a binding delay from a supplier or component, when that dependency applies."
+          "text": "The binding supply lead time reflects the wait for a component or supplier when it affects the decision."
         },
         {
           "id": "deadline",
-          "text": "The recovery deadline is shared. The model checks whether each strategy meets it under stated risk assumptions."
+          "text": "The deadline is shared. ASRI evaluates whether each strategy could meet it given the stated risks."
         },
         {
           "id": "risk_expand",
-          "text": "Open Risks and Probabilities. These values are practice assumptions, not calibrated forecasts."
+          "text": "Open Risks and Probabilities to enter success likelihood and potential disruptions."
         },
         {
           "id": "risk_success",
-          "text": "We separate the probability of technical success from the delay incurred if the chosen route fails."
+          "text": "We distinguish technical success probability from the delay caused by failure of the chosen route."
         }
       ]
     },
@@ -86,35 +86,35 @@
       "cues": [
         {
           "id": "risk_external",
-          "text": "We also model the chance of an external disruption and the additional delay it could cause."
+          "text": "We also assess the possibility of an external disruption and the additional days it could cause."
         },
         {
           "id": "cost_expand",
-          "text": "Economic Obligations covers direct cost, logistics and extra expenses under adverse conditions."
+          "text": "Economic Obligations covers direct costs, logistics and additional commitments under disruption."
         },
         {
           "id": "cost_values",
-          "text": "Expected cost weights conditional expenses by probability. It is not an approved contract price."
+          "text": "Expected cost weights those expenses by probability to compare options within the same boundary."
         },
         {
           "id": "contract_expand",
-          "text": "Contractual Conditions covers reservation fees and cancellation charges, only when they actually apply."
+          "text": "Contractual Conditions lets us assess reservations and penalties whenever those obligations apply."
         },
         {
           "id": "contracts",
-          "text": "If a contract does not apply, mark Not Applicable and explain why. Do not invent a numeric zero."
+          "text": "If a condition is irrelevant, mark it Not Applicable and record why, rather than inventing a zero."
         },
         {
           "id": "environment_expand",
-          "text": "Environmental Factors covers material demand, waste and greenhouse gases for a defined assessment boundary."
+          "text": "Environmental Factors covers materials, waste and greenhouse gases within a defined boundary."
         },
         {
           "id": "environment",
-          "text": "These quantities can be compared, but they are not a complete or certified life-cycle assessment."
+          "text": "These indicators reveal trade-offs between circularity, availability and cost."
         },
         {
           "id": "evidence_section",
-          "text": "The sixth section reminds us to trace and review inputs. An assumption does not become evidence on its own."
+          "text": "The sixth section covers evidence and uncertainty: every input needs an appropriate source and review."
         }
       ]
     },
@@ -124,31 +124,31 @@
       "cues": [
         {
           "id": "results",
-          "text": "The results compare timelines, deadline performance, cost and environmental factors without declaring an automatic winner."
+          "text": "The dashboard compares time, deadline attainment, cost and environmental outcomes without imposing a winner."
         },
         {
           "id": "edit_recovery",
-          "text": "Let us change the repair option's recovery time and observe how the model responds."
+          "text": "We change the recovery time for the repair option to test how the model responds."
         },
         {
           "id": "updated_result",
-          "text": "The calculation updates as soon as an input changes. We can inspect sensitivity before making a decision."
+          "text": "The calculation updates immediately, allowing us to examine sensitivity before deciding."
         },
         {
           "id": "restore_recovery",
-          "text": "We restore the original illustrative value so the remaining analysis uses a consistent baseline."
+          "text": "We restore the original value to keep the comparison consistent."
         },
         {
           "id": "sensitivity",
-          "text": "The sensitivity margin tests robustness. It is not a statistical confidence interval."
+          "text": "The sensitivity margin shows whether conclusions depend strongly on a particular assumption."
         },
         {
           "id": "compare",
-          "text": "One option can improve a metric and worsen another. ASRI makes that trade-off visible."
+          "text": "One option may improve one indicator and worsen another. ASRI makes those trade-offs visible."
         },
         {
           "id": "next_check",
-          "text": "Next comes Check. These calculations alone cannot establish a demonstrated benefit."
+          "text": "We move to Check to identify which conclusions are adequately supported."
         }
       ]
     },
@@ -158,35 +158,35 @@
       "cues": [
         {
           "id": "check_intro",
-          "text": "Check examines the quality of the inputs and the technical requirements that still need verification."
+          "text": "In Check, we assess data quality and the technical requirements that must be supported."
         },
         {
           "id": "gates",
-          "text": "Four review gates cover comparable scope, technical eligibility, measurement methods and independent review."
+          "text": "Four review gates cover comparable scope, technical eligibility, measurement method and independent review."
         },
         {
           "id": "not_approved",
-          "text": "We do not claim these gates have passed. This is a fictional example, and tick boxes do not replace approval."
+          "text": "Every gate requires proper verification. A tick box does not replace formal approval."
         },
         {
           "id": "evidence_intro",
-          "text": "The evidence register can identify a document, its owner, reviewer, review date and limitations."
+          "text": "The register identifies each document, owner, reviewer, review date and limitations."
         },
         {
           "id": "add_evidence",
-          "text": "We add a sample evidence record and leave it pending. This illustrates what a real case would still need."
+          "text": "We add a reference awaiting review to illustrate how traceability is organised."
         },
         {
           "id": "evidence_pending",
-          "text": "Each baseline and option measurement would then need a traceable and comparable source."
+          "text": "Each alternative input can then be linked to a traceable and comparable source."
         },
         {
           "id": "readiness",
-          "text": "Validation remains incomplete. That is intentional: a learning scenario must not be confused with actual performance."
+          "text": "The review status shows what is still required before a conclusion can be confirmed."
         },
         {
           "id": "next_translate",
-          "text": "With those limitations clear, continue to Translate for audience-specific communication."
+          "text": "With inputs and evidence clearly framed, we reach Translate: the strategic centre of ASRI."
         }
       ]
     },
@@ -196,7 +196,79 @@
       "cues": [
         {
           "id": "translate_intro",
-          "text": "Translate turns case findings into strategic arguments without changing the underlying numbers."
+          "text": "Translate turns technical findings into value that matters to the person making a decision."
+        },
+        {
+          "id": "translate_priority",
+          "text": "This is the difference: an environmental result is not enough. We must show which vulnerability changes."
+        },
+        {
+          "id": "translate_logic",
+          "text": "The question moves beyond how much material is saved towards which industrial dependencies we can reduce."
+        },
+        {
+          "id": "translate_causal",
+          "text": "Repairability can reduce the need for new procurement; diversification can create additional supply options."
+        },
+        {
+          "id": "translate_conditions",
+          "text": "Those mechanisms still require technical feasibility and comparable evidence."
+        },
+        {
+          "id": "customer_focus",
+          "text": "Select Defence Customer. The same comparison is framed in terms of mission continuity."
+        },
+        {
+          "id": "customer_question",
+          "text": "Can we sustain the required capability if a supplier can no longer deliver a critical component?"
+        },
+        {
+          "id": "customer_value",
+          "text": "The customer's potential value is reduced exposure to disruption without compromising operational requirements."
+        },
+        {
+          "id": "engineering_focus",
+          "text": "Now choose Engineering. Value depends on repair and materials meeting technical requirements."
+        },
+        {
+          "id": "engineering_question",
+          "text": "Here we need testing, supplier qualification, traceability and proper approval of changes."
+        },
+        {
+          "id": "engineering_value",
+          "text": "Translate clarifies what Engineering needs to demonstrate before an advantage can be defended."
+        },
+        {
+          "id": "programme_focus",
+          "text": "Select Programme Manager. The message shifts to availability, schedules and commitments."
+        },
+        {
+          "id": "programme_question",
+          "text": "Material savings have operational value only if they do not create new delays, costs or dependencies."
+        },
+        {
+          "id": "programme_value",
+          "text": "Here we weigh the trade-offs: how timing changes, what it costs and which risks remain."
+        },
+        {
+          "id": "leadership_focus",
+          "text": "Finally, choose Executive Leadership. We turn scattered indicators into a strategic decision."
+        },
+        {
+          "id": "leadership_question",
+          "text": "The question is where investment can strengthen industrial autonomy and response capability."
+        },
+        {
+          "id": "leadership_value",
+          "text": "Translate does not invent benefits; it prioritises risks, options and the evidence needed."
+        },
+        {
+          "id": "translation_summary",
+          "text": "One analysis supports four different decision conversations without changing the underlying facts."
+        },
+        {
+          "id": "translation_conclusion",
+          "text": "That is how ASRI translates sustainability into the language of resilience our stakeholders expect."
         },
         {
           "id": "customer",
@@ -204,27 +276,27 @@
         },
         {
           "id": "engineering",
-          "text": "For Engineering, the argument concerns qualification, safety and demonstrable repairability."
+          "text": "For Engineering, we focus on qualification, safety and verifiable repairability."
         },
         {
           "id": "programme",
-          "text": "For a Programme Manager, the key issues are delivery commitments, cost and supply resilience over time."
+          "text": "For the Programme team, we relate findings to timing, costs, milestones and supply commitments."
         },
         {
           "id": "leadership",
-          "text": "For leadership, potential value is lower industrial dependency with transparent costs and uncertainties."
+          "text": "For leadership, we address industrial dependencies, risk exposure and the value of decisions."
         },
         {
           "id": "choose_option_b",
-          "text": "We can select the other alternative. The narrative should reflect the new comparison."
+          "text": "We switch the selected option to show how the message changes without altering the method."
         },
         {
           "id": "limitations",
-          "text": "The report explicitly flags unvalidated data. A compelling narrative is not evidence of causality."
+          "text": "Translate retains traceability and clearly identifies what still needs to be verified."
         },
         {
           "id": "export_intro",
-          "text": "Finally, we review exports. We can generate a report and keep an editable copy of the case."
+          "text": "That argument can be included in a report alongside the comparison and supporting evidence."
         }
       ]
     },
@@ -234,25 +306,27 @@
       "cues": [
         {
           "id": "export_pdf",
-          "text": "The PDF report includes assumptions, comparisons, pending evidence and qualified conclusions."
+          "text": "The PDF report brings together the case, results, evidence and audience-specific interpretation."
         },
         {
           "id": "export_markdown",
-          "text": "A Markdown version is also available for further review and editing."
+          "text": "A Markdown version is also available for reviewing and editing the content."
         },
         {
           "id": "report_caution",
-          "text": "Before sharing, check comparability and ensure no benefit is presented as validated without evidence."
+          "text": "Before sharing, ensure the figures are comparable and the conclusion has appropriate support."
         },
         {
           "id": "save_draft",
-          "text": "To resume later, download a local case file. ASRI does not automatically store this work in the cloud."
+          "text": "We can download an editable case file and continue the analysis whenever needed."
         },
         {
           "id": "closing",
-          "text": "That completes all four stages using Eurodrone. This is a hypothetical decision exercise, not a calibrated prediction."
+          "text": "ASRI connects sustainability decisions to the resilience that matters to customers, programmes and leadership."
         }
       ]
     }
-  ]
+  ],
+  "storyline": "Eurodrone only; revised from user's Spanish Word; prioritises Translate with strategic resilience narrative",
+  "reviewed_spanish_word": "ASRI Eurodrone Tutorial Castellano Locutor Sereno (1).docx"
 }
