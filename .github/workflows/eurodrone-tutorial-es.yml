@@ -1,4 +1,4 @@
-name: Eurodrone tutorial — approved serene Castilian narrator
+name: Eurodrone final revised — Castellano (Translate emphasis)
 on:
   workflow_dispatch:
   push:
@@ -42,8 +42,8 @@ jobs:
           import json
           d=json.load(open('video-demo/eurodrone/es/chapters.json'))
           cues=[cue for chapter in d['chapters'] for cue in chapter['cues']]
-          assert d['language']=='es-ES' and len(d['chapters'])==7 and len(cues)==52
-          assert len({x['id'] for x in cues})==52
+          assert d['language']=='es-ES' and len(d['chapters'])==7 and len(cues)==70
+          assert len({x['id'] for x in cues})==70
           print('Spanish Eurodrone storyboard validated:',len(cues),'cues')
           PY
       - name: Build same free Qwen CPU voice engine as previous approved tutorial
@@ -66,7 +66,7 @@ jobs:
           name: Eurodrone-Serene-Spanish-Voice-${{ matrix.shard }}
           path: video-demo/eurodrone/es/output/segment-*.wav
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
           compression-level: 1
 
   video:
@@ -82,7 +82,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Download all 52 cues synthesized in the approved voice
+      - name: Download all 70 cues synthesized in the approved voice
         uses: actions/download-artifact@v4
         with:
           pattern: Eurodrone-Serene-Spanish-Voice-*
@@ -104,7 +104,7 @@ jobs:
       - name: Deliver approved-style Spanish MP4, captions and QA report
         uses: actions/upload-artifact@v4
         with:
-          name: ASRI-Eurodrone-Tutorial-Castellano-Locutor-Sereno
+          name: ASRI-Eurodrone-Final-Revised-Castellano
           path: |
             video-demo/eurodrone/es/output/ASRI_Eurodrone_Tutorial_Castellano_Locutor_Sereno.mp4
             video-demo/eurodrone/es/output/tutorial-report.json
@@ -115,5 +115,5 @@ jobs:
             video-demo/eurodrone/es/output/eurodrone-report.pdf
             video-demo/eurodrone/es/output/eurodrone-case.json
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
           compression-level: 2
