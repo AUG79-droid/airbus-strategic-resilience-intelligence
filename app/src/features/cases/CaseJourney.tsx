@@ -8,6 +8,7 @@ import {
 } from './model';
 import { fromPreset, presetTitle, type PresetKey } from './presets';
 import { UniversalControls } from './UniversalControls';
+import { strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { calculateUniversal, parameterUnit } from './universal';
 import './CaseJourney.css';
 
@@ -66,43 +67,6 @@ function metricTitle(label:string,locale:Locale){
 function describeVerdict(c:OptionComparison,locale:Locale){
   return verdicts[c.verdict][locale==='es'?0:1];
 }
-function summary(data:StrategicCase, c:OptionComparison, locale:Locale):string {
-  const es=locale==='es';
-  const measurable=c.rows.filter(r=>r.improvement!==null&&r.issue!=='excluded');
-  const positive=measurable.filter(r=>r.improvement!==null&&r.improvement>0);
-  const negative=measurable.filter(r=>r.improvement!==null&&r.improvement<0);
-  const main=c.rows.find(r=>r.metric.category==='resilience'&&r.issue!=='excluded')??measurable[0];
-  const change=main && main.delta!==null
-    ? `${metricTitle(main.metric.label,locale)}: ${present(main.baseline,locale)} → ${present(main.candidate,locale)} ${parameterUnit(main.metric.unit,data.kind,locale)} (${main.delta>0?'+':''}${present(main.delta,locale)} ${parameterUnit(main.metric.unit,data.kind,locale)})`
-    : (es?'El indicador clave no tiene datos suficientes.':'The main indicator has insufficient data.');
-  return es
-    ? `${data.title||'Este caso'} evalúa «${data.initiative||'una iniciativa'}» frente a la referencia «${(data.options[0]?displayOptionName(data.options[0],locale):'situación actual')}». La alternativa «${displayOptionName(c.option,locale)}» ofrece ${positive.length} indicadores mejores y ${negative.length} peores, según los valores declarados. ${change}. ${data.hypothetical?'Todos los valores son hipotéticos; ':'Estos valores han sido declarados por el usuario; '}no debe comunicarse una mejora como beneficio demostrado sin validación técnica y operativa.`
-    : `${data.title||'This case'} examines “${data.initiative||'an initiative'}” against “${(data.options[0]?displayOptionName(data.options[0],locale):'the current baseline')}”. “${displayOptionName(c.option,locale)}” has ${positive.length} improving and ${negative.length} worsening indicators under the entered assumptions. ${change}. ${data.hypothetical?'Every value is hypothetical; ':'Values are user-provided; '}do not communicate modelled changes as demonstrated benefits without technical and operational validation.`;
-}
-function narrative(data:StrategicCase,c:OptionComparison,audience:Audience,locale:Locale):string{
-  const es=locale==='es';
-  const opening=summary(data,c,locale);
-  const risk=data.vulnerability || (es?'la vulnerabilidad por definir':'the vulnerability yet to be defined');
-  const endings:Record<Audience,[string,string]>={
-    defenceCustomer:[
-      `Para el cliente, la cuestión es si reduce la exposición a «${risk}» y mantiene las capacidades necesarias. Deben acreditarse los límites operativos, el resultado bajo una situación comparable y las condiciones de aceptación del cliente.`,
-      `For the customer, the question is whether it mitigates “${risk}” without losing required capability. Operating limits, like-for-like outcomes and customer acceptance must be demonstrated.`
-    ],
-    engineering:[
-      `Ingeniería debe confirmar el mecanismo «${data.mechanism||'pendiente de definir'}», los requisitos de seguridad y las condiciones de ensayo. Ninguna mejora numérica autoriza por sí sola un cambio técnico.`,
-      `Engineering must verify “${data.mechanism||'the proposed mechanism'}”, safety requirements and test conditions. Numeric improvements alone do not authorise a technical change.`
-    ],
-    programmeManager:[
-      `El programa debe valorar fechas, recursos, costes y dependencias antes de decidir. Los indicadores deben relacionarse con hitos y compromisos verificables dentro de «${data.boundary||'un alcance aún no definido'}».`,
-      `The programme should assess timing, resources, costs and dependencies. Connect indicators to measurable commitments within “${data.boundary||'a defined scope'}”.`
-    ],
-    executiveLeadership:[
-      `Dirección puede utilizar el análisis para priorizar una validación, no para declarar un beneficio todavía. El criterio de inversión es que la mejora de resiliencia sea verificable y que los compromisos económicos, ambientales y técnicos sean explícitos.`,
-      `Leadership may use this analysis to prioritise validation, not to advertise a benefit. Investment should follow verified resilience gains with transparent economic, environmental and technical trade-offs.`
-    ]
-  };
-  return opening+' '+endings[audience][es?0:1];
-}
 function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale:Locale):string{
   const es=locale==='es';
   const lines=[
@@ -134,7 +98,7 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     ...data.evidence.map(e=>`- ${e.id}: ${e.title} | ${e.status} / ${e.nature} | ${e.reference} | ${e.owner} | ${e.reviewer} ${e.reviewedOn} | ${e.limitations}`),
     '',es?'## 04 Traducir':'## 04 Translate',
     `Audience: ${audienceNames[a][es?0:1]}`,
-    narrative(data,chosen,a,locale),
+    strategicNarrativeText(data,chosen,a,locale),
     '',es?'LÍMITE: ningún cálculo es una prueba de causalidad o aprobación técnica.':'BOUNDARY: calculations do not establish causality or technical approval.',
   ];
   return lines.filter((x)=>x!=='').join('\n');
@@ -180,6 +144,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
   const [exportBusy,setExportBusy]=useState(false);
   const results=useMemo(()=>comparisons(data),[data]);
   const active=results.find(r=>r.option.id===selectedOption)??results[0];
+  const strategic=active?strategicMessage(data,active,selectedAudience,locale):null;
   // An exercise can be COMPLETE as a simulation without being validated
   // as a factual programme result. This distinction must never be hidden.
   const exerciseComplete=(c:OptionComparison)=>
@@ -426,8 +391,8 @@ export function CaseJourney({locale,view,data,setData}:Props){
     {view==='translate' && <div className="cy-stage">
       <section className="cy-panel">
         <h3>{t('Traductor estratégico del caso','Case strategic translator')}</h3>
-        <p>{t('Las narrativas se generan desde los valores y la descripción de tu caso; cambian al cambiar sus datos. No toman resultados del DEMO-60.',
-          'Narratives are generated from your case description and values and update when inputs change. They never reuse DEMO-60 results.')}</p>
+        <p>{t('De la iniciativa de sostenibilidad a su consecuencia operativa: qué vulnerabilidad cambia, cómo lo muestran los indicadores y qué decisión puede tomar cada audiencia. Cambia la alternativa o los datos para actualizar el mensaje.',
+          'From the sustainability initiative to its operational consequence: which vulnerability changes, what the indicators show, and what each audience can decide. Change the option or inputs to update the message.')}</p>
         <div className="cy-choices">
           <label className="cy-field"><span>{t('Alternativa analizada','Alternative')}</span><select value={active?.option.id??''} onChange={e=>setSelectedOption(e.target.value)}>
             {results.map(c=><option key={c.option.id} value={c.option.id}>{displayOptionName(c.option,locale)}</option>)}</select></label>
@@ -441,8 +406,22 @@ export function CaseJourney({locale,view,data,setData}:Props){
             :active.canDescribeAsMeasured?t('RESULTADOS CALCULADOS CON DATOS DECLARADOS COMO REVISADOS','RESULTS FROM USER-DECLARED REVIEWED DATA')
             :t('RESULTADO NO VALIDADO','UNVALIDATED RESULT')}</span>
           <h4>{audienceNames[selectedAudience][es?0:1]} · {displayOptionName(active.option,locale)}</h4>
-          <strong>{describeVerdict(active,locale)}</strong>
-          <p>{narrative(data,active,selectedAudience,locale)}</p>
+          {strategic&&<section className="cy-strategic-message" aria-labelledby="cy-strategic-heading">
+            <p className="cy-strategic-eyebrow">{t('Valor estratégico para esta audiencia','Strategic value for this audience')}</p>
+            <h3 id="cy-strategic-heading">{strategic.headline}</h3>
+            <p className="cy-strategic-meaning">{strategic.operationalMeaning}</p>
+            <div className="cy-strategic-finding">
+              <strong>{t('Qué demuestra la comparación del escenario','What the scenario comparison shows')}</strong>
+              <p>{strategic.quantifiedFinding}</p>
+            </div>
+            <p className="cy-strategic-sustainability">{strategic.sustainabilityLink}</p>
+            <p className="cy-strategic-decision">{strategic.decisionQuestion}</p>
+            <p className="cy-strategic-assumption">{data.hypothetical
+              ?t('Interpretación del ejercicio, basada en condiciones y evidencias simuladas. No es un resultado real del programa ni acredita disponibilidad de flota.',
+                'Exercise interpretation from simulated inputs and review. Not a real programme outcome or proof of fleet availability.')
+              :t('Interpretación condicionada al alcance, las hipótesis y las evidencias revisadas; requiere aceptación técnica.',
+                'Interpretation depends on scope, assumptions and reviewed sources; technical acceptance is still required.')}</p>
+          </section>}
           <h4>{exerciseComplete(active)
             ?t('Evaluación del ejercicio: completada','Exercise assessment: complete')
             :t('Qué falta antes de comunicar un beneficio','What is still required before communicating a benefit')}</h4>
