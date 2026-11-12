@@ -1,3 +1,3 @@
-Rebuild final Eurodrone strategic tutorial — British English, same Piper en_GB-alba-medium voice.
-Source: user's corrected Spanish Word (12 November 2026). One Eurodrone case only, no separate DEMO-60 reference, revised 70-cue script with 26 cues in Translate. Narrate, capture, subtitle and QA through all four stages.
-Revision: 2026-11-12 final-Translate-script-v2.
+Eurodrone British English tutorial — re-record against CURRENT ASRI with complete fictional evidence and extended Translate.
+85 cues, 7 chapters, 41 on Translate, all 7 strategic conclusions and 4 decision audiences, 18 fictional evidence references, four simulated checks. No artificial pending evidence. British Piper en_GB-alba-medium voice, real on-screen browser actions, cursor, accurate subtitles, FHD. Render and QA screenshots.
+Revision: 2026-11-12 expanded-translate-complete-demo-v3.
