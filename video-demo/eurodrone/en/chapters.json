@@ -215,6 +215,10 @@
           "text": "Those mechanisms still require technical feasibility and comparable evidence."
         },
         {
+          "id": "customer",
+          "text": "For a Defence customer, the focus is operational continuity and access to critical components."
+        },
+        {
           "id": "customer_focus",
           "text": "Select Defence Customer. The same comparison is framed in terms of mission continuity."
         },
@@ -225,6 +229,10 @@
         {
           "id": "customer_value",
           "text": "The customer's potential value is reduced exposure to disruption without compromising operational requirements."
+        },
+        {
+          "id": "engineering",
+          "text": "For Engineering, we focus on qualification, safety and verifiable repairability."
         },
         {
           "id": "engineering_focus",
@@ -239,6 +247,10 @@
           "text": "Translate clarifies what Engineering needs to demonstrate before an advantage can be defended."
         },
         {
+          "id": "programme",
+          "text": "For the Programme team, we relate findings to timing, costs, milestones and supply commitments."
+        },
+        {
           "id": "programme_focus",
           "text": "Select Programme Manager. The message shifts to availability, schedules and commitments."
         },
@@ -249,6 +261,10 @@
         {
           "id": "programme_value",
           "text": "Here we weigh the trade-offs: how timing changes, what it costs and which risks remain."
+        },
+        {
+          "id": "leadership",
+          "text": "For leadership, we address industrial dependencies, risk exposure and the value of decisions."
         },
         {
           "id": "leadership_focus",
@@ -267,32 +283,16 @@
           "text": "One analysis supports four different decision conversations without changing the underlying facts."
         },
         {
-          "id": "translation_conclusion",
-          "text": "That is how ASRI translates sustainability into the language of resilience our stakeholders expect."
-        },
-        {
-          "id": "customer",
-          "text": "For a Defence customer, the focus is operational continuity and access to critical components."
-        },
-        {
-          "id": "engineering",
-          "text": "For Engineering, we focus on qualification, safety and verifiable repairability."
-        },
-        {
-          "id": "programme",
-          "text": "For the Programme team, we relate findings to timing, costs, milestones and supply commitments."
-        },
-        {
-          "id": "leadership",
-          "text": "For leadership, we address industrial dependencies, risk exposure and the value of decisions."
-        },
-        {
           "id": "choose_option_b",
           "text": "We switch the selected option to show how the message changes without altering the method."
         },
         {
           "id": "limitations",
           "text": "Translate retains traceability and clearly identifies what still needs to be verified."
+        },
+        {
+          "id": "translation_conclusion",
+          "text": "That is how ASRI translates sustainability into the language of resilience our stakeholders expect."
         },
         {
           "id": "export_intro",
