@@ -148,7 +148,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
   // An exercise can be COMPLETE as a simulation without being validated
   // as a factual programme result. This distinction must never be hidden.
   const exerciseComplete=(c:OptionComparison)=>
-    data.hypothetical&&data.kind==='ecodesign'&&c.reviewedData&&c.gatesReady&&c.missing.length===0;
+    data.hypothetical&&data.evidence.some(item=>item.id.startsWith('SIM-'))&&c.reviewedData&&c.gatesReady&&c.missing.length===0;
   const setField=(key:keyof StrategicCase,value:unknown)=>setData(current=>({...current,[key]:value}));
   const patchOption=(id:string,key:'name'|'explanation',value:string)=>setData(current=>({
     ...current,options:current.options.map(o=>o.id===id?{...o,[key]:value}:o)
@@ -308,9 +308,9 @@ export function CaseJourney({locale,view,data,setData}:Props){
     {view==='validate' && <div className="cy-stage">
       <section className="cy-panel">
         <h3>{t('Comprobaciones para poder interpretar los resultados','Checks before interpreting the results')}</h3>
-        <p>{data.hypothetical&&data.kind==='ecodesign'
-          ?t('En Eurodrone hemos simulado también las cuatro comprobaciones metodológicas para recorrer el ejercicio de principio a fin. Están marcadas como parte de la práctica: NO representan aprobaciones, ensayos ni autorizaciones reales.',
-            'The Eurodrone exercise simulates all four methodology checks to demonstrate the complete workflow. Checked boxes are part of the exercise, NOT real engineering approvals, tests or authorisations.')
+        <p>{data.hypothetical&&data.evidence.some(item=>item.id.startsWith('SIM-'))
+          ?t('En este caso de ejemplo hemos simulado las cuatro comprobaciones metodológicas para recorrer el ejercicio de principio a fin. Las casillas representan la práctica, NO aprobaciones, ensayos ni autorizaciones reales.',
+            'This prepared example simulates all four methodology checks to demonstrate the complete workflow. Checked boxes represent the exercise, NOT real engineering approvals, tests or authorisations.')
           :t('Marcar una casilla registra una declaración del usuario: NO sustituye una aprobación formal ni convierte automáticamente un beneficio en validado.',
             'Checking a box records a user declaration: it does NOT replace formal approval or automatically validate a benefit.')}</p>
         <div className="cy-checks">{([
@@ -321,16 +321,16 @@ export function CaseJourney({locale,view,data,setData}:Props){
         ] as const).map(([key,label])=><label key={key}>
           <input type="checkbox" checked={data.gates[key]} onChange={e=>setData(current=>({
             ...current,gates:{...current.gates,[key]:e.target.checked}
-          }))}/><span>{label}{data.hypothetical&&data.kind==='ecodesign'
+          }))}/><span>{label}{data.hypothetical&&data.evidence.some(item=>item.id.startsWith('SIM-'))
             ?t(' — SIMULADO',' — SIMULATED'):''}</span></label>)}</div>
         <p className="cy-help"><strong>{t('Requisito del modelo: ','Model-specific requirement: ')}</strong>{templateInfo(data.kind,locale).requirement}</p>
       </section>
       <section className="cy-panel">
         <div className="cy-section-heading"><h3>{t('Registro de evidencias del caso','Case evidence register')}</h3>
           <button type="button" onClick={addEvidence}>{t('+ Añadir evidencia','+ Add evidence')}</button></div>
-        <p>{data.hypothetical&&data.kind==='ecodesign'
-          ?t('Hemos preparado referencias ficticias, equipos responsables, revisores y fechas simuladas. Los 17 controles aplicables de las tres alternativas están vinculados a este registro. Las fichas SIM-EURO no son documentos de Airbus ni certificaciones.',
-            'The example includes fictional references, named exercise teams, simulated reviewers and dates. All 17 applicable inputs for each option are linked here. SIM-EURO records are not Airbus documentation or certification.')
+        <p>{data.hypothetical&&data.evidence.some(item=>item.id.startsWith('SIM-'))
+          ?t(`Hemos preparado referencias ficticias, equipos responsables, revisores y fechas simuladas. Los ${Object.values(data.parameters).filter(p=>p.applicability==='applies').length} parámetros aplicables de las tres alternativas están vinculados al registro. Las fichas SIM no son documentos de Airbus ni certificaciones.`,
+            `The example includes fictional references, exercise teams, simulated reviewers and dates. All ${Object.values(data.parameters).filter(p=>p.applicability==='applies').length} applicable inputs for the three options are linked to this register. SIM records are not Airbus documents or certifications.`)
           :t('Registra el documento, medición o método por referencia; indica propietario, revisor, fecha y limitaciones. Vincúlalo después a cada valor en la etapa 02.',
             'Record each document, observation or method by reference, its owner, reviewer, date and limitations. Link it to each data cell in stage 02.')}</p>
         {data.evidence.length===0&&<p className="cy-example-notice">{t('No hay evidencias. Las cifras se consideran hipótesis, aunque aparezcan resultados numéricos.','No evidence registered. Every numeric comparison remains hypothetical.')}</p>}
@@ -367,7 +367,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
       </section>
       <section className="cy-panel">
         <h3>{t('Estado de evidencias de las alternativas','Evidence readiness by alternative')}</h3>
-        <p>{data.hypothetical&&data.kind==='ecodesign'
+        <p>{data.hypothetical&&data.evidence.some(item=>item.id.startsWith('SIM-'))
           ?t('Aquí puede comprobarse la trazabilidad íntegra del ejercicio. La revisión que aparece como completada es EXCLUSIVAMENTE SIMULADA y nunca valida un beneficio operativo real.',
             'This section shows complete traceability within the exercise. The recorded reviews are SIMULATED ONLY and never establish a real operational benefit.')
           :t('Para confirmar un resultado documental se necesitan datos de referencia y alternativa asociados a fuentes revisadas. La revisión declarada en esta demo no acredita por sí sola un beneficio.',
@@ -381,8 +381,8 @@ export function CaseJourney({locale,view,data,setData}:Props){
               :t('Validación incompleta','Validation incomplete')}</strong>
           <p>{c.rows.filter(x=>x.issue!=='excluded'&&x.evidenceReady).length} / {c.rows.filter(x=>x.issue!=='excluded').length} {t('indicadores con fuentes revisadas en ambas alternativas','indicators with reviewed records for both values')}</p>
           {exerciseComplete(c)
-            ?<p className="cy-help">{t('17 parámetros aplicables por opción, 18 fichas documentales ficticias y cuatro comprobaciones simuladas. Se ha completado todo el recorrido del ejemplo; una aplicación real requeriría fuentes auténticas y aprobación técnica.',
-              '17 applicable parameters per option, 18 fictional evidence records and four simulated checks. The exercise is complete; a real application would require authentic sources and technical approval.')}</p>
+            ?<p className="cy-help">{t(`${Object.values(data.parameters).filter(p=>p.applicability==='applies').length} parámetros aplicables por opción, ${data.evidence.length} fichas documentales ficticias y cuatro comprobaciones simuladas. Se ha completado todo el recorrido del ejemplo; una aplicación real requeriría fuentes auténticas y aprobación técnica.`,
+              `${Object.values(data.parameters).filter(p=>p.applicability==='applies').length} applicable parameters per option, ${data.evidence.length} fictional evidence records and four simulated checks. The exercise is complete; a real application would require authentic sources and technical approval.`)}</p>
             :<ul>{c.missing.map((item,i)=><li key={i}>{item}</li>)}</ul>}
         </article>)}</div>
       </section>
