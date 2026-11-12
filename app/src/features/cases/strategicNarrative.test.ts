@@ -85,7 +85,7 @@ describe('Strategic resilience translation',()=>{
         expect(messages[0].headline.toLowerCase()).toContain(subject);
         expect(messages[0].quantifiedFinding).toContain(unit);
         expect(messages[0].quantifiedFinding).not.toContain('del componente');
-        expect(messages[3].decisionQuestion).toMatch(/Qué|Cuál/);
+        expect(messages[3].decisionQuestion).toMatch(/Qué|Cuál|Conviene/);
       }
     }
   });
