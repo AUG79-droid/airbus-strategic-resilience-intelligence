@@ -265,7 +265,8 @@ describe('Create your own strategic case', () => {
     const c=fromPreset('wildfire');
     const imported=validateCaseImport(JSON.parse(JSON.stringify(c)));
     expect(imported.options[1].parameterValues.baseRecovery.value).toBe(19);
-    expect(imported.evidence).toHaveLength(0);
+    expect(imported.evidence).toHaveLength(15);
+    expect(imported.evidence.every(e=>e.id.startsWith('SIM-FIRE-'))).toBe(true);
   });
   it('rejects malformed, excessive and non-finite imports',()=>{
     expect(()=>validateCaseImport({})).toThrow();
