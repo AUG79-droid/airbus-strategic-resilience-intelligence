@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { comparisons } from './model';
+import { comparisons, createCase } from './model';
 import { fromPreset } from './presets';
 import { strategicMessage, strategicNarrativeText } from './strategicNarrative';
 
