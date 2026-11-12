@@ -164,6 +164,122 @@ const EXAMPLE_CONTROLS:Record<PresetKey,Record<string,[number,number,number]>>={
   }
 };
 
+/**
+ * A COMPLETE, FICTIONAL evidence trail for the Eurodrone learning exercise.
+ *
+ * These reference numbers are intentionally generated exercise artefacts, not
+ * Airbus documents. The reviewer and approval gates represent a SIMULATED
+ * tabletop verification, NEVER real engineering qualification or validation.
+ * "estimate" is deliberate: no made-up source is marked as observed data.
+ * The case remains hypothetical and canDescribeAsMeasured remains false.
+ *
+ * Six synthetic dossiers x three options = 18 reviewed-in-exercise records,
+ * covering all 17 applicable universal inputs in all three options.
+ */
+function populateEurodroneExercise(result:StrategicCase,locale:'es'|'en'):void {
+  const es=locale==='es';
+  const groups={
+    operational:{
+      code:'OPS',
+      es:'Definición del perímetro, unidad funcional y plazos comparables',
+      en:'Comparable boundary, functional unit and schedule assumptions',
+      ownerEs:'Equipo de análisis del ejercicio (ficticio)',
+      ownerEn:'Exercise analysis team (fictional)'
+    },
+    technical:{
+      code:'TEC',
+      es:'Evaluación simulada de reparabilidad y contingencia técnica',
+      en:'Simulated repairability and technical contingency assessment',
+      ownerEs:'Equipo técnico del ejercicio (ficticio)',
+      ownerEn:'Exercise technical team (fictional)'
+    },
+    supply:{
+      code:'SUM',
+      es:'Evaluación simulada de concentración de proveedores y disrupciones',
+      en:'Simulated supplier concentration and disruption assessment',
+      ownerEs:'Equipo de compras del ejercicio (ficticio)',
+      ownerEn:'Exercise sourcing team (fictional)'
+    },
+    economic:{
+      code:'ECO',
+      es:'Estimación simulada de costes y sobrecostes por alternativa',
+      en:'Simulated costs and conditional expenses by option',
+      ownerEs:'Equipo económico del ejercicio (ficticio)',
+      ownerEn:'Exercise finance team (fictional)'
+    },
+    contract:{
+      code:'CON',
+      es:'Supuestos contractuales ficticios y penalizaciones',
+      en:'Fictional contractual commitments and cancellation charges',
+      ownerEs:'Equipo contractual del ejercicio (ficticio)',
+      ownerEn:'Exercise contract team (fictional)'
+    },
+    environmental:{
+      code:'AMB',
+      es:'Inventario ambiental supuesto: materiales, residuos, GEI y vida útil',
+      en:'Assumed environmental inventory: material, waste, GHG and service life',
+      ownerEs:'Equipo ambiental del ejercicio (ficticio)',
+      ownerEn:'Exercise environment team (fictional)'
+    }
+  } as const;
+  type Group=keyof typeof groups;
+  const groupFor:Record<string,Group>={
+    baseRecovery:'operational',supplyLead:'operational',recoveryTarget:'operational',
+    technicalSuccess:'technical',failureDelay:'technical',failureCost:'technical',
+    shockProbability:'supply',shockDelay:'supply',shockSurcharge:'supply',
+    baseCost:'economic',logisticsCost:'economic',investmentCost:'economic',
+    reservationFee:'contract',cancellationProbability:'contract',cancellationFee:'contract',
+    materialKg:'environmental',wasteKg:'environmental',ghgKg:'environmental',
+    lifeExtension:'environmental'
+  };
+  const optionLabels=es?['situación actual','reparación cualificada','reparación y suministro alternativo']:
+    ['current baseline','qualified repair','repair and alternate sourcing'];
+  result.owner=es?'Equipo responsable del ejercicio Eurodrone (ficticio)':
+    'Eurodrone exercise case team (fictional)';
+  result.gates={
+    comparableBoundary:true,
+    technicalEligibility:true,
+    measurementMethod:true,
+    independentReview:true
+  }; // These four gates have been ticked ONLY within the fictional tabletop exercise.
+  result.evidence=[];
+  const keys=Object.keys(groups) as Group[];
+  for(let optionIndex=0;optionIndex<result.options.length;optionIndex++){
+    const option=result.options[optionIndex];
+    const suffix=['REF','A','B'][optionIndex];
+    for(const group of keys){
+      const def=groups[group];
+      const id='SIM-EURO-'+def.code+'-'+suffix;
+      result.evidence.push({
+        id,
+        title:(es?'EJERCICIO SIMULADO · ':'SIMULATED EXERCISE · ')+(es?def.es:def.en)+
+          ' — '+optionLabels[optionIndex],
+        reference:'SIM-EURO-'+def.code+'-'+suffix+'-v1 (fictional / ficticio)',
+        owner:es?def.ownerEs:def.ownerEn,
+        reviewer:es?'Revisión metodológica del ejercicio (ficticia)':
+          'Exercise methodology reviewer (fictional)',
+        reviewedOn:'2026-11-01',
+        status:'reviewed', // Reviewed IN THE EXERCISE, not reviewed by Airbus.
+        nature:'estimate', // Never claim these are observations.
+        limitations:es?
+          'DOCUMENTO FICTICIO SIN EXISTENCIA EXTERNA. Revisión exclusivamente simulada para enseñar las etapas de ASRI. No certifica resultados, autorizaciones de Ingeniería, aprobaciones de programa ni decisiones del cliente.':
+          'FICTIONAL RECORD WITH NO EXTERNAL DOCUMENT. Review is simulated only to demonstrate the ASRI workflow. It does not certify outcomes, engineering qualification, programme approvals or customer decisions.'
+      });
+    }
+    option.parameterValues=Object.fromEntries(Object.entries(option.parameterValues).map(([id,value])=>{
+      const group=groupFor[id];
+      const evidenceId=result.parameters[id].applicability==='applies' && group
+        ?'SIM-EURO-'+groups[group].code+'-'+suffix:'';
+      return [id,{...value,evidenceId}];
+    }));
+    // Also cover the four retained input metrics for backward-compatible JSON.
+    option.measures=Object.fromEntries(Object.entries(option.measures).map(([id,value])=>[
+      id,{...value,evidenceId:'SIM-EURO-'+
+        groups[id==='cost'?'economic':id==='environment'?'environmental':'operational'].code+'-'+suffix}
+    ]));
+  }
+}
+
 export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCase {
   const p:Preset=locale==='es'?{...ES_PRESETS[kind],values:PRESETS[kind].values}:PRESETS[kind];
   const result=createCase(kind,locale);
@@ -181,6 +297,8 @@ export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCas
       evidenceId:''
     }]))
   }));
-  // We intentionally provide NO 'reviewed' documents, gates or false source links.
+  // Eurodrone is a complete learning exercise, with SIMULATED sign-offs and
+  // fictional traceability; no exercise-only review is a real Airbus approval.
+  if(kind==='ecodesign')populateEurodroneExercise(result,locale);
   return result;
 }
