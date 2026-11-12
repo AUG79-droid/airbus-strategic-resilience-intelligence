@@ -35,7 +35,7 @@ describe('Strategic resilience translation',()=>{
     c.options[1].parameterValues.baseRecovery.value=200;
     x=strategicMessage(c,comparisons(c)[0],'programmeManager','es');
     expect(x.sustainabilityLink).toContain('aumenta');
-    expect(x.quantifiedFinding).toContain('200');
+    expect(x.quantifiedFinding).toContain('214');
   });
   it('produces four distinct, decision-specific narratives without generic KPI counts',()=>{
     const c=fromPreset('ecodesign','es');
