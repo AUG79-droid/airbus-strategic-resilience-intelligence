@@ -221,9 +221,8 @@ export function CaseJourney({locale,view,data,setData}:Props){
       <h2>{phaseTitles[view][es?0:1]}</h2>
       <p>{t('Un mismo caso recorre las cuatro etapas. Empieza con tu iniciativa, compara con una situación de referencia, registra evidencias y genera argumentos para el público seleccionado.',
         'One case follows all four stages: frame the initiative, compare against a baseline, review evidence and translate findings for a decision audience.')}</p>
-      <p className="cy-security"><strong>{t('Seguridad de la información:','Information security:')}</strong>{' '}
-        {t('Esta demostración pública funciona en el navegador. No introduzcas datos confidenciales de Airbus ni información personal. ASRI no guarda automáticamente tu trabajo: puedes descargar una copia local desde el apartado opcional de guardado.',
-          'This public browser demo does not have corporate access controls. Do not enter Airbus-confidential or personal information. ASRI does not automatically save your work; use the optional save section to download a local copy.')}</p>
+      <p className="cy-help">{t('Puedes guardar una copia de tu caso desde el apartado opcional de guardado para continuar trabajando más adelante.',
+        'You can save a copy of your case in the optional save section and resume work later.')}</p>
     </header>
 
     {view==='investigate' && <div className="cy-stage">
