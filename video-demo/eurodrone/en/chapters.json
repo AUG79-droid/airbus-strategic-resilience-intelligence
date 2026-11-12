@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "language": "en-GB",
   "case": "Eurodrone fictional eco-design and supply resilience",
   "fictional": true,
@@ -158,35 +158,35 @@
       "cues": [
         {
           "id": "check_intro",
-          "text": "In Check, we assess data quality and the technical requirements that must be supported."
+          "text": "Check shows how the Eurodrone exercise is documented, from assumptions through review and traceability."
         },
         {
           "id": "gates",
-          "text": "Four review gates cover comparable scope, technical eligibility, measurement method and independent review."
+          "text": "All four methodological gates are checked within this complete simulated exercise."
         },
         {
           "id": "not_approved",
-          "text": "Every gate requires proper verification. A tick box does not replace formal approval."
+          "text": "These are exercise-only reviews. ASRI makes that distinction clear without leaving our demonstration unfinished."
         },
         {
           "id": "evidence_intro",
-          "text": "The register identifies each document, owner, reviewer, review date and limitations."
+          "text": "The register contains eighteen fictional records, with accountable teams, reviewers, dates and limitations."
         },
         {
           "id": "add_evidence",
-          "text": "We add a reference awaiting review to illustrate how traceability is organised."
+          "text": "Each record is organised by option and topic, covering operations, technical risks, supply, cost and environment."
         },
         {
           "id": "evidence_pending",
-          "text": "Each alternative input can then be linked to a traceable and comparable source."
+          "text": "All seventeen applicable inputs in every option are linked to exercise records marked as reviewed."
         },
         {
           "id": "readiness",
-          "text": "The review status shows what is still required before a conclusion can be confirmed."
+          "text": "Both alternative comparisons show the exercise as complete, with no missing evidence or methodology gates."
         },
         {
           "id": "next_translate",
-          "text": "With inputs and evidence clearly framed, we reach Translate: the strategic centre of ASRI."
+          "text": "Now we arrive at Translate, where ASRI turns a completed analysis into meaningful strategic decisions."
         }
       ]
     },
@@ -196,107 +196,167 @@
       "cues": [
         {
           "id": "translate_intro",
-          "text": "Translate turns technical findings into value that matters to the person making a decision."
+          "text": "Translate is the core of ASRI. It explains the operational value behind sustainability choices."
         },
         {
           "id": "translate_priority",
-          "text": "This is the difference: an environmental result is not enough. We must show which vulnerability changes."
+          "text": "It asks what vulnerability changes, not merely which environmental indicator improves."
         },
         {
           "id": "translate_logic",
-          "text": "The question moves beyond how much material is saved towards which industrial dependencies we can reduce."
+          "text": "We can connect repairability to recovery options, supplier dependence and continuity of support."
         },
         {
           "id": "translate_causal",
-          "text": "Repairability can reduce the need for new procurement; diversification can create additional supply options."
+          "text": "The underlying figures stay the same while the decision-focused interpretation changes."
         },
         {
           "id": "translate_conditions",
-          "text": "Those mechanisms still require technical feasibility and comparable evidence."
+          "text": "The analysis distinguishes a completed exercise from formally approved operational evidence."
         },
         {
           "id": "customer",
-          "text": "For a Defence customer, the focus is operational continuity and access to critical components."
+          "text": "First, consider the Defence Customer. Their concern is restoring the required capability."
         },
         {
           "id": "customer_focus",
-          "text": "Select Defence Customer. The same comparison is framed in terms of mission continuity."
+          "text": "The headline now explains why having another recovery route matters when supply is disrupted."
         },
         {
           "id": "customer_question",
-          "text": "Can we sustain the required capability if a supplier can no longer deliver a critical component?"
+          "text": "The decision is whether the option meets operational requirements and restores the component sooner."
         },
         {
           "id": "customer_value",
-          "text": "The customer's potential value is reduced exposure to disruption without compromising operational requirements."
+          "text": "Here, estimated component recovery falls from one hundred forty one point three to ninety two days."
+        },
+        {
+          "id": "customer_scope",
+          "text": "The benefit concerns component recovery in this scenario, not a guaranteed increase in fleet availability."
+        },
+        {
+          "id": "deep_intro",
+          "text": "Below the headline, seven deeper conclusions explain the strategic significance of the results."
+        },
+        {
+          "id": "bottleneck",
+          "text": "First, the binding constraint. Repair work takes sixty five days, but supply still takes seventy eight."
+        },
+        {
+          "id": "supply_choice",
+          "text": "Shortening repair alone cannot remove that seventy eight day supply constraint. We must address the bottleneck."
+        },
+        {
+          "id": "risk_assumptions",
+          "text": "Next, ASRI shows assumed disruption likelihood, technical success and the modelled chance of meeting the deadline."
+        },
+        {
+          "id": "tradeoff_economics",
+          "text": "The cost analysis reveals whether faster recovery comes with savings, or requires an additional premium."
+        },
+        {
+          "id": "environment_tradeoff",
+          "text": "Environmental trade-offs are also explicit: material, waste and bounded emissions can move in different directions."
+        },
+        {
+          "id": "compare_options",
+          "text": "Crucially, ASRI compares the selected strategy with the other proposed option, not just the baseline."
+        },
+        {
+          "id": "evidence_confidence",
+          "text": "It then evaluates review coverage and sensitivity, without disguising assumptions as observed outcomes."
+        },
+        {
+          "id": "decision_action",
+          "text": "Finally, each audience gets a concrete next decision, with appropriate conditions for validation."
         },
         {
           "id": "engineering",
-          "text": "For Engineering, we focus on qualification, safety and verifiable repairability."
+          "text": "Now choose Engineering. The same scenario becomes a technical qualification decision."
         },
         {
           "id": "engineering_focus",
-          "text": "Now choose Engineering. Value depends on repair and materials meeting technical requirements."
+          "text": "Engineering focuses on repair viability, safety, traceability and functional equivalence."
         },
         {
           "id": "engineering_question",
-          "text": "Here we need testing, supplier qualification, traceability and proper approval of changes."
+          "text": "Which tests and authorisations would allow this recovery route to be used safely?"
         },
         {
           "id": "engineering_value",
-          "text": "Translate clarifies what Engineering needs to demonstrate before an advantage can be defended."
+          "text": "The action section turns that question into a practical set of engineering checks."
         },
         {
           "id": "programme",
-          "text": "For the Programme team, we relate findings to timing, costs, milestones and supply commitments."
+          "text": "Switch to Programme Management. Here, timing, expected cost and commitments take centre stage."
         },
         {
           "id": "programme_focus",
-          "text": "Select Programme Manager. The message shifts to availability, schedules and commitments."
+          "text": "The recovery result connects directly to milestone risk and the time available to respond."
         },
         {
           "id": "programme_question",
-          "text": "Material savings have operational value only if they do not create new delays, costs or dependencies."
+          "text": "The model compares how much faster the option recovers and how likely it is to meet its deadline."
         },
         {
           "id": "programme_value",
-          "text": "Here we weigh the trade-offs: how timing changes, what it costs and which risks remain."
+          "text": "The economic analysis also shows whether that resilience comes with savings or a premium."
         },
         {
           "id": "leadership",
-          "text": "For leadership, we address industrial dependencies, risk exposure and the value of decisions."
+          "text": "Finally, choose Executive Leadership and view the broader industrial resilience argument."
         },
         {
           "id": "leadership_focus",
-          "text": "Finally, choose Executive Leadership. We turn scattered indicators into a strategic decision."
+          "text": "The same evidence now supports decisions on repair capability and supply-chain dependence."
         },
         {
           "id": "leadership_question",
-          "text": "The question is where investment can strengthen industrial autonomy and response capability."
+          "text": "Leadership can see which constraints are binding, and where investment may change the outcome."
         },
         {
           "id": "leadership_value",
-          "text": "Translate does not invent benefits; it prioritises risks, options and the evidence needed."
+          "text": "Instead of generic claims, ASRI suggests a bounded next decision and what would justify it."
+        },
+        {
+          "id": "leadership_risks",
+          "text": "Leadership can revisit the risk assumptions and see which dependencies remain exposed."
+        },
+        {
+          "id": "leadership_evidence",
+          "text": "The evidence section keeps the distinction between simulated reviews and actual programme authorisation."
         },
         {
           "id": "translation_summary",
-          "text": "One analysis supports four different decision conversations without changing the underlying facts."
+          "text": "One consistent analytical model now supports four audiences, with no change to the underlying facts."
         },
         {
           "id": "choose_option_b",
-          "text": "We switch the selected option to show how the message changes without altering the method."
+          "text": "Switch from qualified repair to repair plus alternative sourcing. The interpretation changes immediately."
+        },
+        {
+          "id": "option_b_compare",
+          "text": "This combined option introduces a second sourcing route alongside repair, and changes the comparative result."
+        },
+        {
+          "id": "option_b_cost",
+          "text": "Its additional resilience must still be weighed against cost. ASRI makes that compromise visible."
         },
         {
           "id": "limitations",
-          "text": "Translate retains traceability and clearly identifies what still needs to be verified."
+          "text": "ASRI shows the scenario boundary clearly. A complete tutorial does not imply programme approval."
+        },
+        {
+          "id": "translate_evolution",
+          "text": "These seven conclusions will also be generated for any future case built with the same tool."
         },
         {
           "id": "translation_conclusion",
-          "text": "That is how ASRI translates sustainability into the language of resilience our stakeholders expect."
+          "text": "The real value is translating sustainability into resilience, risk, trade-offs and actionable choices."
         },
         {
           "id": "export_intro",
-          "text": "That argument can be included in a report alongside the comparison and supporting evidence."
+          "text": "These expanded conclusions can also be exported with the full comparison and traceable exercise records."
         }
       ]
     },
@@ -314,7 +374,7 @@
         },
         {
           "id": "report_caution",
-          "text": "Before sharing, ensure the figures are comparable and the conclusion has appropriate support."
+          "text": "Before any external use, replace simulated records with verified sources and obtain the required approvals."
         },
         {
           "id": "save_draft",
@@ -322,11 +382,11 @@
         },
         {
           "id": "closing",
-          "text": "ASRI connects sustainability decisions to the resilience that matters to customers, programmes and leadership."
+          "text": "ASRI gives customers and teams a richer strategic conversation, grounded in alternatives, evidence and resilience."
         }
       ]
     }
   ],
-  "storyline": "Eurodrone only; revised from user's Spanish Word; prioritises Translate with strategic resilience narrative",
+  "storyline": "English tutorial re-recorded against live current ASRI, complete Check and seven strategic insights, no missing exercise evidence.",
   "reviewed_spanish_word": "ASRI Eurodrone Tutorial Castellano Locutor Sereno (1).docx"
 }
