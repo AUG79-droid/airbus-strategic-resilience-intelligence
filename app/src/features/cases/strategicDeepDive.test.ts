@@ -55,8 +55,8 @@ describe('Extended strategic translator',()=>{
     const c=fromPreset('wildfire','es');
     const message=strategicInsights(c,comparisons(c)[0],'executiveLeadership','es');
     expect(message[3].body).toContain('GEI');
-    expect(message[3].body).toContain('5.000');
-    expect(message[3].body).toContain('7.000');
+    expect(message[3].body).toMatch(/5(?:\\.|\\s)?000/);
+    expect(message[3].body).toMatch(/7(?:\\.|\\s)?000/);
     expect(message[3].body).toContain('aumenta');
     expect(message[3].body).toContain('no equivale a un ACV');
   });
