@@ -1,0 +1,2 @@
+Eurodrone full Castilian Spanish tutorial, preserving Qwen3-TTS 1.7B Base synthetic voice sample from run 42505805912.
+7 chapters; 52 synced real UI actions; 1920x1080; local subtitles and QA.
