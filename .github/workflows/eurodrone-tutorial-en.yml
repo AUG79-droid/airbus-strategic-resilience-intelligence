@@ -1,4 +1,4 @@
-name: Eurodrone tutorial — approved British English narrator
+name: Eurodrone final revised — English (Translate emphasis)
 on:
   workflow_dispatch:
   push:
@@ -33,7 +33,7 @@ jobs:
           d=json.load(open('video-demo/eurodrone/en/chapters.json'))
           assert d['language']=='en-GB' and len(d['chapters'])==7
           cues=[cue for ch in d['chapters'] for cue in ch['cues']]
-          assert len(cues)==52 and len({cue['id'] for cue in cues})==52
+          assert len(cues)==70 and len({cue['id'] for cue in cues})==70
           for c in cues:
               assert len(textwrap.wrap(c['text'],width=78,break_long_words=False,break_on_hyphens=False))<=2,(c['id'],c['text'])
           print('English Eurodrone storyboard validated:',len(cues),'timed cues')
@@ -56,7 +56,7 @@ jobs:
       - name: Deliver English MP4, subtitles and quality report
         uses: actions/upload-artifact@v4
         with:
-          name: ASRI-Eurodrone-Tutorial-English-British-Voice
+          name: ASRI-Eurodrone-Final-Revised-English
           path: |
             video-demo/eurodrone/en/output/ASRI_Eurodrone_Tutorial_English.mp4
             video-demo/eurodrone/en/output/tutorial-report.json
@@ -67,5 +67,5 @@ jobs:
             video-demo/eurodrone/en/output/eurodrone-report.pdf
             video-demo/eurodrone/en/output/eurodrone-case.json
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
           compression-level: 2
