@@ -33,8 +33,6 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
   const es=locale==='es';
   const isEco=data.kind==='ecodesign';
   const combo=isEco&&c.option.id==='option-b';
-  const repair=isEco&&c.option.id==='option-a';
-  const name=c.option.name;
   const recovery=measure(c,'expectedRecovery');
   const cost=measure(c,'expectedCost');
   const deadline=measure(c,'deadlineAttainment');
