@@ -1,0 +1,119 @@
+name: Eurodrone tutorial — approved serene Castilian narrator
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - video-demo/eurodrone/TRIGGER_ES.txt
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: eurodrone-castilian-video
+  cancel-in-progress: false
+
+jobs:
+  spanish_voice:
+    name: Original synthetic Spanish narrator — group ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Retrieve EXACT approved synthetic narrator sample from original tutorial
+        uses: actions/download-artifact@v4
+        with:
+          name: ASRI-Locutor-Sereno-Castellano
+          run-id: 42505805912
+          github-token: ${{ github.token }}
+          path: video-demo/eurodrone/es/reference
+      - name: Validate Spanish script and voice synthesis
+        run: |
+          python -m py_compile video-demo/eurodrone/synth_voice_es.py video-demo/eurodrone/build_audio.py video-demo/eurodrone/render_video.py
+          python - <<'PY'
+          import json
+          d=json.load(open('video-demo/eurodrone/es/chapters.json'))
+          cues=[cue for chapter in d['chapters'] for cue in chapter['cues']]
+          assert d['language']=='es-ES' and len(d['chapters'])==7 and len(cues)==52
+          assert len({x['id'] for x in cues})==52
+          print('Spanish Eurodrone storyboard validated:',len(cues),'cues')
+          PY
+      - name: Build same free Qwen CPU voice engine as previous approved tutorial
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq git build-essential libopenblas-dev ffmpeg curl
+          git clone --depth 1 https://github.com/gabriele-mastrapasqua/qwen3-tts.git /tmp/qwen-c
+          make -C /tmp/qwen-c blas
+          /tmp/qwen-c/qwen_tts --self-test
+      - name: Retrieve same 1.7B Base synthetic voice model
+        run: |
+          cd /tmp/qwen-c
+          bash download_model.sh --model base-large
+          test -s qwen3-tts-1.7b-base/model.safetensors
+      - name: Narrate using original approved voice identity and speech settings
+        run: python video-demo/eurodrone/synth_voice_es.py --shard ${{ matrix.shard }} --shards 4
+      - name: Preserve generated voice segments
+        uses: actions/upload-artifact@v4
+        with:
+          name: Eurodrone-Serene-Spanish-Voice-${{ matrix.shard }}
+          path: video-demo/eurodrone/es/output/segment-*.wav
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 1
+
+  video:
+    name: Spanish Eurodrone complete case — Full HD synchronized MP4
+    needs: spanish_voice
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download all 52 cues synthesized in the approved voice
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Eurodrone-Serene-Spanish-Voice-*
+          merge-multiple: true
+          path: video-demo/eurodrone/es/output
+      - name: Install video editor and browser recorder
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          npm install --prefix video-demo --no-fund --no-audit --ignore-scripts
+          node video-demo/node_modules/playwright-core/cli.js install --with-deps chromium
+          node --check video-demo/eurodrone/record.mjs
+      - name: Stitch exact Spanish narration and bottom-strip subtitles
+        run: python video-demo/eurodrone/build_audio.py es
+      - name: Record actual Spanish Eurodrone case and four-stage navigation
+        run: node video-demo/eurodrone/record.mjs es
+      - name: Assemble and technically validate Spanish Full HD MP4
+        run: python video-demo/eurodrone/render_video.py es
+      - name: Deliver approved-style Spanish MP4, captions and QA report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASRI-Eurodrone-Tutorial-Castellano-Locutor-Sereno
+          path: |
+            video-demo/eurodrone/es/output/ASRI_Eurodrone_Tutorial_Castellano_Locutor_Sereno.mp4
+            video-demo/eurodrone/es/output/tutorial-report.json
+            video-demo/eurodrone/es/output/subtitles.srt
+            video-demo/eurodrone/es/output/voice-credits.txt
+            video-demo/eurodrone/es/output/recording-timing.json
+            video-demo/eurodrone/es/output/edited-recovery.png
+            video-demo/eurodrone/es/output/eurodrone-report.pdf
+            video-demo/eurodrone/es/output/eurodrone-case.json
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 2
