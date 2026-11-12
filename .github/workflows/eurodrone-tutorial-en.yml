@@ -1,4 +1,4 @@
-name: Eurodrone final revised — English (Translate emphasis)
+name: Eurodrone English — complete Check and extended Translate
 on:
   workflow_dispatch:
   push:
@@ -33,10 +33,11 @@ jobs:
           d=json.load(open('video-demo/eurodrone/en/chapters.json'))
           assert d['language']=='en-GB' and len(d['chapters'])==7
           cues=[cue for ch in d['chapters'] for cue in ch['cues']]
-          assert len(cues)==70 and len({cue['id'] for cue in cues})==70
+          assert len(cues)==85 and len({cue['id'] for cue in cues})==85
           for c in cues:
               assert len(textwrap.wrap(c['text'],width=78,break_long_words=False,break_on_hyphens=False))<=2,(c['id'],c['text'])
-          print('English Eurodrone storyboard validated:',len(cues),'timed cues')
+          assert len([cue for ch in d['chapters'] if ch['id']=='translate' for cue in ch['cues']])==41
+          print('Current English storyboard validated:',len(cues),'cues; 41 Translate cues; seven conclusions')
           PY
       - name: Install original offline British voice and video tools
         run: |
@@ -56,7 +57,7 @@ jobs:
       - name: Deliver English MP4, subtitles and quality report
         uses: actions/upload-artifact@v4
         with:
-          name: ASRI-Eurodrone-Final-Revised-English
+          name: ASRI-Eurodrone-Expanded-Translate-English
           path: |
             video-demo/eurodrone/en/output/ASRI_Eurodrone_Tutorial_English.mp4
             video-demo/eurodrone/en/output/tutorial-report.json
@@ -64,6 +65,10 @@ jobs:
             video-demo/eurodrone/en/output/voice-credits.txt
             video-demo/eurodrone/en/output/recording-timing.json
             video-demo/eurodrone/en/output/edited-recovery.png
+            video-demo/eurodrone/en/output/check-complete.png
+            video-demo/eurodrone/en/output/translate-new-overview.png
+            video-demo/eurodrone/en/output/translate-bottleneck.png
+            video-demo/eurodrone/en/output/translate-other-option.png
             video-demo/eurodrone/en/output/eurodrone-report.pdf
             video-demo/eurodrone/en/output/eurodrone-case.json
           if-no-files-found: error
