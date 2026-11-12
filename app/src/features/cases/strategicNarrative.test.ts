@@ -65,6 +65,47 @@ describe('Strategic resilience translation',()=>{
     expect(x.quantifiedFinding).toMatch(/aún no puede compararse/);
     expect(x.operationalMeaning).not.toMatch(/permite recuperar antes el componente/);
   });
+  it.each([
+    ['climate','calor extremo','horas'],
+    ['saf','abastecimiento','días'],
+    ['wildfire','alertas','minutos']
+  ] as const)('translates the completed %s case into a specific resilience decision', (kind,subject,unit)=>{
+    for(const locale of ['es','en'] as const){
+      const c=fromPreset(kind,locale);
+      const compared=comparisons(c);
+      expect(compared.every(x=>x.missing.length===0)).toBe(true);
+      expect(compared.every(x=>x.reviewedData&&!x.canDescribeAsMeasured)).toBe(true);
+      const audiences=['defenceCustomer','engineering','programmeManager','executiveLeadership'] as const;
+      const messages=audiences.map(a=>strategicMessage(c,compared[0],a,locale));
+      expect(new Set(messages.map(x=>x.headline)).size).toBe(4);
+      expect(messages.every(x=>x.quantifiedFinding.length>35)).toBe(true);
+      expect(messages.every(x=>x.decisionQuestion.length>35)).toBe(true);
+      expect(messages.every(x=>!x.operationalMeaning.includes('qualified repair'))).toBe(true);
+      if(locale==='es'){
+        expect(messages[0].headline.toLowerCase()).toContain(subject);
+        expect(messages[0].quantifiedFinding).toContain(unit);
+        expect(messages[0].quantifiedFinding).not.toContain('del componente');
+        expect(messages[3].decisionQuestion).toMatch(/Qué|Cuál/);
+      }
+    }
+  });
+  it('distinguishes SAF supply diversification from a single SAF supplier',()=>{
+    const c=fromPreset('saf','es');
+    const [single,fallback]=comparisons(c);
+    const a=strategicMessage(c,single,'defenceCustomer','es');
+    const b=strategicMessage(c,fallback,'defenceCustomer','es');
+    expect(a.operationalMeaning).toContain('único proveedor');
+    expect(b.operationalMeaning).toContain('suministro alternativo');
+    expect(a.sustainabilityLink).toContain('GEI');
+    expect(a.operationalMeaning).not.toContain('aprobación concedida');
+  });
+  it('does not claim wildfire alert detection was directly measured by a restoration-time model',()=>{
+    const c=fromPreset('wildfire','es');
+    const a=strategicMessage(c,comparisons(c)[0],'defenceCustomer','es');
+    expect(a.quantifiedFinding).toContain('restablecimiento');
+    expect(a.quantifiedFinding).not.toContain('tiempo desde detección');
+    expect(a.operationalMeaning).toContain('comunicaciones');
+  });
   it('does not report a spurious fleet-availability effect for any case',()=>{
     for(const kind of ['ecodesign','climate','saf','wildfire'] as const){
       const c=fromPreset(kind,'es');
