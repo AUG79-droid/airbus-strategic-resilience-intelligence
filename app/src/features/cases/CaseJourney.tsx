@@ -9,6 +9,7 @@ import {
 import { fromPreset, presetTitle, type PresetKey } from './presets';
 import { UniversalControls } from './UniversalControls';
 import { strategicMessage, strategicNarrativeText } from './strategicNarrative';
+import { strategicInsights } from './strategicDeepDive';
 import { calculateUniversal, parameterUnit } from './universal';
 import './CaseJourney.css';
 
@@ -99,6 +100,8 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     '',es?'## 04 Traducir':'## 04 Translate',
     `Audience: ${audienceNames[a][es?0:1]}`,
     strategicNarrativeText(data,chosen,a,locale),
+    '',es?'### Conclusiones estratégicas ampliadas':'### Extended strategic conclusions',
+    ...strategicInsights(data,chosen,a,locale).flatMap(item=>['', '#### '+item.title,item.body]),
     '',es?'LÍMITE: ningún cálculo es una prueba de causalidad o aprobación técnica.':'BOUNDARY: calculations do not establish causality or technical approval.',
   ];
   return lines.filter((x)=>x!=='').join('\n');
@@ -145,6 +148,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
   const results=useMemo(()=>comparisons(data),[data]);
   const active=results.find(r=>r.option.id===selectedOption)??results[0];
   const strategic=active?strategicMessage(data,active,selectedAudience,locale):null;
+  const deepDive=active?strategicInsights(data,active,selectedAudience,locale):[];
   // An exercise can be COMPLETE as a simulation without being validated
   // as a factual programme result. This distinction must never be hidden.
   const exerciseComplete=(c:OptionComparison)=>
@@ -422,6 +426,18 @@ export function CaseJourney({locale,view,data,setData}:Props){
               :t('Interpretación condicionada al alcance, las hipótesis y las evidencias revisadas; requiere aceptación técnica.',
                 'Interpretation depends on scope, assumptions and reviewed sources; technical acceptance is still required.')}</p>
           </section>}
+          <section className="cy-deep-dive" aria-label={t('Conclusiones estratégicas ampliadas','Extended strategic conclusions')}>
+            <div className="cy-deep-dive__intro">
+              <h3>{t('Conclusiones estratégicas ampliadas','Extended strategic conclusions')}</h3>
+              <p>{t('Siete lecturas adicionales del mismo escenario: vulnerabilidades, riesgos, economía, factores ambientales, alternativas, evidencia y decisión. Se actualizan al cambiar datos o audiencia.',
+                'Seven deeper insights from the same scenario: vulnerabilities, risk, economics, environmental impact, options, evidence and decision. All update with the inputs and audience.')}</p>
+            </div>
+            <div className="cy-deep-dive__grid">{deepDive.map(insight=>
+              <article key={insight.id} className={'cy-deep-dive__item cy-deep-dive__item--'+insight.id}>
+                <h4>{insight.title}</h4>
+                <p>{insight.body}</p>
+              </article>)}</div>
+          </section>
           <h4>{exerciseComplete(active)
             ?t('Evaluación del ejercicio: completada','Exercise assessment: complete')
             :t('Qué falta antes de comunicar un beneficio','What is still required before communicating a benefit')}</h4>
