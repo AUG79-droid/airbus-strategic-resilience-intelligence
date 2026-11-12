@@ -192,7 +192,92 @@ function otherStrategicMessage(data:StrategicCase,c:OptionComparison,audience:Au
     decisionQuestion:question[locale]};
 }
 
+/**
+ * Universal route for ANY new or imported user-defined case, regardless of the
+ * chosen template. Unlike prepared examples, its meaning comes exclusively
+ * from the user's own case definition and the compared, applicable inputs.
+ * An incomplete case produces questions and clearly missing findings.
+ */
+function customStrategicMessage(data:StrategicCase,c:OptionComparison,audience:Audience,locale:Locale):StrategicMessage {
+  const es=locale==='es';
+  const text=(value:string,esFallback:string,enFallback:string)=>
+    value.trim()|| (es?esFallback:enFallback);
+  const subject=text(data.title, 'el caso estratégico','the strategic case');
+  const initiative=text(data.initiative,'iniciativa pendiente de definir','initiative yet to be defined');
+  const vulnerability=text(data.vulnerability,'vulnerabilidad pendiente de definir','vulnerability yet to be defined');
+  const mechanism=text(data.mechanism,'mecanismo pendiente de definir','mechanism yet to be defined');
+  const boundary=text(data.boundary,'perímetro aún no definido','boundary not yet defined');
+  const option=text(c.option.name,'alternativa seleccionada','selected option');
+  const timeUnit=data.kind==='climate'?(es?'horas':'hours'):
+    data.kind==='wildfire'?(es?'minutos':'minutes'):(es?'días':'days');
+  const recovery=measure(c,'expectedRecovery');
+  const deadline=measure(c,'deadlineAttainment');
+  const cost=measure(c,'expectedCost');
+  const ghg=measure(c,'ghgKg');
+  const material=measure(c,'materialKg');
+  const outcome=recovery
+    ?(es
+      ?`El restablecimiento del servicio definido cambia de ${n(recovery.baseline!,locale)} a ${n(recovery.candidate!,locale)} ${timeUnit} (${recovery.delta!<0?'una reducción de':recovery.delta!>0?'un aumento de':'sin diferencia:'} ${n(Math.abs(recovery.delta!),locale)} ${timeUnit}).`
+      :`Restoration of the defined service changes from ${n(recovery.baseline!,locale)} to ${n(recovery.candidate!,locale)} ${timeUnit} (${recovery.delta!<0?'a reduction of':recovery.delta!>0?'an increase of':'no difference:'} ${n(Math.abs(recovery.delta!),locale)} ${timeUnit}).`)
+    :(es?'No hay todavía datos suficientes para comparar el tiempo de restablecimiento del servicio.':
+      'There are not yet enough data to compare service restoration time.');
+  const deadlineResult=deadline
+    ?(es?` El cumplimiento calculado del plazo objetivo pasa del ${asPercent(deadline.baseline!,locale)} al ${asPercent(deadline.candidate!,locale)}.`
+      :` Modelled deadline attainment changes from ${asPercent(deadline.baseline!,locale)} to ${asPercent(deadline.candidate!,locale)}.`)
+    :'';
+  const costResult=cost
+    ?(es?`El coste esperado comparado pasa de ${n(cost.baseline!,locale,0)} € a ${n(cost.candidate!,locale,0)} €.`
+      :`Compared expected cost changes from €${n(cost.baseline!,locale,0)} to €${n(cost.candidate!,locale,0)}.`)
+    :(es?'El efecto económico no puede cuantificarse todavía.':'The economic effect cannot yet be quantified.');
+  const environmental=[
+    ghg?(es?`GEI acotados: ${n(ghg.baseline!,locale)} → ${n(ghg.candidate!,locale)} kg CO₂e.`
+      :`Bounded GHG: ${n(ghg.baseline!,locale)} → ${n(ghg.candidate!,locale)} kg CO₂e.`):'',
+    material?(es?`Material virgen: ${n(material.baseline!,locale)} → ${n(material.candidate!,locale)} kg.`
+      :`Virgin material: ${n(material.baseline!,locale)} → ${n(material.candidate!,locale)} kg.`):''
+  ].filter(Boolean).join(' ');
+  const framed=es
+    ?`En «${subject}», analizamos ${initiative}. La vulnerabilidad declarada es: ${vulnerability}. El mecanismo propuesto es: ${mechanism}. La alternativa «${option}» se evalúa dentro del alcance «${boundary}».`
+    :`In “${subject}”, we examine ${initiative}. The stated vulnerability is: ${vulnerability}. The proposed mechanism is: ${mechanism}. “${option}” is assessed within “${boundary}”.`;
+  const focus:Record<Audience,[string,string,string,string]>={
+    defenceCustomer:[
+      'Para el cliente, la pregunta es si la alternativa puede sostener la capacidad requerida cuando esa vulnerabilidad se materializa.',
+      'For the customer, the question is whether the option can sustain required capability if that vulnerability materialises.',
+      'Decisión para el cliente: ¿qué requisito operativo, límite de aceptación y prueba de continuidad justifican escoger esta alternativa?',
+      'Customer decision: which operational requirement, acceptance limit and continuity test justify choosing this option?'
+    ],
+    engineering:[
+      'Para Ingeniería, interesa comprobar que el mecanismo declarado es técnicamente viable y no introduce riesgos de seguridad o calidad.',
+      'For Engineering, the proposed mechanism must be technically feasible without introducing safety or quality risks.',
+      'Decisión para Ingeniería: ¿qué verificación, ensayo, criterio de aceptación y autorización exige el mecanismo propuesto?',
+      'Engineering decision: which verification, test, acceptance criteria and authorisations does this mechanism require?'
+    ],
+    programmeManager:[
+      'Para Programa, el valor depende de alcanzar los compromisos operativos dentro del plazo y coste del mismo perímetro.',
+      'For Programme, value depends on meeting operational commitments within the same scope, timing and costs.',
+      'Decisión para Programa: ¿qué opción equilibra mejor plazo objetivo, costes y contingencias del caso?',
+      'Programme decision: which option best balances target deadline, costs and contingencies for this case?'
+    ],
+    executiveLeadership:[
+      'Para Dirección, el objetivo es conocer la vulnerabilidad que cambia y cuánto cuesta reducir su exposición.',
+      'For leadership, the aim is to understand which vulnerability changes and what it costs to reduce exposure.',
+      'Decisión para Dirección: ¿qué capacidad merece inversión y qué umbral operativo y económico justificaría ampliarla?',
+      'Leadership decision: which capability merits investment, and which operational and financial thresholds would justify scaling it?'
+    ]
+  };
+  const words=focus[audience];
+  return {
+    headline:es?`Resiliencia estratégica de «${subject}»`:`Strategic resilience for “${subject}”`,
+    operationalMeaning:framed+' '+words[es?0:1],
+    quantifiedFinding:outcome+deadlineResult,
+    sustainabilityLink:[environmental,costResult].filter(Boolean).join(' '),
+    decisionQuestion:words[es?2:3]
+  };
+}
+
 export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:Audience,locale:Locale):StrategicMessage{
+  // A template type is NOT proof that a user's own case is the prepared
+  // Eurodrone/heat/SAF/wildfire story. All new cases use the universal route.
+  if(!data.hypothetical || !data.id.startsWith('SYNTH-'))return customStrategicMessage(data,c,audience,locale);
   if(data.kind!=='ecodesign')return otherStrategicMessage(data,c,audience,locale);
   const es=locale==='es';
   const isEco=data.kind==='ecodesign';
