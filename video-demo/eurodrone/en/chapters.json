@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "language": "en-GB",
+  "case": "Eurodrone fictional eco-design and supply resilience",
+  "fictional": true,
+  "chapters": [
+    {
+      "id": "investigate",
+      "title": "01 · Investigate and select the case",
+      "cues": [
+        {
+          "id": "welcome",
+          "text": "Welcome to ASRI. This tutorial follows a complete eco-design and supply resilience case from start to finish."
+        },
+        {
+          "id": "mode",
+          "text": "Select Create Your Own Strategic Case. This journey is separate from the original maintenance demonstration."
+        },
+        {
+          "id": "examples",
+          "text": "Investigate presents four examples. We will use Eurodrone to examine critical materials and long-term support."
+        },
+        {
+          "id": "choose",
+          "text": "Select Eco-design and Critical Materials. The app loads a case and three fictional options."
+        },
+        {
+          "id": "case_title",
+          "text": "The case concerns a hypothetical support subsystem. No figures here come from an actual Eurodrone programme."
+        },
+        {
+          "id": "case_decision",
+          "text": "The decision is whether qualified repair and supplier diversification might reduce long-term vulnerability."
+        },
+        {
+          "id": "case_boundary",
+          "text": "Before comparing options, define the same component, functional requirements and assessment period."
+        },
+        {
+          "id": "next_challenge",
+          "text": "We continue to Challenge, where operating and economic assumptions drive the comparison."
+        }
+      ]
+    },
+    {
+      "id": "operations",
+      "title": "02 · Challenge: alternatives and operations",
+      "cues": [
+        {
+          "id": "alternatives",
+          "text": "We compare the baseline, qualified repair, and repair combined with an additional qualified supplier."
+        },
+        {
+          "id": "model_intro",
+          "text": "All cases share the same six sections. What changes is which parameters apply to a particular decision."
+        },
+        {
+          "id": "operational",
+          "text": "Open Operational Conditions. Every input contains values for all three options, measured in matching units."
+        },
+        {
+          "id": "recovery",
+          "text": "Recovery time describes how long each option would take without additional failures or disruptions."
+        },
+        {
+          "id": "supply",
+          "text": "The supply lead time captures a binding delay from a supplier or component, when that dependency applies."
+        },
+        {
+          "id": "deadline",
+          "text": "The recovery deadline is shared. The model checks whether each strategy meets it under stated risk assumptions."
+        },
+        {
+          "id": "risk_expand",
+          "text": "Open Risks and Probabilities. These values are practice assumptions, not calibrated forecasts."
+        },
+        {
+          "id": "risk_success",
+          "text": "We separate the probability of technical success from the delay incurred if the chosen route fails."
+        }
+      ]
+    },
+    {
+      "id": "economics",
+      "title": "02 · Challenge: costs and environmental boundaries",
+      "cues": [
+        {
+          "id": "risk_external",
+          "text": "We also model the chance of an external disruption and the additional delay it could cause."
+        },
+        {
+          "id": "cost_expand",
+          "text": "Economic Obligations covers direct cost, logistics and extra expenses under adverse conditions."
+        },
+        {
+          "id": "cost_values",
+          "text": "Expected cost weights conditional expenses by probability. It is not an approved contract price."
+        },
+        {
+          "id": "contract_expand",
+          "text": "Contractual Conditions covers reservation fees and cancellation charges, only when they actually apply."
+        },
+        {
+          "id": "contracts",
+          "text": "If a contract does not apply, mark Not Applicable and explain why. Do not invent a numeric zero."
+        },
+        {
+          "id": "environment_expand",
+          "text": "Environmental Factors covers material demand, waste and greenhouse gases for a defined assessment boundary."
+        },
+        {
+          "id": "environment",
+          "text": "These quantities can be compared, but they are not a complete or certified life-cycle assessment."
+        },
+        {
+          "id": "evidence_section",
+          "text": "The sixth section reminds us to trace and review inputs. An assumption does not become evidence on its own."
+        }
+      ]
+    },
+    {
+      "id": "experiment",
+      "title": "02 · Challenge: test a change",
+      "cues": [
+        {
+          "id": "results",
+          "text": "The results compare timelines, deadline performance, cost and environmental factors without declaring an automatic winner."
+        },
+        {
+          "id": "edit_recovery",
+          "text": "Let us change the repair option's recovery time and observe how the model responds."
+        },
+        {
+          "id": "updated_result",
+          "text": "The calculation updates as soon as an input changes. We can inspect sensitivity before making a decision."
+        },
+        {
+          "id": "restore_recovery",
+          "text": "We restore the original illustrative value so the remaining analysis uses a consistent baseline."
+        },
+        {
+          "id": "sensitivity",
+          "text": "The sensitivity margin tests robustness. It is not a statistical confidence interval."
+        },
+        {
+          "id": "compare",
+          "text": "One option can improve a metric and worsen another. ASRI makes that trade-off visible."
+        },
+        {
+          "id": "next_check",
+          "text": "Next comes Check. These calculations alone cannot establish a demonstrated benefit."
+        }
+      ]
+    },
+    {
+      "id": "check",
+      "title": "03 · Check evidence and assumptions",
+      "cues": [
+        {
+          "id": "check_intro",
+          "text": "Check examines the quality of the inputs and the technical requirements that still need verification."
+        },
+        {
+          "id": "gates",
+          "text": "Four review gates cover comparable scope, technical eligibility, measurement methods and independent review."
+        },
+        {
+          "id": "not_approved",
+          "text": "We do not claim these gates have passed. This is a fictional example, and tick boxes do not replace approval."
+        },
+        {
+          "id": "evidence_intro",
+          "text": "The evidence register can identify a document, its owner, reviewer, review date and limitations."
+        },
+        {
+          "id": "add_evidence",
+          "text": "We add a sample evidence record and leave it pending. This illustrates what a real case would still need."
+        },
+        {
+          "id": "evidence_pending",
+          "text": "Each baseline and option measurement would then need a traceable and comparable source."
+        },
+        {
+          "id": "readiness",
+          "text": "Validation remains incomplete. That is intentional: a learning scenario must not be confused with actual performance."
+        },
+        {
+          "id": "next_translate",
+          "text": "With those limitations clear, continue to Translate for audience-specific communication."
+        }
+      ]
+    },
+    {
+      "id": "translate",
+      "title": "04 · Translate for decision audiences",
+      "cues": [
+        {
+          "id": "translate_intro",
+          "text": "Translate turns case findings into strategic arguments without changing the underlying numbers."
+        },
+        {
+          "id": "customer",
+          "text": "For a Defence customer, the focus is operational continuity and access to critical components."
+        },
+        {
+          "id": "engineering",
+          "text": "For Engineering, the argument concerns qualification, safety and demonstrable repairability."
+        },
+        {
+          "id": "programme",
+          "text": "For a Programme Manager, the key issues are delivery commitments, cost and supply resilience over time."
+        },
+        {
+          "id": "leadership",
+          "text": "For leadership, potential value is lower industrial dependency with transparent costs and uncertainties."
+        },
+        {
+          "id": "choose_option_b",
+          "text": "We can select the other alternative. The narrative should reflect the new comparison."
+        },
+        {
+          "id": "limitations",
+          "text": "The report explicitly flags unvalidated data. A compelling narrative is not evidence of causality."
+        },
+        {
+          "id": "export_intro",
+          "text": "Finally, we review exports. We can generate a report and keep an editable copy of the case."
+        }
+      ]
+    },
+    {
+      "id": "export",
+      "title": "04 · Export and conclusion",
+      "cues": [
+        {
+          "id": "export_pdf",
+          "text": "The PDF report includes assumptions, comparisons, pending evidence and qualified conclusions."
+        },
+        {
+          "id": "export_markdown",
+          "text": "A Markdown version is also available for further review and editing."
+        },
+        {
+          "id": "report_caution",
+          "text": "Before sharing, check comparability and ensure no benefit is presented as validated without evidence."
+        },
+        {
+          "id": "save_draft",
+          "text": "To resume later, download a local case file. ASRI does not automatically store this work in the cloud."
+        },
+        {
+          "id": "closing",
+          "text": "That completes all four stages using Eurodrone. This is a hypothetical decision exercise, not a calibrated prediction."
+        }
+      ]
+    }
+  ]
+}
