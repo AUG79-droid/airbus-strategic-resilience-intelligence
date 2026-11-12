@@ -30,7 +30,7 @@ describe('Create your own strategic case', () => {
       expect(c.boundary.length).toBeGreaterThan(10);
       expect(c.options).toHaveLength(3);
       expect(c.metrics).toHaveLength(4);
-      expect(c.evidence).toHaveLength(kind==='ecodesign'?18:0);
+      expect(c.evidence).toHaveLength(kind==='ecodesign'||kind==='saf'?18:15);
       expect(comparisons(c)).toHaveLength(2);
       expect(comparisons(c).every(x=>!x.canDescribeAsMeasured)).toBe(true);
     }
@@ -87,6 +87,62 @@ describe('Create your own strategic case', () => {
     expect(comparison.reviewedData).toBe(false);
     expect(comparison.missing.some(x=>x.includes('missing traceable review'))).toBe(true);
     expect(comparison.canDescribeAsMeasured).toBe(false);
+  });
+  it.each([
+    ['climate',12,15,'SIM-CLIM-'],
+    ['saf',15,18,'SIM-SAF-'],
+    ['wildfire',11,15,'SIM-FIRE-']
+  ] as const)('fully completes the %s exercise with traceable synthetic review and no real claim', (kind,activeCount,evidenceCount,prefix)=>{
+    for(const locale of ['es','en'] as const){
+      const c=fromPreset(kind,locale);
+      expect(c.hypothetical).toBe(true);
+      expect(c.owner.toLowerCase()).toMatch(/fictic|fictional/);
+      expect(Object.values(c.gates).every(Boolean)).toBe(true);
+      expect(Object.values(c.parameters).filter(p=>p.applicability==='applies')).toHaveLength(activeCount);
+      expect(c.evidence).toHaveLength(evidenceCount);
+      expect(new Set(c.evidence.map(e=>e.id)).size).toBe(evidenceCount);
+      expect(c.evidence.every(e=>e.id.startsWith(prefix)&&
+        e.status==='reviewed'&&e.nature==='estimate'&&
+        e.reference.includes('fictional / ficticio')&&
+        e.reviewer.toLowerCase().match(/fictic|fictional/')&&
+        e.limitations.length>100)).toBe(true);
+      for(const option of c.options){
+        for(const [id,state] of Object.entries(c.parameters)){
+          if(state.applicability==='applies'){
+            const value=option.parameterValues[id];
+            expect(value.value).not.toBeNull();
+            expect(c.evidence.some(e=>e.id===value.evidenceId)).toBe(true);
+          }else{
+            expect(option.parameterValues[id].evidenceId).toBe('');
+          }
+        }
+      }
+      for(const comparison of comparisons(c)){
+        expect(comparison.gatesReady).toBe(true);
+        expect(comparison.reviewedData).toBe(true);
+        expect(comparison.observedData).toBe(false);
+        expect(comparison.canDescribeAsMeasured).toBe(false);
+        expect(comparison.missing).toEqual([]);
+        expect(comparison.rows.filter(x=>x.issue!=='excluded').every(x=>x.evidenceReady)).toBe(true);
+      }
+    }
+  });
+  it.each(['climate','saf','wildfire'] as const)('%s exercise reopens pending evidence when an exercise review is changed',kind=>{
+    const c=fromPreset(kind,'es');
+    const linkedId=c.options[0].parameterValues.baseRecovery.evidenceId;
+    expect(linkedId.startsWith('SIM-')).toBe(true);
+    c.evidence.find(e=>e.id===linkedId)!.status='pending';
+    const outcome=compareOption(c,c.options[1]);
+    expect(outcome.reviewedData).toBe(false);
+    expect(outcome.missing.some(m=>m.includes('missing traceable review'))).toBe(true);
+    expect(outcome.canDescribeAsMeasured).toBe(false);
+  });
+  it.each(['climate','saf','wildfire'] as const)('removing one %s approval stops completeness even with all sources',kind=>{
+    const c=fromPreset(kind,'es');
+    c.gates.technicalEligibility=false;
+    const result=compareOption(c,c.options[1]);
+    expect(result.gatesReady).toBe(false);
+    expect(result.missing.some(m=>m.includes('gates'))).toBe(true);
   });
   it('shows tradeoffs for SAF and wildfire sample options rather than universal wins', () => {
     expect(comparisons(fromPreset('saf'))[0].verdict).toBe('tradeoff');
