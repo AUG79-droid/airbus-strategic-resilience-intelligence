@@ -168,3 +168,17 @@
 .cy-strategic-sustainability{font-size:17px!important;line-height:1.6!important}
 .cy-strategic-decision{font-size:18px!important;font-weight:750;color:#214e39;line-height:1.6!important;padding-top:12px;border-top:1px solid #c4d4c8}
 .cy-strategic-assumption{font-size:13px!important;color:#617568;line-height:1.5!important}
+
+
+/* Extended strategic translator: readable conclusions, independent of data entry UI. */
+.cy-deep-dive {display:grid;gap:19px;margin:24px 0 28px;padding-top:22px;border-top:2px solid #b9ccb9}
+.cy-deep-dive__intro h3{font-size:clamp(23px,2.4vw,29px);color:#183e2e;margin:0 0 9px}
+.cy-deep-dive__intro p{font-size:16px;line-height:1.65;color:#436052;max-width:950px}
+.cy-deep-dive__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.cy-deep-dive__item{background:#fff;border:1px solid #c6d7c7;padding:21px 22px;display:grid;gap:12px;align-content:start;min-width:0}
+.cy-deep-dive__item h4{margin:0;font-size:18px;line-height:1.38;color:#1f4b36}
+.cy-deep-dive__item p{margin:0!important;font-size:16px!important;line-height:1.72!important;overflow-wrap:anywhere}
+.cy-deep-dive__item--action{grid-column:1/-1;border-left:5px solid #427c58;background:#edf4ed}
+.cy-deep-dive__item--risk{border-top:3px solid #ac8558}
+.cy-deep-dive__item--evidence{background:#f6f7f3}
+@media(max-width:800px){.cy-deep-dive__grid{grid-template-columns:1fr}.cy-deep-dive__item--action{grid-column:auto}}
