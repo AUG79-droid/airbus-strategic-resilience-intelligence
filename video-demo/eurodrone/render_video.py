@@ -35,14 +35,17 @@ for f in [wav,webm,out/'timeline.json',out/'subtitles.srt',
 timeline=json.loads((out/'timeline.json').read_text(encoding='utf-8'))
 recording=json.loads((out/'recording-timing.json').read_text(encoding='utf-8'))
 expected=sum(len(c['cues']) for c in timeline['chapters'])
-if len(timeline['chapters'])!=7 or expected<60 or sum(len(ch['cues']) for ch in timeline['chapters'] if ch['id']=='translate')<20 or recording['cues']!=expected:
+if len(timeline['chapters'])!=7 or expected<85 or sum(len(ch['cues']) for ch in timeline['chapters'] if ch['id']=='translate')<40 or recording['cues']!=expected:
     raise RuntimeError(f'Incomplete tutorial. {len(timeline["chapters"])} chapters, {expected} cues, {recording["cues"]} recorded')
 if lang=='es' and not timeline['voice'].startswith('Qwen3-TTS'):
     raise RuntimeError('Spanish newsreader narrator was not preserved')
 if lang=='en' and timeline['voice']!='en_GB-alba-medium':
     raise RuntimeError('The original British English voice was not preserved')
 for phrase in ('Eurodrone synthetic case loaded','Fictional input changed live comparison',
-               'Pending evidence record created without falsely marking it reviewed',
+               'All 18 prepared fictional evidence records loaded without creating pending records',
+               'Both comparisons show completed simulated exercise with no missing evidence',
+               'Translate shows seven in-depth conclusions and complete exercise status, no pending checklist',
+               'Translate recalculated to repair plus alternative supplier',
                'eurodrone-report.pdf downloaded','eurodrone-case.json downloaded'):
     if phrase not in recording['checks']:
         raise RuntimeError('Missing required interactive check: '+phrase)
@@ -59,7 +62,7 @@ max_drift=max(abs(c['drift_ms']) for c in recording['cue_timings'])
 if max_drift>1900:
     raise RuntimeError('Narration/browser sync drift: '+str(max_drift))
 filter='fps=25,pad=1920:1080:0:0:color=0x101821,tpad=stop_mode=clone:stop_duration=2,ass=captions.ass'
-label='Eurodrone | Complete Strategic Case | British English' if lang=='en' else 'Eurodrone | Caso Estratégico Completo | Castellano'
+label='Eurodrone | Expanded Strategic Translate | British English' if lang=='en' else 'Eurodrone | Caso Estratégico Completo | Castellano'
 subprocess.run([
     'ffmpeg','-hide_banner','-nostdin','-y',
     '-ss',f'{offset:.3f}','-i',str(webm.resolve()),
@@ -84,6 +87,7 @@ result={
     'captions':'two-line maximum, separate 110-pixel lower band',
     'fictional_case':True,'checks':recording['checks'],
     'strategic_translation_cues':sum(len(ch['cues']) for ch in timeline['chapters'] if ch['id']=='translate'),
+    'translate_in_depth_conclusions':7,
     'audio_video_synchronized_by_marker_frames':marker_frames,
     'note':'Technical render verified. Does not claim independent review of programme-specific figures.'
 }
