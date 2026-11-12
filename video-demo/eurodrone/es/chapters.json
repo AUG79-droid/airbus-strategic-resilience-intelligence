@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "language": "es-ES",
+  "case": "Eurodrone fictional eco-design and supply resilience",
+  "fictional": true,
+  "chapters": [
+    {
+      "id": "investigate",
+      "title": "01 · Investigar y elegir el caso",
+      "cues": [
+        {
+          "id": "welcome",
+          "text": "Este es el nuevo tutorial de ASRI. Veremos cómo investigar un caso completo de ecodiseño y resiliencia del suministro."
+        },
+        {
+          "id": "mode",
+          "text": "Seleccionamos Crear tu propio caso estratégico. Es una experiencia distinta del simulador de mantenimiento DEMO sesenta."
+        },
+        {
+          "id": "examples",
+          "text": "En Investigar aparecen cuatro ejemplos. Elegimos el de Eurodron para explorar decisiones de materiales críticos."
+        },
+        {
+          "id": "choose",
+          "text": "Pulsamos Ecodiseño y materiales críticos. La herramienta carga una ficha y tres alternativas con datos inventados."
+        },
+        {
+          "id": "case_title",
+          "text": "La ficha identifica un subsistema hipotético de soporte. No estamos utilizando información de un programa real."
+        },
+        {
+          "id": "case_decision",
+          "text": "La pregunta es si reparar componentes y diversificar proveedores podría reducir vulnerabilidades durante el servicio."
+        },
+        {
+          "id": "case_boundary",
+          "text": "Antes de comparar, debemos fijar el mismo componente, la misma función y un horizonte temporal comparable."
+        },
+        {
+          "id": "next_challenge",
+          "text": "Continuamos a Cuestionar. Allí veremos cómo las condiciones operativas y económicas cambian los resultados."
+        }
+      ]
+    },
+    {
+      "id": "operations",
+      "title": "02 · Cuestionar: alternativas y operaciones",
+      "cues": [
+        {
+          "id": "alternatives",
+          "text": "Encontramos la situación de referencia, la reparación cualificada y una vía combinada con proveedor alternativo."
+        },
+        {
+          "id": "model_intro",
+          "text": "Los seis apartados del modelo son comunes a todos los casos. Solo cambia qué parámetros resultan aplicables."
+        },
+        {
+          "id": "operational",
+          "text": "Abrimos condiciones operativas. Cada control muestra los valores de las tres alternativas, en la misma unidad."
+        },
+        {
+          "id": "recovery",
+          "text": "El tiempo operativo de recuperación expresa cuánto tarda cada vía sin incidentes adicionales."
+        },
+        {
+          "id": "supply",
+          "text": "El plazo condicionante de suministro representa la espera por una pieza o un proveedor cuando es relevante."
+        },
+        {
+          "id": "deadline",
+          "text": "El plazo objetivo es común. El cálculo compara si cada estrategia puede cumplirlo bajo los riesgos previstos."
+        },
+        {
+          "id": "risk_expand",
+          "text": "Abrimos riesgos y probabilidades. Estos valores son hipótesis de práctica, no pronósticos calibrados."
+        },
+        {
+          "id": "risk_success",
+          "text": "Aquí diferenciamos la probabilidad de éxito técnico del retraso que aparecería si la vía elegida falla."
+        }
+      ]
+    },
+    {
+      "id": "economics",
+      "title": "02 · Cuestionar: costes y límites ambientales",
+      "cues": [
+        {
+          "id": "risk_external",
+          "text": "También tenemos la probabilidad de una interrupción externa y los días adicionales que podría provocar."
+        },
+        {
+          "id": "cost_expand",
+          "text": "En obligaciones económicas examinamos costes directos, logística y recargos asociados a contingencias."
+        },
+        {
+          "id": "cost_values",
+          "text": "El coste esperado pondera los recargos por sus probabilidades. No debemos confundirlo con un precio contratado."
+        },
+        {
+          "id": "contract_expand",
+          "text": "Las condiciones contractuales permiten valorar reservas y penalizaciones, si esas obligaciones realmente existen."
+        },
+        {
+          "id": "contracts",
+          "text": "Si un contrato no interviene, marcamos No aplica y documentamos por qué. No se introduce un cero ficticio."
+        },
+        {
+          "id": "environment_expand",
+          "text": "En factores ambientales examinamos materiales, residuos y gases de efecto invernadero dentro de un perímetro definido."
+        },
+        {
+          "id": "environment",
+          "text": "Estas cantidades son comparables, pero no equivalen a un análisis completo y certificado de ciclo de vida."
+        },
+        {
+          "id": "evidence_section",
+          "text": "El sexto apartado recuerda que los datos requieren fuentes y revisión. Una hipótesis no se convierte sola en evidencia."
+        }
+      ]
+    },
+    {
+      "id": "experiment",
+      "title": "02 · Cuestionar: probar un cambio",
+      "cues": [
+        {
+          "id": "results",
+          "text": "El panel de resultados compara plazos, cumplimiento del objetivo, costes y variables ambientales sin elegir un ganador automático."
+        },
+        {
+          "id": "edit_recovery",
+          "text": "Vamos a modificar el tiempo de recuperación de la alternativa de reparación, para comprobar cómo responde el modelo."
+        },
+        {
+          "id": "updated_result",
+          "text": "El cálculo se actualiza en cuanto cambia el dato. Podemos estudiar la sensibilidad antes de decidir."
+        },
+        {
+          "id": "restore_recovery",
+          "text": "Restablecemos el valor de ejemplo para no mezclar la prueba con el escenario original."
+        },
+        {
+          "id": "sensitivity",
+          "text": "El margen de sensibilidad es una prueba de robustez. No representa un intervalo de confianza estadístico."
+        },
+        {
+          "id": "compare",
+          "text": "Las alternativas pueden mejorar un indicador y empeorar otro. ASRI debe mostrar ese compromiso con claridad."
+        },
+        {
+          "id": "next_check",
+          "text": "Pasamos a Comprobar. Ninguno de los beneficios se puede considerar demostrado solo por estos cálculos."
+        }
+      ]
+    },
+    {
+      "id": "check",
+      "title": "03 · Comprobar evidencias y supuestos",
+      "cues": [
+        {
+          "id": "check_intro",
+          "text": "En Comprobar analizamos la calidad de la información y los requisitos técnicos que deben verificarse."
+        },
+        {
+          "id": "gates",
+          "text": "Cuatro controles recuerdan la equivalencia del alcance, la elegibilidad técnica, el método y la revisión independiente."
+        },
+        {
+          "id": "not_approved",
+          "text": "No los marcamos como aprobados. Es un ejemplo hipotético, y ninguna casilla sustituye una autorización de Airbus."
+        },
+        {
+          "id": "evidence_intro",
+          "text": "En el registro podemos identificar un documento, su propietario, el revisor, la fecha y las limitaciones."
+        },
+        {
+          "id": "add_evidence",
+          "text": "Añadimos una ficha de evidencia de muestra y la dejamos pendiente. Así se ve qué faltaría en un caso real."
+        },
+        {
+          "id": "evidence_pending",
+          "text": "Cada valor de las alternativas debería vincularse después a una fuente trazable y comparable."
+        },
+        {
+          "id": "readiness",
+          "text": "El estado de validación sigue incompleto. Es correcto: la herramienta no debe confundir práctica con rendimiento real."
+        },
+        {
+          "id": "next_translate",
+          "text": "Con las limitaciones claras, pasamos a Traducir para adaptar los argumentos al destinatario."
+        }
+      ]
+    },
+    {
+      "id": "translate",
+      "title": "04 · Traducir según la audiencia",
+      "cues": [
+        {
+          "id": "translate_intro",
+          "text": "Traducir transforma los resultados del caso en argumentos estratégicos, sin alterar los números del análisis."
+        },
+        {
+          "id": "customer",
+          "text": "Para el cliente de Defensa, el foco está en la continuidad operativa y la disponibilidad de componentes críticos."
+        },
+        {
+          "id": "engineering",
+          "text": "Para Ingeniería, el argumento gira alrededor de la cualificación, la seguridad y la reparabilidad demostrable."
+        },
+        {
+          "id": "programme",
+          "text": "Para el responsable de Programa, importan los compromisos de plazo, coste y abastecimiento durante el servicio."
+        },
+        {
+          "id": "leadership",
+          "text": "Para Dirección, el valor potencial es reducir dependencias industriales sin ocultar costes ni incertidumbre."
+        },
+        {
+          "id": "choose_option_b",
+          "text": "También podemos cambiar la alternativa seleccionada. La narrativa debe ajustarse a la nueva comparación."
+        },
+        {
+          "id": "limitations",
+          "text": "El informe señala expresamente los datos no validados. Una narrativa convincente no es una prueba causal."
+        },
+        {
+          "id": "export_intro",
+          "text": "Finalmente revisamos la exportación. Podemos generar un informe y conservar una copia editable del caso."
+        }
+      ]
+    },
+    {
+      "id": "export",
+      "title": "04 · Exportar y cerrar el tutorial",
+      "cues": [
+        {
+          "id": "export_pdf",
+          "text": "El informe en PDF recoge hipótesis, comparaciones, evidencias pendientes y conclusiones limitadas."
+        },
+        {
+          "id": "export_markdown",
+          "text": "También se puede exportar un informe en formato Markdown para revisión y edición posterior."
+        },
+        {
+          "id": "report_caution",
+          "text": "Antes de compartir, debemos comprobar que las cifras sean comparables y que ningún beneficio se presente como validado."
+        },
+        {
+          "id": "save_draft",
+          "text": "Para retomar el trabajo, descargamos una copia del caso. ASRI no guarda automáticamente los datos en la nube."
+        },
+        {
+          "id": "closing",
+          "text": "Así recorremos las cuatro etapas con Eurodron. Es una demostración hipotética de decisiones defendibles, no una predicción calibrada."
+        }
+      ]
+    }
+  ]
+}
