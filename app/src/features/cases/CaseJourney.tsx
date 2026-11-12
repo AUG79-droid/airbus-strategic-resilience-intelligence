@@ -180,6 +180,10 @@ export function CaseJourney({locale,view,data,setData}:Props){
   const [exportBusy,setExportBusy]=useState(false);
   const results=useMemo(()=>comparisons(data),[data]);
   const active=results.find(r=>r.option.id===selectedOption)??results[0];
+  // An exercise can be COMPLETE as a simulation without being validated
+  // as a factual programme result. This distinction must never be hidden.
+  const exerciseComplete=(c:OptionComparison)=>
+    data.hypothetical&&data.kind==='ecodesign'&&c.reviewedData&&c.gatesReady&&c.missing.length===0;
   const setField=(key:keyof StrategicCase,value:unknown)=>setData(current=>({...current,[key]:value}));
   const patchOption=(id:string,key:'name'|'explanation',value:string)=>setData(current=>({
     ...current,options:current.options.map(o=>o.id===id?{...o,[key]:value}:o)
@@ -204,7 +208,11 @@ export function CaseJourney({locale,view,data,setData}:Props){
     ...current,
     id:'CASE-'+Date.now().toString(36),hypothetical:false,programme:'',owner:'',
     gates:{comparableBoundary:false,technicalEligibility:false,measurementMethod:false,independentReview:false},
-    evidence:[],options:current.options.map(o=>({...o,measures:Object.fromEntries(current.metrics.map(m=>[m.id,{value:null,evidenceId:''}]))}))
+    evidence:[],options:current.options.map(o=>({
+      ...o,
+      measures:Object.fromEntries(current.metrics.map(m=>[m.id,{value:null,evidenceId:''}])),
+      parameterValues:Object.fromEntries(Object.keys(o.parameterValues).map(id=>[id,{value:null,evidenceId:''}]))
+    }))
   }));
   const importCase=async(file?:File)=>{
     if(!file)return;
@@ -335,8 +343,11 @@ export function CaseJourney({locale,view,data,setData}:Props){
     {view==='validate' && <div className="cy-stage">
       <section className="cy-panel">
         <h3>{t('Comprobaciones para poder interpretar los resultados','Checks before interpreting the results')}</h3>
-        <p>{t('Marcar una casilla registra una declaración del usuario: NO sustituye una aprobación formal ni convierte automáticamente un beneficio en validado.',
-          'Checking a box records a user declaration: it does NOT replace formal approval or automatically validate a benefit.')}</p>
+        <p>{data.hypothetical&&data.kind==='ecodesign'
+          ?t('En Eurodrone hemos simulado también las cuatro comprobaciones metodológicas para recorrer el ejercicio de principio a fin. Están marcadas como parte de la práctica: NO representan aprobaciones, ensayos ni autorizaciones reales.',
+            'The Eurodrone exercise simulates all four methodology checks to demonstrate the complete workflow. Checked boxes are part of the exercise, NOT real engineering approvals, tests or authorisations.')
+          :t('Marcar una casilla registra una declaración del usuario: NO sustituye una aprobación formal ni convierte automáticamente un beneficio en validado.',
+            'Checking a box records a user declaration: it does NOT replace formal approval or automatically validate a benefit.')}</p>
         <div className="cy-checks">{([
           ['comparableBoundary',t('Las alternativas comparten una misma unidad, plazo y perímetro','All options share a defined and equivalent unit, period and scope')],
           ['technicalEligibility',t('Se ha contrastado la elegibilidad técnica y la seguridad','Technical and safety eligibility has been checked')],
@@ -345,14 +356,18 @@ export function CaseJourney({locale,view,data,setData}:Props){
         ] as const).map(([key,label])=><label key={key}>
           <input type="checkbox" checked={data.gates[key]} onChange={e=>setData(current=>({
             ...current,gates:{...current.gates,[key]:e.target.checked}
-          }))}/><span>{label}</span></label>)}</div>
+          }))}/><span>{label}{data.hypothetical&&data.kind==='ecodesign'
+            ?t(' — SIMULADO',' — SIMULATED'):''}</span></label>)}</div>
         <p className="cy-help"><strong>{t('Requisito del modelo: ','Model-specific requirement: ')}</strong>{templateInfo(data.kind,locale).requirement}</p>
       </section>
       <section className="cy-panel">
         <div className="cy-section-heading"><h3>{t('Registro de evidencias del caso','Case evidence register')}</h3>
           <button type="button" onClick={addEvidence}>{t('+ Añadir evidencia','+ Add evidence')}</button></div>
-        <p>{t('Registra el documento, medición o método por referencia; indica propietario, revisor, fecha y limitaciones. Vincúlalo después a cada valor en la etapa 02.',
-          'Record each document, observation or method by reference, its owner, reviewer, date and limitations. Link it to each data cell in stage 02.')}</p>
+        <p>{data.hypothetical&&data.kind==='ecodesign'
+          ?t('Hemos preparado referencias ficticias, equipos responsables, revisores y fechas simuladas. Los 17 controles aplicables de las tres alternativas están vinculados a este registro. Las fichas SIM-EURO no son documentos de Airbus ni certificaciones.',
+            'The example includes fictional references, named exercise teams, simulated reviewers and dates. All 17 applicable inputs for each option are linked here. SIM-EURO records are not Airbus documentation or certification.')
+          :t('Registra el documento, medición o método por referencia; indica propietario, revisor, fecha y limitaciones. Vincúlalo después a cada valor en la etapa 02.',
+            'Record each document, observation or method by reference, its owner, reviewer, date and limitations. Link it to each data cell in stage 02.')}</p>
         {data.evidence.length===0&&<p className="cy-example-notice">{t('No hay evidencias. Las cifras se consideran hipótesis, aunque aparezcan resultados numéricos.','No evidence registered. Every numeric comparison remains hypothetical.')}</p>}
         <div className="cy-records">{data.evidence.map(item=><article key={item.id}>
           <div className="cy-record-head"><strong>{item.id}</strong>
@@ -387,14 +402,23 @@ export function CaseJourney({locale,view,data,setData}:Props){
       </section>
       <section className="cy-panel">
         <h3>{t('Estado de evidencias de las alternativas','Evidence readiness by alternative')}</h3>
-        <p>{t('Para confirmar un resultado documental se necesitan datos de referencia y alternativa asociados a fuentes revisadas. La revisión declarada en esta demo no acredita por sí sola un beneficio.',
-          'A documented comparison requires both baseline and option values linked to reviewed sources. Self-declared review in this demo does not establish an approved benefit.')}</p>
+        <p>{data.hypothetical&&data.kind==='ecodesign'
+          ?t('Aquí puede comprobarse la trazabilidad íntegra del ejercicio. La revisión que aparece como completada es EXCLUSIVAMENTE SIMULADA y nunca valida un beneficio operativo real.',
+            'This section shows complete traceability within the exercise. The recorded reviews are SIMULATED ONLY and never establish a real operational benefit.')
+          :t('Para confirmar un resultado documental se necesitan datos de referencia y alternativa asociados a fuentes revisadas. La revisión declarada en esta demo no acredita por sí sola un beneficio.',
+            'A documented comparison requires both baseline and option values linked to reviewed sources. Self-declared review in this demo does not establish an approved benefit.')}</p>
         <div className="cy-readiness">{results.map(c=><article key={c.option.id}>
           <h4>{displayOptionName(c.option,locale)}</h4>
-          <strong>{c.canDescribeAsMeasured?t('Mediciones documentadas declaradas; revisión experta pendiente','User-declared documented measurements; expert acceptance pending'):
-            t('Validación incompleta','Validation incomplete')}</strong>
+          <strong>{exerciseComplete(c)
+            ?t('Ejercicio completado: revisión y trazabilidad simuladas','Exercise complete: simulated review and traceability')
+            :c.canDescribeAsMeasured
+              ?t('Mediciones documentadas declaradas; revisión experta pendiente','User-declared documented measurements; expert acceptance pending')
+              :t('Validación incompleta','Validation incomplete')}</strong>
           <p>{c.rows.filter(x=>x.issue!=='excluded'&&x.evidenceReady).length} / {c.rows.filter(x=>x.issue!=='excluded').length} {t('indicadores con fuentes revisadas en ambas alternativas','indicators with reviewed records for both values')}</p>
-          <ul>{c.missing.map((item,i)=><li key={i}>{item}</li>)}</ul>
+          {exerciseComplete(c)
+            ?<p className="cy-help">{t('17 parámetros aplicables por opción, 18 fichas documentales ficticias y cuatro comprobaciones simuladas. Se ha completado todo el recorrido del ejemplo; una aplicación real requeriría fuentes auténticas y aprobación técnica.',
+              '17 applicable parameters per option, 18 fictional evidence records and four simulated checks. The exercise is complete; a real application would require authentic sources and technical approval.')}</p>
+            :<ul>{c.missing.map((item,i)=><li key={i}>{item}</li>)}</ul>}
         </article>)}</div>
       </section>
     </div>}
@@ -411,16 +435,23 @@ export function CaseJourney({locale,view,data,setData}:Props){
             {audiences.map(a=><option key={a} value={a}>{audienceNames[a][es?0:1]}</option>)}</select></label>
         </div>
         {active&&<div className="cy-output" role="status">
-          <span className="cy-status">{data.hypothetical?t('EJEMPLO 100 % HIPOTÉTICO','100% HYPOTHETICAL CASE'):
-            active.canDescribeAsMeasured?t('RESULTADOS CALCULADOS CON DATOS DECLARADOS COMO REVISADOS','RESULTS FROM USER-DECLARED REVIEWED DATA'):
-            t('RESULTADO NO VALIDADO','UNVALIDATED RESULT')}</span>
+          <span className="cy-status">{exerciseComplete(active)
+            ?t('EJERCICIO COMPLETO · REVISIÓN SIMULADA','COMPLETE EXERCISE · SIMULATED REVIEW')
+            :data.hypothetical?t('EJEMPLO HIPOTÉTICO','HYPOTHETICAL CASE')
+            :active.canDescribeAsMeasured?t('RESULTADOS CALCULADOS CON DATOS DECLARADOS COMO REVISADOS','RESULTS FROM USER-DECLARED REVIEWED DATA')
+            :t('RESULTADO NO VALIDADO','UNVALIDATED RESULT')}</span>
           <h4>{audienceNames[selectedAudience][es?0:1]} · {displayOptionName(active.option,locale)}</h4>
           <strong>{describeVerdict(active,locale)}</strong>
           <p>{narrative(data,active,selectedAudience,locale)}</p>
-          <h4>{t('Qué falta antes de comunicar un beneficio','What is still required before communicating a benefit')}</h4>
-          <ul>{active.missing.length?active.missing.map((m,i)=><li key={i}>{m}</li>):
-            <li>{t('Revisión experta de causalidad, aceptación operativa y aprobación de la comunicación; el prototipo no sustituye ese proceso.',
-              'Expert review of causality, operational acceptance and approval of claims; the prototype does not replace this process.')}</li>}</ul>
+          <h4>{exerciseComplete(active)
+            ?t('Evaluación del ejercicio: completada','Exercise assessment: complete')
+            :t('Qué falta antes de comunicar un beneficio','What is still required before communicating a benefit')}</h4>
+          {exerciseComplete(active)
+            ?<p>{t('El caso didáctico ya incluye sus datos, referencias ficticias, responsables, revisión metodológica simulada y narrativa para cada audiencia. No faltan apartados para completar esta práctica. Para comunicar resultados reales será necesario sustituir las fuentes simuladas por documentación auténtica y obtener las autorizaciones correspondientes.',
+              'This learning case includes its inputs, fictional references, assigned teams, simulated methodology checks and audience-specific narratives. Nothing is missing from the exercise itself. Communicating real results would require replacing simulated sources with authentic evidence and obtaining the necessary approvals.')}</p>
+            :<ul>{active.missing.length?active.missing.map((m,i)=><li key={i}>{m}</li>):
+              <li>{t('Revisión experta de causalidad, aceptación operativa y aprobación de la comunicación; el prototipo no sustituye ese proceso.',
+                'Expert review of causality, operational acceptance and approval of claims; the prototype does not replace this process.')}</li>}</ul>}
         </div>}
       </section>
       <section className="cy-panel">
