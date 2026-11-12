@@ -176,7 +176,6 @@ try{
    },
    evidence_pending:async()=>{
      const records=page.locator('.cy-records article');
-     const statuses=await records.locator('select').all();
      const reviewed=await Promise.all(records.locator('select').filter({has:page.locator('option[value="reviewed"]')}).all().then(async opts=>Promise.all(opts.map(x=>x.inputValue()))));
      if(reviewed.length!==18||reviewed.some(x=>x!=='reviewed'))throw new Error('Incomplete synthetic reviewed evidence '+JSON.stringify(reviewed));
      await focus(records.last());
