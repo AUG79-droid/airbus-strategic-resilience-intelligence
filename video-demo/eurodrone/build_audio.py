@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 HERE=Path(__file__).resolve().parent
-ROOT=HERE.parent.parent
+ROOT=HERE.parent
 if len(sys.argv)!=2 or sys.argv[1] not in ('en','es'):
     raise SystemExit('Usage: build_audio.py en|es')
 lang=sys.argv[1]
