@@ -46,6 +46,22 @@ function otherStrategicMessage(data:StrategicCase,c:OptionComparison,audience:Au
   const minutes=data.kind==='wildfire'?(es?'minutos':'minutes'):
     data.kind==='climate'?(es?'horas':'hours'):(es?'días':'days');
   const profiles={
+    general:{
+      titleEs:'Resiliencia operativa: opciones frente a una vulnerabilidad definida',
+      titleEn:'Operational resilience: alternatives to a defined vulnerability',
+      processEs:'la actividad definida en el caso',
+      processEn:'the service defined by this case',
+      mechanismEs:data.mechanism||'La iniciativa busca reducir la vulnerabilidad de una actividad crítica mediante una alternativa de operación o suministro.',
+      mechanismEn:data.mechanism||'The initiative aims to reduce a critical service vulnerability through an alternative operating or supply route.',
+      benefitEs:'Lo relevante es comparar el impacto operativo junto con sus costes y condiciones ambientales, no asumir un beneficio automático.',
+      benefitEn:'The goal is to compare operational effects with costs and environmental conditions, not assume an automatic benefit.',
+      engineeringEs:'¿Qué requisitos técnicos y pruebas permitirían utilizar la alternativa de forma segura?',
+      engineeringEn:'Which technical requirements and tests would allow this option to be used safely?',
+      programmeEs:'¿Qué plazos y costes permitirían cumplir los compromisos de servicio?',
+      programmeEn:'Which timings and costs would support the service commitments?',
+      execEs:'¿Qué alternativa reduce mejor la vulnerabilidad dentro de las restricciones declaradas?',
+      execEn:'Which alternative reduces vulnerability most effectively within the stated constraints?'
+    },
     climate:{
       titleEs:'Resiliencia climática: continuidad del soporte ante calor extremo',
       titleEn:'Climate resilience: support continuity during extreme heat',
@@ -154,6 +170,10 @@ function otherStrategicMessage(data:StrategicCase,c:OptionComparison,audience:Au
     };
   }
   const question={
+    general:{
+      es:'¿Qué alternativa proporciona una vía de recuperación más robusta dentro del alcance definido?',
+      en:'Which alternative provides a more robust recovery route within the stated boundary?'
+    },
     climate:{
       es:'¿Conservamos la actividad de soporte necesaria durante calor extremo sin introducir nuevas dependencias críticas?',
       en:'Can we sustain required support activity during extreme heat without adding new critical dependencies?'
