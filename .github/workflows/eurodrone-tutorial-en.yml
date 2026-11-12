@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: eurodrone-english-video
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   tutorial:
