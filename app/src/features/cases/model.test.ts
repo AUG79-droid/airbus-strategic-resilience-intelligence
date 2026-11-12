@@ -104,7 +104,7 @@ describe('Create your own strategic case', () => {
       expect(c.evidence.every(e=>e.id.startsWith(prefix)&&
         e.status==='reviewed'&&e.nature==='estimate'&&
         e.reference.includes('fictional / ficticio')&&
-        e.reviewer.toLowerCase().match(/fictic|fictional/')&&
+        e.reviewer.toLowerCase().match(/fictic|fictional/)&&
         e.limitations.length>100)).toBe(true);
       for(const option of c.options){
         for(const [id,state] of Object.entries(c.parameters)){
