@@ -280,6 +280,87 @@ function populateEurodroneExercise(result:StrategicCase,locale:'es'|'en'):void {
   }
 }
 
+
+/**
+ * Fully worked, explicitly simulated evidence and methodology checks for
+ * climate adaptation, SAF and wildfire examples. These are exercise records
+ * only: they do NOT assert the existence of Airbus documents, observations,
+ * technical approvals, fuel certifications or operational performance.
+ * Keeping nature='estimate' and hypothetical=true prevents any live claim.
+ */
+function populateOtherSimulatedExercise(result:StrategicCase,kind:'climate'|'saf'|'wildfire',locale:'es'|'en'):void{
+  const es=locale==='es';
+  const kindCode={climate:'CLIM',saf:'SAF',wildfire:'FIRE'}[kind];
+  const kindLabel={
+    climate:es?'Adaptación climática: calor extremo':'Climate adaptation: extreme heat',
+    saf:es?'SAF: suministro de combustible':'SAF: fuel supply',
+    wildfire:es?'Incendios forestales: observación y respuesta':'Wildfires: observation and response'
+  }[kind];
+  const families={
+    OPS:{es:'Perímetro, función equivalente y condiciones operativas',en:'Comparable boundary, operating scope and timelines',ownerEs:'Equipo de operaciones del ejercicio (ficticio)',ownerEn:'Exercise operations team (fictional)'},
+    TEC:{es:'Viabilidad y riesgos técnicos simulados',en:'Simulated technical feasibility and failure risks',ownerEs:'Equipo técnico del ejercicio (ficticio)',ownerEn:'Exercise engineering team (fictional)'},
+    SUM:{es:'Exposición a interrupciones y continuidad del suministro o servicio',en:'Disruption exposure and continuity of supply or service',ownerEs:'Equipo de resiliencia del ejercicio (ficticio)',ownerEn:'Exercise resilience team (fictional)'},
+    ECO:{es:'Estimación de costes e inversiones por escenario',en:'Estimated scenario costs and investments',ownerEs:'Equipo financiero del ejercicio (ficticio)',ownerEn:'Exercise finance team (fictional)'},
+    CON:{es:'Condiciones y compromisos contractuales simulados',en:'Simulated contracts and commitments',ownerEs:'Equipo de contratación del ejercicio (ficticio)',ownerEn:'Exercise contracts team (fictional)'},
+    AMB:{es:'Inventario ambiental y perímetro de comparación',en:'Environmental inventory and comparison boundary',ownerEs:'Equipo de sostenibilidad del ejercicio (ficticio)',ownerEn:'Exercise sustainability team (fictional)'}
+  } as const;
+  type Family=keyof typeof families;
+  const familyByParameter:Record<string,Family>={
+    baseRecovery:'OPS',supplyLead:'OPS',recoveryTarget:'OPS',
+    technicalSuccess:'TEC',failureDelay:'TEC',failureCost:'TEC',
+    shockProbability:'SUM',shockDelay:'SUM',shockSurcharge:'SUM',
+    baseCost:'ECO',logisticsCost:'ECO',investmentCost:'ECO',
+    reservationFee:'CON',cancellationProbability:'CON',cancellationFee:'CON',
+    materialKg:'AMB',wasteKg:'AMB',ghgKg:'AMB',lifeExtension:'AMB'
+  };
+  const active=Object.keys(result.parameters).filter(id=>result.parameters[id].applicability==='applies');
+  const usedFamilies=(Object.keys(families) as Family[]).filter(group=>active.some(id=>familyByParameter[id]===group));
+  result.owner=es
+    ?'Equipo responsable del ejercicio '+kindLabel+' (ficticio)'
+    :'Exercise team responsible for '+kindLabel+' (fictional)';
+  result.gates={
+    comparableBoundary:true,
+    technicalEligibility:true,
+    measurementMethod:true,
+    independentReview:true
+  }; // All four checks are completed IN THE SIMULATED EXERCISE only.
+  result.evidence=[];
+  for(let index=0;index<result.options.length;index++){
+    const option=result.options[index];
+    const optionCode=['REF','A','B'][index];
+    for(const group of usedFamilies){
+      const definition=families[group];
+      const id='SIM-'+kindCode+'-'+group+'-'+optionCode;
+      result.evidence.push({
+        id,
+        title:(es?'REVISIÓN SIMULADA · ':'SIMULATED REVIEW · ')+
+          (es?definition.es:definition.en)+' — '+option.name,
+        reference:id+'-v1 (fictional / ficticio)',
+        owner:es?definition.ownerEs:definition.ownerEn,
+        reviewer:es?'Responsable independiente del ejercicio (ficticio)':
+          'Independent exercise reviewer (fictional)',
+        reviewedOn:'2026-11-01',
+        status:'reviewed',
+        nature:'estimate',
+        limitations:es
+          ?'REGISTRO DIDÁCTICO FICTICIO; NO EXISTE DOCUMENTO DE FUENTE. Revisión exclusivamente simulada. No demuestra resultados reales, ensayos, certificación del combustible, autorización técnica, rendimiento operativo ni aprobación del cliente.'
+          :'FICTIONAL TRAINING RECORD; NO SOURCE DOCUMENT EXISTS. Simulated review only. Does not establish actual results, tests, fuel certification, technical authorisation, operational performance or customer approval.'
+      });
+    }
+    option.parameterValues=Object.fromEntries(Object.entries(option.parameterValues).map(([id,item])=>[
+      id,{...item,evidenceId:result.parameters[id].applicability==='applies'
+        ?'SIM-'+kindCode+'-'+familyByParameter[id]+'-'+optionCode:''}
+    ]));
+    // The legacy input metric fields are not used for calculated results,
+    // but retain exercise traceability in exported case JSON.
+    option.measures=Object.fromEntries(Object.entries(option.measures).map(([id,item])=>{
+      const group:Family=id==='cost'?'ECO':id==='environment'?'AMB':'OPS';
+      const chosen=usedFamilies.includes(group)?group:'OPS';
+      return [id,{...item,evidenceId:'SIM-'+kindCode+'-'+chosen+'-'+optionCode}];
+    }));
+  }
+}
+
 export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCase {
   const p:Preset=locale==='es'?{...ES_PRESETS[kind],values:PRESETS[kind].values}:PRESETS[kind];
   const result=createCase(kind,locale);
@@ -300,5 +381,6 @@ export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCas
   // Eurodrone is a complete learning exercise, with SIMULATED sign-offs and
   // fictional traceability; no exercise-only review is a real Airbus approval.
   if(kind==='ecodesign')populateEurodroneExercise(result,locale);
+  else populateOtherSimulatedExercise(result,kind,locale);
   return result;
 }
