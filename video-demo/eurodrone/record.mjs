@@ -153,7 +153,7 @@ try{
    check_intro:()=>focus('.cy-checks'),
    gates:()=>focus('.cy-checks label'),
    not_approved:()=>focus('.cy-checks label:last-child'),
-   evidence_intro:()=>focus('.cy-records'),
+   evidence_intro:()=>focus('.cy-section-heading'),
    add_evidence:async()=>{
      await click('.cy-section-heading button');
      const first=page.locator('.cy-records article').first();
