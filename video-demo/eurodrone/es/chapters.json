@@ -215,6 +215,10 @@
           "text": "Pero esos mecanismos deben ser viables técnicamente y estar respaldados por datos comparables."
         },
         {
+          "id": "customer",
+          "text": "Para el cliente de Defensa, hablamos de continuidad operativa y disponibilidad de componentes críticos."
+        },
+        {
           "id": "customer_focus",
           "text": "Seleccionamos Cliente de Defensa. La misma comparación se expresa desde la continuidad de la misión."
         },
@@ -225,6 +229,10 @@
         {
           "id": "customer_value",
           "text": "El interés para el cliente es una menor exposición a interrupciones, sin comprometer requisitos operativos."
+        },
+        {
+          "id": "engineering",
+          "text": "Para Ingeniería, nos centramos en cualificación, seguridad y reparabilidad verificable."
         },
         {
           "id": "engineering_focus",
@@ -239,6 +247,10 @@
           "text": "Translate permite explicar qué debe demostrar Ingeniería antes de que una ventaja sea defendible."
         },
         {
+          "id": "programme",
+          "text": "Para Programa, relacionamos los resultados con plazos, costes, hitos y compromisos de suministro."
+        },
+        {
           "id": "programme_focus",
           "text": "Seleccionamos Responsable de Programa. El discurso cambia hacia disponibilidad, calendario y compromisos."
         },
@@ -249,6 +261,10 @@
         {
           "id": "programme_value",
           "text": "Aquí se contrastan los compromisos: cuánto cambia el plazo, qué cuesta y qué riesgo permanece."
+        },
+        {
+          "id": "leadership",
+          "text": "Para Dirección, hablamos de dependencias industriales, exposición al riesgo y valor de las decisiones."
         },
         {
           "id": "leadership_focus",
@@ -267,32 +283,16 @@
           "text": "Un mismo análisis alimenta cuatro conversaciones distintas, adaptadas a decisiones reales y sin alterar los datos."
         },
         {
-          "id": "translation_conclusion",
-          "text": "Así es como ASRI traduce sostenibilidad al lenguaje de resiliencia que piden nuestros interlocutores."
-        },
-        {
-          "id": "customer",
-          "text": "Para el cliente de Defensa, hablamos de continuidad operativa y disponibilidad de componentes críticos."
-        },
-        {
-          "id": "engineering",
-          "text": "Para Ingeniería, nos centramos en cualificación, seguridad y reparabilidad verificable."
-        },
-        {
-          "id": "programme",
-          "text": "Para Programa, relacionamos los resultados con plazos, costes, hitos y compromisos de suministro."
-        },
-        {
-          "id": "leadership",
-          "text": "Para Dirección, hablamos de dependencias industriales, exposición al riesgo y valor de las decisiones."
-        },
-        {
           "id": "choose_option_b",
           "text": "Cambiamos la alternativa elegida para comprobar cómo cambia el argumento sin alterar el método."
         },
         {
           "id": "limitations",
           "text": "Translate conserva la trazabilidad y muestra las condiciones que todavía requieren verificación."
+        },
+        {
+          "id": "translation_conclusion",
+          "text": "Así es como ASRI traduce sostenibilidad al lenguaje de resiliencia que piden nuestros interlocutores."
         },
         {
           "id": "export_intro",
