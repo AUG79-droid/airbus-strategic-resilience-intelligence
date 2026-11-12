@@ -155,3 +155,16 @@
 .cy-root textarea[data-case-field="decision"],
 .cy-root textarea[data-case-field="vulnerability"],
 .cy-root textarea[data-case-field="boundary"] { min-height: 124px; }
+
+
+/* Strategic Translator: lead with the operational consequence, not KPI counts. */
+.cy-strategic-message{display:grid;gap:16px;margin-top:18px}
+.cy-strategic-eyebrow{font-size:13px!important;line-height:1.4!important;text-transform:uppercase;letter-spacing:.075em;color:#496e52;font-weight:850}
+.cy-strategic-message>h3{font-size:clamp(23px,2.6vw,31px);line-height:1.22;margin:0;color:#173f31;max-width:930px}
+.cy-strategic-meaning{font-size:19px!important;line-height:1.6!important;margin:0}
+.cy-strategic-finding{padding:18px 22px;background:#e9f1e6;border-left:5px solid #3d7659;display:grid;gap:8px}
+.cy-strategic-finding>strong{font-size:15px;line-height:1.35;color:#254d38}
+.cy-strategic-finding>p{font-size:18px;line-height:1.6;margin:0;font-variant-numeric:tabular-nums}
+.cy-strategic-sustainability{font-size:17px!important;line-height:1.6!important}
+.cy-strategic-decision{font-size:18px!important;font-weight:750;color:#214e39;line-height:1.6!important;padding-top:12px;border-top:1px solid #c4d4c8}
+.cy-strategic-assumption{font-size:13px!important;color:#617568;line-height:1.5!important}
