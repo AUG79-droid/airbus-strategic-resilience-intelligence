@@ -114,4 +114,36 @@ describe('Strategic resilience translation',()=>{
       expect(x.decisionQuestion.length).toBeGreaterThan(35);
     }
   });
+  it.each(['general','ecodesign','climate','saf','wildfire'] as const)('generates an audience-specific narrative for a user-created %s case, not the prepared preset',kind=>{
+    for(const locale of ['es','en'] as const){
+      const c=fromPreset(kind==='general'?'ecodesign':kind,locale);
+      c.kind=kind;
+      c.id='CASE-user-authored';
+      c.hypothetical=false;
+      c.title='CUSTOM CASE 2040';
+      c.initiative='My independent waste-heat reuse concept';
+      c.vulnerability='Dependence on an external cooling contractor';
+      c.mechanism='Reuse recovered heat locally to protect critical activity';
+      c.boundary='One workshop, one year';
+      c.decision='Whether to invest in on-site recovery';
+      for(const a of ['defenceCustomer','engineering','programmeManager','executiveLeadership'] as const){
+        const result=strategicMessage(c,comparisons(c)[0],a,locale);
+        expect(result.headline).toContain('CUSTOM CASE 2040');
+        expect(result.operationalMeaning).toContain('Dependence on an external cooling contractor');
+        expect(result.operationalMeaning).toContain('Reuse recovered heat locally');
+        expect(result.decisionQuestion.length).toBeGreaterThan(50);
+        expect(result.headline).not.toMatch(/SAF|Eurodrone|heatwave|incendios/i);
+      }
+    }
+  });
+  it('does not invent numeric impacts for a brand-new empty editable case',()=>{
+    const c=createCase('general','es');
+    c.title='Caso de suministro propio';
+    c.vulnerability='Dependencia de un servicio externo';
+    const output=strategicMessage(c,comparisons(c)[0],'executiveLeadership','es');
+    expect(output.operationalMeaning).toContain('Dependencia de un servicio externo');
+    expect(output.quantifiedFinding).toMatch(/No hay todavía datos suficientes/);
+    expect(output.quantifiedFinding).not.toMatch(/141,3|92 días/);
+  });
+
 });
