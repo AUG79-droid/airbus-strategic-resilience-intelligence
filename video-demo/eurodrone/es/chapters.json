@@ -10,35 +10,35 @@
       "cues": [
         {
           "id": "welcome",
-          "text": "Este es el nuevo tutorial de ASRI. Veremos cómo investigar un caso completo de ecodiseño y resiliencia del suministro."
+          "text": "En ASRI vamos a analizar un caso de resiliencia de la cadena de suministro y ecodiseño para Eurodrone."
         },
         {
           "id": "mode",
-          "text": "Seleccionamos Crear tu propio caso estratégico. Es una experiencia distinta del simulador de mantenimiento DEMO sesenta."
+          "text": "Seleccionamos «Crear tu propio caso estratégico» para definir y evaluar decisiones desde una perspectiva operativa."
         },
         {
           "id": "examples",
-          "text": "En Investigar aparecen cuatro ejemplos. Elegimos el de Eurodron para explorar decisiones de materiales críticos."
+          "text": "En Investigar, elegimos Eurodrone y centramos el análisis en las decisiones sobre materiales críticos."
         },
         {
           "id": "choose",
-          "text": "Pulsamos Ecodiseño y materiales críticos. La herramienta carga una ficha y tres alternativas con datos inventados."
+          "text": "Hacemos clic en «Ecodiseño y materiales críticos». ASRI carga la ficha del caso y tres alternativas comparables."
         },
         {
           "id": "case_title",
-          "text": "La ficha identifica un subsistema hipotético de soporte. No estamos utilizando información de un programa real."
+          "text": "La ficha define un subsistema de soporte y el alcance de la decisión que vamos a estudiar."
         },
         {
           "id": "case_decision",
-          "text": "La pregunta es si reparar componentes y diversificar proveedores podría reducir vulnerabilidades durante el servicio."
+          "text": "La cuestión es si reparar componentes y diversificar proveedores puede reducir vulnerabilidades durante el servicio."
         },
         {
           "id": "case_boundary",
-          "text": "Antes de comparar, debemos fijar el mismo componente, la misma función y un horizonte temporal comparable."
+          "text": "Antes de comparar, fijamos el mismo componente, la misma función y un horizonte temporal equivalente."
         },
         {
           "id": "next_challenge",
-          "text": "Continuamos a Cuestionar. Allí veremos cómo las condiciones operativas y económicas cambian los resultados."
+          "text": "Continuamos a Cuestionar, donde las condiciones operativas y económicas modifican los resultados."
         }
       ]
     },
@@ -48,35 +48,35 @@
       "cues": [
         {
           "id": "alternatives",
-          "text": "Encontramos la situación de referencia, la reparación cualificada y una vía combinada con proveedor alternativo."
+          "text": "Comparamos la situación actual, la reparación cualificada y una solución combinada con un proveedor alternativo."
         },
         {
           "id": "model_intro",
-          "text": "Los seis apartados del modelo son comunes a todos los casos. Solo cambia qué parámetros resultan aplicables."
+          "text": "Las seis secciones del modelo son comunes. Solo cambia qué parámetros son aplicables al caso."
         },
         {
           "id": "operational",
-          "text": "Abrimos condiciones operativas. Cada control muestra los valores de las tres alternativas, en la misma unidad."
+          "text": "Abrimos Condiciones operativas. Cada control muestra los valores de las tres alternativas en la misma unidad."
         },
         {
           "id": "recovery",
-          "text": "El tiempo operativo de recuperación expresa cuánto tarda cada vía sin incidentes adicionales."
+          "text": "El tiempo operativo de recuperación indica cuánto tarda cada vía sin incidentes adicionales."
         },
         {
           "id": "supply",
-          "text": "El plazo condicionante de suministro representa la espera por una pieza o un proveedor cuando es relevante."
+          "text": "El plazo condicionante de suministro refleja la espera de una pieza o proveedor cuando afecta a la decisión."
         },
         {
           "id": "deadline",
-          "text": "El plazo objetivo es común. El cálculo compara si cada estrategia puede cumplirlo bajo los riesgos previstos."
+          "text": "El plazo objetivo es común. ASRI calcula si cada estrategia podría cumplirlo teniendo en cuenta los riesgos."
         },
         {
           "id": "risk_expand",
-          "text": "Abrimos riesgos y probabilidades. Estos valores son hipótesis de práctica, no pronósticos calibrados."
+          "text": "Abrimos Riesgos y probabilidades para introducir tanto la probabilidad de éxito como posibles interrupciones."
         },
         {
           "id": "risk_success",
-          "text": "Aquí diferenciamos la probabilidad de éxito técnico del retraso que aparecería si la vía elegida falla."
+          "text": "Distinguimos entre la probabilidad de éxito técnico y el retraso que causaría un fallo de la vía elegida."
         }
       ]
     },
@@ -86,35 +86,35 @@
       "cues": [
         {
           "id": "risk_external",
-          "text": "También tenemos la probabilidad de una interrupción externa y los días adicionales que podría provocar."
+          "text": "También valoramos la posibilidad de una interrupción externa y los días adicionales que podría ocasionar."
         },
         {
           "id": "cost_expand",
-          "text": "En obligaciones económicas examinamos costes directos, logística y recargos asociados a contingencias."
+          "text": "En Obligaciones económicas analizamos costes directos, logística y cargos asociados a contingencias."
         },
         {
           "id": "cost_values",
-          "text": "El coste esperado pondera los recargos por sus probabilidades. No debemos confundirlo con un precio contratado."
+          "text": "El coste esperado pondera esos cargos según sus probabilidades para comparar alternativas en el mismo perímetro."
         },
         {
           "id": "contract_expand",
-          "text": "Las condiciones contractuales permiten valorar reservas y penalizaciones, si esas obligaciones realmente existen."
+          "text": "Las condiciones contractuales permiten analizar reservas y penalizaciones cuando esas obligaciones existen."
         },
         {
           "id": "contracts",
-          "text": "Si un contrato no interviene, marcamos No aplica y documentamos por qué. No se introduce un cero ficticio."
+          "text": "Si una condición no interviene, la marcamos como No aplica y registramos el motivo, en lugar de inventar un cero."
         },
         {
           "id": "environment_expand",
-          "text": "En factores ambientales examinamos materiales, residuos y gases de efecto invernadero dentro de un perímetro definido."
+          "text": "En Factores ambientales estudiamos materiales, residuos y gases de efecto invernadero dentro de un perímetro definido."
         },
         {
           "id": "environment",
-          "text": "Estas cantidades son comparables, pero no equivalen a un análisis completo y certificado de ciclo de vida."
+          "text": "Estos indicadores permiten identificar compromisos entre circularidad, disponibilidad y costes."
         },
         {
           "id": "evidence_section",
-          "text": "El sexto apartado recuerda que los datos requieren fuentes y revisión. Una hipótesis no se convierte sola en evidencia."
+          "text": "La sexta sección reúne evidencias e incertidumbre: cada dato necesita una fuente y una revisión apropiada."
         }
       ]
     },
@@ -124,31 +124,31 @@
       "cues": [
         {
           "id": "results",
-          "text": "El panel de resultados compara plazos, cumplimiento del objetivo, costes y variables ambientales sin elegir un ganador automático."
+          "text": "El panel compara plazos, cumplimiento del objetivo, costes y variables ambientales sin elegir automáticamente un ganador."
         },
         {
           "id": "edit_recovery",
-          "text": "Vamos a modificar el tiempo de recuperación de la alternativa de reparación, para comprobar cómo responde el modelo."
+          "text": "Modificamos el tiempo de recuperación de la alternativa de reparación para comprobar la respuesta del modelo."
         },
         {
           "id": "updated_result",
-          "text": "El cálculo se actualiza en cuanto cambia el dato. Podemos estudiar la sensibilidad antes de decidir."
+          "text": "El cálculo se actualiza inmediatamente. Podemos analizar la sensibilidad antes de decidir."
         },
         {
           "id": "restore_recovery",
-          "text": "Restablecemos el valor de ejemplo para no mezclar la prueba con el escenario original."
+          "text": "Restablecemos el valor de partida para mantener una comparación coherente."
         },
         {
           "id": "sensitivity",
-          "text": "El margen de sensibilidad es una prueba de robustez. No representa un intervalo de confianza estadístico."
+          "text": "El margen de sensibilidad permite comprobar si los resultados dependen mucho de una hipótesis."
         },
         {
           "id": "compare",
-          "text": "Las alternativas pueden mejorar un indicador y empeorar otro. ASRI debe mostrar ese compromiso con claridad."
+          "text": "Una alternativa puede mejorar un indicador y empeorar otro. ASRI hace visibles esos compromisos."
         },
         {
           "id": "next_check",
-          "text": "Pasamos a Comprobar. Ninguno de los beneficios se puede considerar demostrado solo por estos cálculos."
+          "text": "Pasamos a Comprobar para identificar qué conclusiones están suficientemente respaldadas."
         }
       ]
     },
@@ -158,35 +158,35 @@
       "cues": [
         {
           "id": "check_intro",
-          "text": "En Comprobar analizamos la calidad de la información y los requisitos técnicos que deben verificarse."
+          "text": "En Comprobar evaluamos la calidad de los datos y los requisitos técnicos que deben acreditarse."
         },
         {
           "id": "gates",
-          "text": "Cuatro controles recuerdan la equivalencia del alcance, la elegibilidad técnica, el método y la revisión independiente."
+          "text": "Cuatro controles revisan equivalencia del alcance, elegibilidad técnica, método y revisión independiente."
         },
         {
           "id": "not_approved",
-          "text": "No los marcamos como aprobados. Es un ejemplo hipotético, y ninguna casilla sustituye una autorización de Airbus."
+          "text": "Cada control exige su comprobación correspondiente. Una casilla no sustituye una aprobación formal."
         },
         {
           "id": "evidence_intro",
-          "text": "En el registro podemos identificar un documento, su propietario, el revisor, la fecha y las limitaciones."
+          "text": "El registro permite identificar el documento, su responsable, el revisor, la fecha y las limitaciones."
         },
         {
           "id": "add_evidence",
-          "text": "Añadimos una ficha de evidencia de muestra y la dejamos pendiente. Así se ve qué faltaría en un caso real."
+          "text": "Añadimos una referencia pendiente de revisión para mostrar cómo se organiza la trazabilidad."
         },
         {
           "id": "evidence_pending",
-          "text": "Cada valor de las alternativas debería vincularse después a una fuente trazable y comparable."
+          "text": "Cada valor de las alternativas puede vincularse después a una fuente rastreable y comparable."
         },
         {
           "id": "readiness",
-          "text": "El estado de validación sigue incompleto. Es correcto: la herramienta no debe confundir práctica con rendimiento real."
+          "text": "El estado de revisión muestra qué queda por acreditar antes de presentar una conclusión como confirmada."
         },
         {
           "id": "next_translate",
-          "text": "Con las limitaciones claras, pasamos a Traducir para adaptar los argumentos al destinatario."
+          "text": "Con las condiciones y las evidencias claras llegamos a Translate, el núcleo estratégico de ASRI."
         }
       ]
     },
@@ -196,35 +196,107 @@
       "cues": [
         {
           "id": "translate_intro",
-          "text": "Traducir transforma los resultados del caso en argumentos estratégicos, sin alterar los números del análisis."
+          "text": "Translate convierte el resultado técnico en valor relevante para quien debe tomar una decisión."
+        },
+        {
+          "id": "translate_priority",
+          "text": "Aquí está la diferencia: no basta con expresar un resultado ambiental. Hay que explicar qué vulnerabilidad cambia."
+        },
+        {
+          "id": "translate_logic",
+          "text": "La pregunta deja de ser únicamente cuántos materiales ahorramos y pasa a ser de qué dependencias podemos liberarnos."
+        },
+        {
+          "id": "translate_causal",
+          "text": "La reparabilidad puede reducir necesidades de compra nueva; la diversificación puede ampliar las opciones de suministro."
+        },
+        {
+          "id": "translate_conditions",
+          "text": "Pero esos mecanismos deben ser viables técnicamente y estar respaldados por datos comparables."
+        },
+        {
+          "id": "customer_focus",
+          "text": "Seleccionamos Cliente de Defensa. La misma comparación se expresa desde la continuidad de la misión."
+        },
+        {
+          "id": "customer_question",
+          "text": "¿Podemos mantener la capacidad necesaria si un proveedor deja de entregar una pieza crítica?"
+        },
+        {
+          "id": "customer_value",
+          "text": "El interés para el cliente es una menor exposición a interrupciones, sin comprometer requisitos operativos."
+        },
+        {
+          "id": "engineering_focus",
+          "text": "Ahora elegimos Ingeniería. El valor depende de que la reparación y los materiales cumplan los requisitos."
+        },
+        {
+          "id": "engineering_question",
+          "text": "Aquí hay que definir ensayos, cualificación de fuentes, trazabilidad y autorización de cambios."
+        },
+        {
+          "id": "engineering_value",
+          "text": "Translate permite explicar qué debe demostrar Ingeniería antes de que una ventaja sea defendible."
+        },
+        {
+          "id": "programme_focus",
+          "text": "Seleccionamos Responsable de Programa. El discurso cambia hacia disponibilidad, calendario y compromisos."
+        },
+        {
+          "id": "programme_question",
+          "text": "Un ahorro de material solo tiene valor operativo si no introduce retrasos, costes o dependencias nuevas."
+        },
+        {
+          "id": "programme_value",
+          "text": "Aquí se contrastan los compromisos: cuánto cambia el plazo, qué cuesta y qué riesgo permanece."
+        },
+        {
+          "id": "leadership_focus",
+          "text": "Finalmente elegimos Dirección. Transformamos indicadores dispersos en una decisión estratégica."
+        },
+        {
+          "id": "leadership_question",
+          "text": "La pregunta es dónde conviene invertir para reforzar autonomía industrial y capacidad de respuesta."
+        },
+        {
+          "id": "leadership_value",
+          "text": "Translate no añade beneficios que el análisis no soporte; prioriza riesgos, opciones y validaciones."
+        },
+        {
+          "id": "translation_summary",
+          "text": "Un mismo análisis alimenta cuatro conversaciones distintas, adaptadas a decisiones reales y sin alterar los datos."
+        },
+        {
+          "id": "translation_conclusion",
+          "text": "Así es como ASRI traduce sostenibilidad al lenguaje de resiliencia que piden nuestros interlocutores."
         },
         {
           "id": "customer",
-          "text": "Para el cliente de Defensa, el foco está en la continuidad operativa y la disponibilidad de componentes críticos."
+          "text": "Para el cliente de Defensa, hablamos de continuidad operativa y disponibilidad de componentes críticos."
         },
         {
           "id": "engineering",
-          "text": "Para Ingeniería, el argumento gira alrededor de la cualificación, la seguridad y la reparabilidad demostrable."
+          "text": "Para Ingeniería, nos centramos en cualificación, seguridad y reparabilidad verificable."
         },
         {
           "id": "programme",
-          "text": "Para el responsable de Programa, importan los compromisos de plazo, coste y abastecimiento durante el servicio."
+          "text": "Para Programa, relacionamos los resultados con plazos, costes, hitos y compromisos de suministro."
         },
         {
           "id": "leadership",
-          "text": "Para Dirección, el valor potencial es reducir dependencias industriales sin ocultar costes ni incertidumbre."
+          "text": "Para Dirección, hablamos de dependencias industriales, exposición al riesgo y valor de las decisiones."
         },
         {
           "id": "choose_option_b",
-          "text": "También podemos cambiar la alternativa seleccionada. La narrativa debe ajustarse a la nueva comparación."
+          "text": "Cambiamos la alternativa elegida para comprobar cómo cambia el argumento sin alterar el método."
         },
         {
           "id": "limitations",
-          "text": "El informe señala expresamente los datos no validados. Una narrativa convincente no es una prueba causal."
+          "text": "Translate conserva la trazabilidad y muestra las condiciones que todavía requieren verificación."
         },
         {
           "id": "export_intro",
-          "text": "Finalmente revisamos la exportación. Podemos generar un informe y conservar una copia editable del caso."
+          "text": "Ese argumento puede incorporarse a un informe, conservando la comparación y las evidencias."
         }
       ]
     },
@@ -234,25 +306,27 @@
       "cues": [
         {
           "id": "export_pdf",
-          "text": "El informe en PDF recoge hipótesis, comparaciones, evidencias pendientes y conclusiones limitadas."
+          "text": "El informe PDF recoge la ficha, los resultados, la evidencia y la interpretación para la audiencia elegida."
         },
         {
           "id": "export_markdown",
-          "text": "También se puede exportar un informe en formato Markdown para revisión y edición posterior."
+          "text": "También disponemos de una versión Markdown para revisar y editar el contenido."
         },
         {
           "id": "report_caution",
-          "text": "Antes de compartir, debemos comprobar que las cifras sean comparables y que ningún beneficio se presente como validado."
+          "text": "Antes de compartir, comprobamos que las cifras sean comparables y la conclusión esté respaldada."
         },
         {
           "id": "save_draft",
-          "text": "Para retomar el trabajo, descargamos una copia del caso. ASRI no guarda automáticamente los datos en la nube."
+          "text": "Podemos descargar una copia editable del caso y retomar el análisis cuando lo necesitemos."
         },
         {
           "id": "closing",
-          "text": "Así recorremos las cuatro etapas con Eurodron. Es una demostración hipotética de decisiones defendibles, no una predicción calibrada."
+          "text": "ASRI conecta las decisiones de sostenibilidad con la resiliencia que importa al cliente, al programa y a la dirección."
         }
       ]
     }
-  ]
+  ],
+  "storyline": "Eurodrone only; revised from user's Spanish Word; prioritises Translate with strategic resilience narrative",
+  "reviewed_spanish_word": "ASRI Eurodrone Tutorial Castellano Locutor Sereno (1).docx"
 }
