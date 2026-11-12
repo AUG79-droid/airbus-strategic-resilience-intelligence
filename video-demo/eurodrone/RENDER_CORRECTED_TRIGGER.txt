@@ -1,0 +1,1 @@
+Re-render corrected Eurodrone tutorial MP4 in British English and Spanish; reuse 52 approved synthetic Spanish voice clips from run 43126286733. Fix is changing the recovery input above supplier lead time.
