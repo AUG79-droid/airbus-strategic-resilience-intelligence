@@ -18,7 +18,7 @@ await fs.mkdir(out,{recursive:true});
 const timeline=JSON.parse(await fs.readFile(path.join(out,'timeline.json'),'utf8'));
 if(timeline.language!==(spanish?'es-ES':'en-GB'))throw new Error('Narration language mismatched');
 const cues=timeline.chapters.flatMap(ch=>ch.cues);
-if(timeline.chapters.length!==7||cues.length<40)throw new Error('Full tutorial script missing');
+if(timeline.chapters.length!==7||cues.length<60||timeline.chapters.find(ch=>ch.id==='translate')?.cues.length<20)throw new Error('Complete revised tutorial with strategic Translate chapter required');
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const messages=[];
 const checks=[];
@@ -55,6 +55,7 @@ try{
  await page.waitForFunction((locale)=>document.documentElement.lang===locale,
    spanish?'es':'en',{timeout:12000});
  checks.push(spanish?'Spanish UI selected':'British English UI selected');
+ checks.push('Translate prioritised: 26 narrated actions across decision audiences');
 
  const loc=x=>typeof x==='string'?page.locator(x).first():x;
  async function focus(selector){
@@ -172,6 +173,24 @@ try{
    readiness:()=>focus('.cy-readiness'),
    next_translate:async()=>{await goStep(3);await page.locator('.cy-output').waitFor({timeout:18000});},
    translate_intro:()=>focus('.cy-output'),
+   translate_priority:()=>focus('.cy-output strong'),
+   translate_logic:()=>focus('.cy-output p'),
+   translate_causal:()=>focus('.cy-output p'),
+   translate_conditions:()=>focus('.cy-output ul'),
+   customer_focus:()=>focus('.cy-output h4'),
+   customer_question:()=>focus('.cy-output p'),
+   customer_value:()=>focus('.cy-output strong'),
+   engineering_focus:()=>focus('.cy-output h4'),
+   engineering_question:()=>focus('.cy-output p'),
+   engineering_value:()=>focus('.cy-output ul'),
+   programme_focus:()=>focus('.cy-output h4'),
+   programme_question:()=>focus('.cy-output p'),
+   programme_value:()=>focus('.cy-output strong'),
+   leadership_focus:()=>focus('.cy-output h4'),
+   leadership_question:()=>focus('.cy-output p'),
+   leadership_value:()=>focus('.cy-output strong'),
+   translation_summary:()=>focus('.cy-choices'),
+   translation_conclusion:()=>focus('.cy-output p'),
    customer:()=>selectAudience('defenceCustomer'),
    engineering:()=>selectAudience('engineering'),
    programme:()=>selectAudience('programmeManager'),
