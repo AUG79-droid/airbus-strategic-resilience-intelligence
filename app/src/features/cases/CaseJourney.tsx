@@ -10,11 +10,13 @@ import { fromPreset, presetTitle, type PresetKey } from './presets';
 import { exportCaseEnvelope, importCaseEnvelope } from './caseIntegrity';
 import { UniversalControls } from './UniversalControls';
 import { DependencyRoutes } from './DependencyRoutes';
+import { RepairCapacity } from './RepairCapacity';
 import { EnvironmentalMethod } from './EnvironmentalMethod';
 import { MissionBridgeReview } from './MissionBridgeReview';
 import { DiscountedFinance } from './DiscountedFinance';
 import { evaluateDiscountedFinance, emptyFinancePlan } from './discountedCashFlows';
 import { boundedEnvironmentalDifference } from './environmentBasis';
+import { evaluateWorkshopCapacity } from './workshopCapacity';
 import { pdfSafeText } from './pdfSafeText';
 import { sha256EvidenceBlob } from './documentProof';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
@@ -128,6 +130,12 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
     ...(data.missionBridges.length
       ?data.missionBridges.map(link=>`- ${link.optionId}: ${link.componentOrService} > ${link.subsystem} > ${link.platform} > ${link.missionFunction}; dependency=${link.dependencyType}; USER-DECLARED mission availability=${link.observedMissionAvailabilityPercent??'not measured'}%; evidence=${link.evidenceId||'none'}`)
       :[es?'Sin evaluación de disponibilidad de misión. No se infiere a partir de la recuperación del componente.':'Mission availability not assessed. Never inferred from component recovery.']),
+    '',es?'## Capacidad de taller y cola FIFO (ilustrativa)':'## Repair-workshop capacity and FIFO queue (illustrative)',
+    ...data.workshopCapacity.map(x=>{
+      const r=evaluateWorkshopCapacity(x);
+      return `- ${x.optionId}: bays=${x.availableBays}; jobsAhead=${x.jobsAhead}; backlogServiceTime=${x.serviceTimePerBacklogJob}; targetServiceTime=${x.targetServiceTime}; conditionalWait=${r.waitingTime??'N/A'}; conditionalCompletion=${r.completionTime??'N/A'}; evidence=${x.evidenceId||'unlinked'}`;
+    }),
+    `${es?'NO suma al tiempo medio de recuperación y no representa capacidad validada ni una cola predictiva':'NOT added to mean recovery time; not validated capacity or a predictive queue'}.`,
     '',es?'## Dependencias de rutas':'## Supply and repair dependencies',
     ...(data.dependencyRoutes.length
       ?data.dependencyRoutes.map(route=>`- ${route.optionId} / ${route.label}: ${route.qualified?'qualified (user-declared)':'unqualified'}; nodes=[${route.dependencies.join(', ')}]; declaredCapacity=${route.capacityPercent??'not specified'}%; evidence=${route.evidenceId||'unlinked'}`)
@@ -227,7 +235,8 @@ export function CaseJourney({locale,view,data,setData}:Props){
     environmentalBasis:current.environmentalBasis.map(e=>e.evidenceId===id?{...e,evidenceId:''}:e),
     missionBridges:current.missionBridges.map(m=>m.evidenceId===id?{...m,evidenceId:''}:m),
     discountedFinance:{...current.discountedFinance,
-      flows:current.discountedFinance.flows.map(f=>f.evidenceId===id?{...f,evidenceId:''}:f)}
+      flows:current.discountedFinance.flows.map(f=>f.evidenceId===id?{...f,evidenceId:''}:f)},
+    workshopCapacity:current.workshopCapacity.map(f=>f.evidenceId===id?{...f,evidenceId:''}:f)
   }));
   const addEvidence=()=>{
     setData(current=>({...current,evidence:[...current.evidence,{
@@ -242,7 +251,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
     ...current,
     id:'CASE-'+Date.now().toString(36),hypothetical:false,programme:'',owner:'',
     gates:{comparableBoundary:false,technicalEligibility:false,measurementMethod:false,independentReview:false},
-    evidence:[],dependencyRoutes:[],environmentalBasis:[],missionBridges:[],
+    evidence:[],dependencyRoutes:[],environmentalBasis:[],missionBridges:[],workshopCapacity:[],
     discountedFinance:emptyFinancePlan(),
     options:current.options.map(o=>({
       ...o,
@@ -362,6 +371,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
       </section>
       <UniversalControls locale={locale} data={data} setData={setData}/>
       <DependencyRoutes locale={locale} data={data} setData={setData}/>
+      <RepairCapacity locale={locale} data={data} setData={setData}/>
       <EnvironmentalMethod locale={locale} data={data} setData={setData}/>
       <MissionBridgeReview locale={locale} data={data} setData={setData}/>
       <DiscountedFinance locale={locale} data={data} setData={setData}/>
