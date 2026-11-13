@@ -58,6 +58,19 @@ describe('Time-valued cash flows: explicit incremental costs',()=>{
     expect(result.incrementalPresentValueEuro).toBeNull();
     expect(result.assumptions.join(' ')).toMatch(/escalation/);
   });
+  it('does not invent a zero-cost option or a negative difference where financial records are missing',()=>{
+    const plan={annualDiscountPercent:10,annualEscalationPercent:0,flows:[flow('baseline-1','baseline',1,110)]};
+    const base=evaluateDiscountedFinance(plan,'baseline');
+    const missing=evaluateDiscountedFinance(plan,'option-a');
+    expect(base.incrementalPresentValueEuro).toBeCloseTo(100);
+    expect(missing.status).toBe('notAssessed');
+    expect(missing.incrementalPresentValueEuro).toBeNull();
+    expect(missing.assumptions.join(' ')).toMatch(/zero incremental cost cannot be inferred/);
+    expect(missing.incrementalPresentValueEuro===null||base.incrementalPresentValueEuro===null
+      ?null:missing.incrementalPresentValueEuro-base.incrementalPresentValueEuro).toBeNull();
+    expect(evaluateDiscountedFinance({annualDiscountPercent:10,flows:[]},'baseline').status)
+      .toBe('notAssessed');
+  });
   it('rejects invalid price basis and escalation but retains legacy nominal cashflows',()=>{
     const one=flow('base','baseline',2,100);
     expect(validateFinancePlan({annualDiscountPercent:10,flows:[one]},['baseline']).annualEscalationPercent).toBeNull();
