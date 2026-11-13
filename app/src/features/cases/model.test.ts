@@ -167,6 +167,12 @@ describe('Create your own strategic case', () => {
     c.robustnessPercent=100;
     const change=compareOption(c,c.options[1]);
     expect(change.rows[0].robustness).toBe('sensitive');
+    const range=change.rows[0].sensitivityRange;
+    expect(range).toBeDefined();
+    expect(range!.minDelta).toBeLessThanOrEqual(change.rows[0].delta!);
+    expect(range!.maxDelta).toBeGreaterThanOrEqual(change.rows[0].delta!);
+    expect(range!.switchingParameter).toBeTruthy();
+    expect(Number.isFinite(range!.switchingValue)).toBe(true);
     c.robustnessPercent=0;
     expect(compareOption(c,c.options[1]).rows[0].robustness).toBe('insufficient');
   });
