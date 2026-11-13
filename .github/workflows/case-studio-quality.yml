@@ -12,7 +12,7 @@ permissions:
   statuses: write
 
 concurrency:
-  group: case-studio-quality
+  group: case-studio-quality-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
