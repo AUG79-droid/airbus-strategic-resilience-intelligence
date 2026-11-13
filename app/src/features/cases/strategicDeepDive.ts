@@ -1,6 +1,7 @@
 import { comparisons, evidenceObserved, type Audience, type OptionComparison, type StrategicCase } from './model';
 import { analyzeRoutes } from './supplyGraph';
 import { assessMissionBridge } from './missionBridge';
+import { evaluateDiscountedFinance } from './discountedCashFlows';
 
 /**
  * Dynamic strategic analysis for Translate. Uses the same calculated scenario
@@ -244,6 +245,19 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   }
   if(!cost)economic+=es?' Todavía faltan costes comparables para evaluar esta alternativa.':
     ' Comparable costs are still needed to assess this option.';
+  if(data.discountedFinance?.flows.length){
+    const cash=evaluateDiscountedFinance(data.discountedFinance,c.option.id);
+    const cashBaseline=evaluateDiscountedFinance(data.discountedFinance,data.options[0].id);
+    if(cash.status==='calculated'&&cashBaseline.status==='calculated'){
+      const diff=cash.incrementalPresentValueEuro!-cashBaseline.incrementalPresentValueEuro!;
+      economic+=es
+        ?` Como análisis financiero SEPARADO, los flujos de caja adicionales descontados declarados tienen valor actual de ${fmt(cash.incrementalPresentValueEuro!,locale,0)} € frente a ${fmt(cashBaseline.incrementalPresentValueEuro!,locale,0)} € en la referencia (diferencia ${fmt(diff,locale,0)} €). No deben sumarse sin comprobar los límites contables y posibles duplicaciones.`
+        :` In a SEPARATE financial worksheet, declared additional discounted cash flows have present value €${fmt(cash.incrementalPresentValueEuro!,locale,0)} versus €${fmt(cashBaseline.incrementalPresentValueEuro!,locale,0)} for the reference (difference €${fmt(diff,locale,0)}). Do not combine these figures without reviewing accounting boundaries and possible duplicates.`;
+    }else{
+      economic+=es?' Los flujos futuros no pueden descontarse porque falta una tasa declarada.':
+        ' Future cash flows cannot be discounted because no annual rate is declared.';
+    }
+  }
   insights.push({id:'economics',title:es?'3. Coste de la alternativa':'3. What the option costs',body:economic});
 
   // Report all relevant environmental measures, including increases.
