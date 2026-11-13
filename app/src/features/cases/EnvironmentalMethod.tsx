@@ -13,14 +13,14 @@ const fields=[
   ['factorSourceVersion','Versión de las fuentes / factores','Source / factor dataset version']
 ] as const;
 const empty=(optionId:string):EnvironmentalBasis=>({optionId,functionalUnit:'',period:'',
-  boundary:'',inventoryMethod:'',allocationRule:'',factorSourceVersion:'',evidenceId:''});
+  boundary:'',inventoryMethod:'',allocationRule:'',factorSourceVersion:'',evidenceId:'',relativeUncertaintyPercent:null});
 export function EnvironmentalMethod({locale,data,setData}:Props) {
   const es=locale==='es';
   const t=(a:string,b:string)=>es?a:b;
-  const patch=(optionId:string,field:Exclude<keyof EnvironmentalBasis,'optionId'>,value:string)=>
+  const patch=(optionId:string,field:Exclude<keyof EnvironmentalBasis,'optionId'>,value:string|number|null)=>
     setData(current=>{
       const existing=current.environmentalBasis.find(x=>x.optionId===optionId)??empty(optionId);
-      const updated={...existing,[field]:value.slice(0,1200)};
+      const updated={...existing,[field]:typeof value==='string'?value.slice(0,1200):value};
       const remaining=current.environmentalBasis.filter(x=>x.optionId!==optionId);
       return {...current,environmentalBasis:[...remaining,updated]};
     });
@@ -45,6 +45,17 @@ export function EnvironmentalMethod({locale,data,setData}:Props) {
             <span>{t(nameEs,nameEn)}</span>
             <input value={selected[key]} maxLength={1200} onChange={e=>patch(option.id,key,e.target.value)}/>
           </label>)}
+          <label className="cy-field"><span>{t('Incertidumbre relativa declarada (±%; opcional)','Declared relative inventory uncertainty (±%; optional)')}</span>
+            <input type="number" min="0" max="100" step="any" value={selected.relativeUncertaintyPercent??''}
+              placeholder={t('No evaluada','Not assessed')}
+              onChange={e=>{
+                const raw=e.target.value,value=raw===''?null:Number(raw);
+                if(value===null||Number.isFinite(value)&&value>=0&&value<=100)
+                  patch(option.id,'relativeUncertaintyPercent',value);
+              }}/>
+            <small>{t('Margen determinista, no intervalo de confianza. Declara los márgenes en referencia y alternativa para comprobar si la mejora resiste la incertidumbre.',
+              'Deterministic margin, not a confidence interval. Declare both baseline and option margins to test whether the improvement withstands uncertainty.')}</small>
+          </label>
           <label className="cy-field"><span>{t('Evidencia de metodología','Methodology evidence')}</span>
             <select value={selected.evidenceId} onChange={e=>patch(option.id,'evidenceId',e.target.value)}>
               <option value="">{t('Sin fuente asociada','No supporting source')}</option>
