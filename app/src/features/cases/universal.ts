@@ -194,6 +194,11 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
     return (x.state==='excluded') !== (y.state==='excluded')
       ? [a+' / '+b+': inconsistent applicability']: [];
   };
+  const validJoint=(technical:number|null,shock:number|null,overlap:number|null):boolean=>{
+    if(overlap===null)return true;
+    if(technical===null||shock===null)return false;
+    try{jointRiskBranches(technical,shock,overlap);return true;}catch{return false;}
+  };
   const pairIssues=[...paired('technicalSuccess','failureDelay'),...paired('shockProbability','shockDelay'),
     ...paired('cancellationProbability','cancellationFee')];
   const invalidPair=(x:DerivedValue):DerivedValue=>
@@ -208,6 +213,7 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
       const risk=v('shockProbability'),delay=v('shockDelay');
       const both=v('jointFailureShock'),jointDelay=v('jointExtraDelay');
       if(jointDelay!==null&&(both===null||tech===null||risk===null))return NaN;
+      if(!validJoint(tech,risk,both))return NaN;
       return Math.max(base,supply??0)+(tech===null?0:(1-tech/100)*(failure??0))
         +(risk===null?0:risk/100*(delay??0))+(both??0)/100*(jointDelay??0);
     }
@@ -245,6 +251,7 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
       if(v('baseCost')===null)return NaN;
       const joint=v('jointFailureShock'),extra=v('jointExtraCost');
       if(extra!==null&&joint===null)return NaN;
+      if(!validJoint(v('technicalSuccess'),v('shockProbability'),joint))return NaN;
       const r=(v('shockProbability')??0)/100,t=(v('technicalSuccess')??100)/100,
         p=(v('cancellationProbability')??0)/100;
       return v('baseCost')!+(v('logisticsCost')??0)+(v('investmentCost')??0)+

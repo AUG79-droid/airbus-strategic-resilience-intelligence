@@ -78,7 +78,15 @@ describe('ASRI v2 joint-risk probability', () => {
     expect(exclusive.deadline.value).toBeCloseTo(0);
 
     opt.parameterValues.jointFailureShock.value=60;
-    expect(calculateUniversal(c,opt).deadline.state).toBe('invalid');
+    const impossible=calculateUniversal(c,opt);
+    expect(impossible.deadline.state).toBe('invalid');
+    expect(impossible.recovery.state).toBe('invalid');
+    opt.parameterValues.baseCost={value:100,evidenceId:''};
+    opt.parameterValues.logisticsCost={value:20,evidenceId:''};
+    expect(calculateUniversal(c,opt).cost.state).toBe('invalid');
+    opt.parameterValues.jointFailureShock.value=50;
+    expect(calculateUniversal(c,opt).recovery.state).toBe('calculated');
+    expect(calculateUniversal(c,opt).cost.state).toBe('calculated');
   });
 
   it('upgrades older JSON without the joint-risk field while retaining values', () => {
