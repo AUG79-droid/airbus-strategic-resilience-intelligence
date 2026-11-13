@@ -9,6 +9,7 @@ import {
 import { fromPreset, presetTitle, type PresetKey } from './presets';
 import { exportCaseEnvelope, importCaseEnvelope } from './caseIntegrity';
 import { UniversalControls } from './UniversalControls';
+import { DependencyRoutes } from './DependencyRoutes';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
 import { calculateUniversal, parameterUnit, UNIVERSAL_PARAMETERS } from './universal';
@@ -94,6 +95,10 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
       const calc=calculateUniversal(data,option);
       return [displayOptionName(option,locale)+': '+JSON.stringify(Object.fromEntries(Object.entries(calc).filter(([k])=>k!=='assumptions')))];
     }),
+    '',es?'## Dependencias de rutas':'## Supply and repair dependencies',
+    ...(data.dependencyRoutes.length
+      ?data.dependencyRoutes.map(route=>`- ${route.optionId} / ${route.label}: ${route.qualified?'qualified (user-declared)':'unqualified'}; nodes=[${route.dependencies.join(', ')}]; declaredCapacity=${route.capacityPercent??'not specified'}%; evidence=${route.evidenceId||'unlinked'}`)
+      :[es?'Dependencias no evaluadas; la independencia no está acreditada.':'Dependencies not assessed; independence not demonstrated.']),
     '',es?'## 03 Comprobar':'## 03 Check',
     `Review gates: ${JSON.stringify(data.gates)}`,
     `Evidence trace: ${chosen.reviewedData?'all inputs linked to reviewed records':'incomplete'}`,
@@ -317,6 +322,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
         </div>)}</div>
       </section>
       <UniversalControls locale={locale} data={data} setData={setData}/>
+      <DependencyRoutes locale={locale} data={data} setData={setData}/>
       <section className="cy-panel">
         <h3>{t('Comparación de las alternativas','Comparison of alternatives')}</h3>
         <p>{t('Los indicadores se calculan con los controles anteriores. Los que no aplican se excluyen, y los desconocidos bloquean las conclusiones afectadas. No hay un ganador automático si existen compromisos.',
