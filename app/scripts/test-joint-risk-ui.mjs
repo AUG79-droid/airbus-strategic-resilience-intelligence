@@ -46,6 +46,22 @@ try {
   await page.locator('section[aria-label="Optional local draft saving"] input[type=checkbox]').uncheck();
   if(await page.evaluate(()=>localStorage.getItem('asri-demo-draft-v2'))!==null)
     throw Error('Disabling draft saving did not remove local data.');
+  // Regression ASRI-012: language changes may NOT silently switch the
+  // selected alternative or executive audience before an export.
+  await page.goto(url+'/#/investigate',{waitUntil:'networkidle'});
+  await page.locator('.case-mode-switch button').last().click();
+  await page.locator('.cy-preset-grid button').first().click();
+  await page.locator('.workspace-tabs button').nth(3).click();
+  const choice=page.locator('.cy-choices select');
+  await choice.nth(0).selectOption('option-b');
+  await choice.nth(1).selectOption('executiveLeadership');
+  await page.getByRole('button',{name:'ES',exact:true}).click();
+  if(await choice.nth(0).inputValue()!=='option-b'||await choice.nth(1).inputValue()!=='executiveLeadership')
+    throw Error('Selected option or executive audience changed after switching to Spanish');
+  await page.getByRole('button',{name:'EN',exact:true}).click();
+  if(await choice.nth(0).inputValue()!=='option-b'||await choice.nth(1).inputValue()!=='executiveLeadership')
+    throw Error('Selected option or executive audience changed after returning to English');
+  console.log('PASS: option B and executive audience survive ES/EN/ES language changes.');
   if(errors.length)throw Error(errors.join('; '));
   console.log('PASS: v2 joint-risk input enforces Fréchet bounds in the browser.');
   await context.close();
