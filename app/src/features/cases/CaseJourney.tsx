@@ -2,11 +2,12 @@ import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { downloadText, downloadBytes } from '../export/download';
 import type { Locale, ViewId } from '../../app/types';
 import {
-  comparisons, createCase, displayOptionName, templateInfo, validateCaseImport,
+  comparisons, createCase, displayOptionName, templateInfo,
   type StrategicCase, type CaseKind, type EvidenceItem, type Audience,
   type OptionComparison
 } from './model';
 import { fromPreset, presetTitle, type PresetKey } from './presets';
+import { exportCaseEnvelope, importCaseEnvelope } from './caseIntegrity';
 import { UniversalControls } from './UniversalControls';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
@@ -209,12 +210,23 @@ export function CaseJourney({locale,view,data,setData}:Props){
     if(!file)return;
     if(file.size>300_000){setMessage(t('Archivo demasiado grande (máximo 300 KB).','File too large (300 KB max).'));return;}
     try{
-      const data=validateCaseImport(JSON.parse(await file.text()));
+      const {data,verifiedIntegrity}=await importCaseEnvelope(await file.text());
       setData(data);setSelectedOption('option-a');
-      setMessage(t('Caso cargado. Comprueba la procedencia de cada dato.','Case loaded. Verify each data source.'));
+      setMessage(verifiedIntegrity
+        ?t('Caso cargado. Integridad del archivo comprobada (no equivale a aprobación de evidencias).',
+          'Case loaded. File integrity verified (this does not approve the underlying evidence).')
+        :t('Caso antiguo cargado sin huella de integridad. Comprueba la procedencia y las evidencias.',
+          'Legacy case loaded without an integrity checksum. Check its origin and evidence.'));
     }catch(e){setMessage(t('Archivo no válido: ','Invalid file: ')+String(e));}
   };
-  const exportJson=()=>downloadText(JSON.stringify(data,null,2),safeFilename(data)+'.json','application/json');
+  const exportJson=async()=>{
+    try{
+      const archived=await exportCaseEnvelope(data);
+      downloadText(archived,safeFilename(data)+'.json','application/json');
+      setMessage(t('JSON exportado con huella SHA-256 (integridad, no firma ni aprobación).',
+        'JSON exported with SHA-256 checksum (integrity only, not a signature or approval).'));
+    }catch(error){setMessage(t('No se pudo exportar el JSON: ','Could not export JSON: ')+String(error));}
+  };
   const exportMarkdown=()=>{
     if(!active)return;
     downloadText(reportText(data,active,selectedAudience,locale),safeFilename(data)+'.md','text/markdown;charset=utf-8');
