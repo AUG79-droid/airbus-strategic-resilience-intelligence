@@ -1,0 +1,34 @@
+import { chromium } from 'playwright-core';
+
+const url=process.env.QA_URL??'http://127.0.0.1:4174';
+const executablePath=process.env.CHROME_BIN||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+const browser=await chromium.launch({executablePath,headless:true,args:['--disable-extensions','--no-first-run']});
+try {
+  const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'});
+  const page=await context.newPage();
+  const errors=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(url+'/#/investigate',{waitUntil:'networkidle'});
+  await page.locator('.case-mode-switch button').last().click();
+  await page.locator('.workspace-tabs button').nth(1).click();
+  await page.locator('.cy-universal__section').nth(1).locator('summary').click();
+
+  const section=label=>page.locator('.cy-universal__param').filter({has:page.getByRole('heading',{name:label,exact:false})});
+  const technical=section('Technical success probability');
+  const shock=section('External disruption probability');
+  const joint=section('Technical failure AND disruption together');
+  await technical.locator('select').first().selectOption('applies');
+  await technical.locator('input[type=number]').first().fill('50');
+  await shock.locator('input[type=number]').first().fill('50');
+  await joint.locator('select').first().selectOption('applies');
+  const overlap=joint.locator('input[type=number]').first();
+  await overlap.fill('60');
+  if(await overlap.getAttribute('aria-invalid')!=='true')throw Error('An impossible 60% overlap was not rejected.');
+  await overlap.fill('50');
+  if(await overlap.getAttribute('aria-invalid')!=='false')throw Error('A feasible 50% overlap was rejected.');
+  if(!(await joint.locator('.cy-universal__option').first().innerText()).includes('Admissible joint range'))
+    throw Error('The expected admissible joint range was not displayed.');
+  if(errors.length)throw Error(errors.join('; '));
+  console.log('PASS: v2 joint-risk input enforces Fréchet bounds in the browser.');
+  await context.close();
+} finally { await browser.close(); }
