@@ -55,8 +55,10 @@ export function DiscountedFinance({locale,data,setData}:Props){
         <p className="cy-help">{result.status==='calculated'
           ?t('Valor actual de flujos adicionales declarados: ','Present value of declared incremental cash flows: ')+
             number(result.incrementalPresentValueEuro!)+' €'
-          :percent===null
-            ?t('Sin tasa de descuento: valoración financiera NO calculada.','Discount rate missing: financial present value NOT calculated.')
+          :result.flowCount===0
+            ?t('Sin flujos económicos declarados: no puede inferirse un coste de 0 € ni un ahorro.','No declared cash flows: neither zero cost nor savings can be inferred.')
+            :percent===null
+              ?t('Sin tasa de descuento: valoración financiera NO calculada.','Discount rate missing: financial present value NOT calculated.')
             :t('Falta escalación para flujos en euros del año base: valor actual NO calculado.',
               'Escalation is missing for base-year flows: financial present value NOT calculated.')}
           {delta!==null&&option.id!==data.options[0].id&&
