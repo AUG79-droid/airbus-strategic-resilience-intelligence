@@ -1,6 +1,7 @@
 import { calculateUniversal, defaultParameterStates, emptyParameterValues, UNIVERSAL_PARAMETERS, type DerivedValue, type ParamMap, type ParamValues } from './universal';
 import { validateRoutes, type DependencyRoute } from './supplyGraph';
 import { compareEnvironmentalBasis, validateEnvironmentalBasis, type EnvironmentalBasis, type EnvironmentBasisCheck } from './environmentBasis';
+import { validateMissionBridges, type MissionBridge } from './missionBridge';
 // Independent custom-case model. This is a transparent comparative calculator, not
 // a predictive aerospace certification, LCA, mission-availability or emissions model.
 export type CaseKind = 'general' | 'ecodesign' | 'climate' | 'saf' | 'wildfire';
@@ -69,6 +70,7 @@ export interface StrategicCase {
   /** Optional topology assessment, never a validated recovery or readiness factor. */
   dependencyRoutes: DependencyRoute[];
   environmentalBasis: EnvironmentalBasis[];
+  missionBridges: MissionBridge[];
 }
 
 export interface IndicatorComparison {
@@ -222,7 +224,7 @@ export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): S
     boundary:'', timeHorizon:'', owner:'', metrics,
     parameters:defaultParameterStates(kind,locale),
     options:makeOptions(metrics,locale), evidence:[], gates:emptyGates(),
-    robustnessPercent:10, hypothetical:false, dependencyRoutes:[], environmentalBasis:[]
+    robustnessPercent:10, hypothetical:false, dependencyRoutes:[], environmentalBasis:[], missionBridges:[]
   };
 }
 
@@ -468,6 +470,7 @@ export function validateCaseImport(value: unknown): StrategicCase {
   const upgraded=structuredClone(x as StrategicCase);
   upgraded.dependencyRoutes=validateRoutes(upgraded.dependencyRoutes,upgraded.options.map(o=>o.id));
   upgraded.environmentalBasis=validateEnvironmentalBasis(upgraded.environmentalBasis,upgraded.options.map(o=>o.id));
+  upgraded.missionBridges=validateMissionBridges(upgraded.missionBridges,upgraded.options.map(o=>o.id));
   upgraded.parameters??=defaultParameterStates(upgraded.kind);
   if(!upgraded.parameters||typeof upgraded.parameters!=='object'||Array.isArray(upgraded.parameters))throw new Error('Invalid applicability catalogue');
   // Version-1 JSON files predate the optional joint-event field.
