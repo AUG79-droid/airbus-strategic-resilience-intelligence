@@ -3,7 +3,8 @@ import type { EnvironmentalAssessment, ScenarioInputs, ScenarioResult, StrategyI
 import type { ClaimGateResult, EvidenceAssumption, EvidenceModelOutput, EvidenceRecord, PublicSource } from '../evidence/types';
 import type { AudienceId, StrategicTranslation } from '../translator/types';
 
-export const MODEL_VERSION = '0.6.0-phase-6';
+import { APP_VERSION } from '../../version';
+export const MODEL_VERSION = APP_VERSION;
 export const EXPORT_SCHEMA_VERSION = '1.0.0';
 export const PROTOTYPE_WARNING = 'PROTOTYPE — NOT INTERNALLY VALIDATED';
 
