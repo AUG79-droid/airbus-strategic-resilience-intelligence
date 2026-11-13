@@ -471,9 +471,15 @@ export function strategicDecisionAnswer(
           :' Expected cost is unchanged.')
     :'';
   if(audience==='defenceCustomer'){
-    const value=data.kind==='ecodesign'
-      ?(es?'Contar con una vía de reparación, además de poder sustituir la pieza, ofrece más opciones para recuperar el componente ante un problema de suministro.':
-        'Having a repair route as well as replacement offers another way to recover the component when supply is disrupted.')
+    const value=(!data.id.startsWith('SYNTH-'))
+      ?(es?'Esta comparación muestra qué alternativa ayuda a recuperar antes el servicio que has definido.':
+        'This comparison shows which option can restore the service you defined sooner.')
+      :data.kind==='ecodesign'
+        ?c.option.id==='option-b'
+          ?(es?'Combinar reparación con otro proveedor ofrece dos vías para recuperar el componente ante problemas de suministro.':
+            'Combining repair and another supplier gives two ways to restore the component when supply is disrupted.')
+          :(es?'Contar con una vía de reparación, además de poder sustituir la pieza, ofrece más opciones para recuperar el componente ante un problema de suministro.':
+            'Having a repair route as well as replacement offers another way to recover the component when supply is disrupted.')
       :data.kind==='climate'
         ?(es?'Esto permite valorar qué medida ayuda a restablecer antes las operaciones de apoyo durante episodios de calor extremo.':
           'This shows which option can restore support operations sooner during extreme heat.')
