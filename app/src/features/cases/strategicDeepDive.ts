@@ -3,6 +3,7 @@ import { analyzeRoutes } from './supplyGraph';
 import { assessMissionBridge } from './missionBridge';
 import { evaluateDiscountedFinance } from './discountedCashFlows';
 import { boundedEnvironmentalDifference } from './environmentBasis';
+import { evaluateWorkshopCapacity } from './workshopCapacity';
 
 /**
  * Dynamic strategic analysis for Translate. Uses the same calculated scenario
@@ -160,6 +161,22 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   if(!lead&&!base&&!recovery)bottleneck+=es
     ?' Todavía faltan tiempos comparables para saber qué actividad provoca la espera.'
     :' There are not yet comparable timings to identify what causes the delay.';
+  const queue=evaluateWorkshopCapacity(data.workshopCapacity?.find(x=>x.optionId===c.option.id));
+  const baselineQueue=evaluateWorkshopCapacity(data.workshopCapacity?.find(x=>x.optionId===data.options[0].id));
+  if(queue.status==='calculated'){
+    bottleneck+=es
+      ?` En el escenario adicional de taller FIFO, la espera por capacidad sería ${fmt(queue.waitingTime!,locale)} ${unit}, con finalización condicional en ${fmt(queue.completionTime!,locale)} ${unit}.`
+      :` Under the optional FIFO workshop scenario, capacity waiting time would be ${fmt(queue.waitingTime!,locale)} ${unit}, with conditional completion at ${fmt(queue.completionTime!,locale)} ${unit}.`;
+    if(baselineQueue.status==='calculated'){
+      const difference=queue.completionTime!-baselineQueue.completionTime!;
+      bottleneck+=es
+        ?` Frente a la misma hipótesis de taller en la referencia, cambia ${fmt(difference,locale)} ${unit}.`
+        :` Versus the baseline workshop assumption, the difference is ${fmt(difference,locale)} ${unit}.`;
+    }
+    bottleneck+=es
+      ?' Esta espera NO está integrada en el tiempo medio del modelo principal para evitar duplicaciones. No es una estimación validada de capacidad industrial.'
+      :' This queue time is NOT added to the main recovery KPI to avoid double counting. It is not validated industrial capacity.';
+  }
   insights.push({id:'bottleneck',title:es?'1. Qué está retrasando la recuperación':'1. What is slowing recovery',body:bottleneck});
 
   // Conditional exposure: parameter inputs, not empirical interruption probabilities.
