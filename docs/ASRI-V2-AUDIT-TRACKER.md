@@ -29,7 +29,7 @@
 | 021 — mobile hidden tabs | FIXED | All four steps available in two-column small-screen tabs. |
 | 022 — lost unsaved drafts | PARTIAL | Browser leave warning added; approved autosave, recovery and revision history not implemented. |
 | 023 — exposed maps | FIXED | Production source maps disabled. |
-| 024 — unverifiable document integrity | OPEN / NEEDS AIRBUS | Add document revision/digest and signed audit history; acceptance requires approved evidence storage and authenticated reviewers. |
+| 024 — unverifiable document integrity | PARTIAL / NEEDS AIRBUS | Exported custom-case JSON now includes a SHA-256 checksum; import rejects modified archives and flags legacy files as unverified. This detects tampering or accidental edits but **is not a cryptographic signature, authenticated audit history or validation of evidence**. Approved evidence storage and signed reviews still require Airbus. |
 
 ## Current v2 changes and tests
 
