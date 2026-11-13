@@ -294,9 +294,10 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   const reviewed=active.filter(row=>row.evidenceReady).length;
   const stable=active.filter(row=>row.robustness==='stable').length;
   const sensitive=active.filter(row=>row.robustness==='sensitive').length;
+  const equivalent=active.filter(row=>row.robustness==='equivalent').length;
   let readiness=es
-    ?`${reviewed} de ${active.length} resultados comparados tienen fuentes marcadas como revisadas. La prueba de sensibilidad utiliza un margen supuesto del ±${fmt(data.robustnessPercent,locale)} %: ${stable} diferencias superan ese margen y ${sensitive} se consideran sensibles.`
-    :`${reviewed} of ${active.length} compared outcomes have records marked as reviewed. The sensitivity check uses an assumed ±${fmt(data.robustnessPercent,locale)} % margin: ${stable} differences exceed that margin and ${sensitive} are considered sensitive.`;
+    ?`${reviewed} de ${active.length} indicadores tienen fuentes marcadas como revisadas. Hemos variado cada parámetro aplicable un ±${fmt(data.robustnessPercent,locale)} %, uno por uno, recalculando los resultados. En ${stable} indicadores se mantiene la dirección de la comparación, en ${sensitive} cambia y en ${equivalent} las alternativas son equivalentes con los datos actuales. Esta prueba no evalúa cambios simultáneos.`
+    :`${reviewed} of ${active.length} indicators have records marked as reviewed. We varied each applicable input by ±${fmt(data.robustnessPercent,locale)} %, one at a time, and recalculated the results. In ${stable} indicators the comparison direction held, in ${sensitive} it changed, and in ${equivalent} the options were equivalent at current inputs. This test does not cover simultaneous changes.`;
   readiness+=data.hypothetical
     ?(es
       ?' En este ejemplo, esas fuentes, revisiones y condiciones son simuladas: el caso didáctico está completo, pero no existe verificación externa ni beneficio operativo certificado.'
