@@ -1,5 +1,6 @@
 import { calculateUniversal, defaultParameterStates, emptyParameterValues, UNIVERSAL_PARAMETERS, type DerivedValue, type ParamMap, type ParamValues } from './universal';
 import { validateRoutes, type DependencyRoute } from './supplyGraph';
+import { compareEnvironmentalBasis, validateEnvironmentalBasis, type EnvironmentalBasis, type EnvironmentBasisCheck } from './environmentBasis';
 // Independent custom-case model. This is a transparent comparative calculator, not
 // a predictive aerospace certification, LCA, mission-availability or emissions model.
 export type CaseKind = 'general' | 'ecodesign' | 'climate' | 'saf' | 'wildfire';
@@ -67,6 +68,7 @@ export interface StrategicCase {
   hypothetical: boolean;
   /** Optional topology assessment, never a validated recovery or readiness factor. */
   dependencyRoutes: DependencyRoute[];
+  environmentalBasis: EnvironmentalBasis[];
 }
 
 export interface IndicatorComparison {
@@ -95,6 +97,7 @@ export interface OptionComparison {
   reviewedData: boolean;
   observedData: boolean;
   canDescribeAsMeasured: boolean;
+  environmentCheck: EnvironmentBasisCheck;
   missing: string[];
 }
 
@@ -219,7 +222,7 @@ export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): S
     boundary:'', timeHorizon:'', owner:'', metrics,
     parameters:defaultParameterStates(kind,locale),
     options:makeOptions(metrics,locale), evidence:[], gates:emptyGates(),
-    robustnessPercent:10, hypothetical:false, dependencyRoutes:[]
+    robustnessPercent:10, hypothetical:false, dependencyRoutes:[], environmentalBasis:[]
   };
 }
 
@@ -386,11 +389,19 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
   const missingReasons=UNIVERSAL_PARAMETERS.filter(p=>caseData.parameters[p.id].applicability==='notApplicable'&&
     !caseData.parameters[p.id].reason.trim());
   if(missingReasons.length)missing.push('N/A exclusions require a reason: '+missingReasons.map(p=>p.id).join(', '));
+  const hasEnvironmentalRows=active.some(row=>row.metric.category==='environment'&&row.issue!=='excluded');
+  const environmentCheck=compareEnvironmentalBasis(
+    caseData.environmentalBasis?.find(x=>x.optionId===baseline.id),
+    caseData.environmentalBasis?.find(x=>x.optionId===candidate.id)
+  );
+  if(hasEnvironmentalRows&&environmentCheck.status!=='declaredComparable')
+    missing.push('Environmental inventory boundary/method not comparable: '+environmentCheck.issues.join(', '));
   const reviewedData=active.length>0&&active.every(r=>r.evidenceReady);
   const observedData=active.length>0&&active.every(r=>r.observedEvidence);
   return {option:candidate,rows,verdict,gatesReady,reviewedData,observedData,
     canDescribeAsMeasured:!caseData.hypothetical&&caseDefined&&reviewedData&&observedData&&
-      gatesReady&&!incomplete&&missingReasons.length===0,missing};
+      gatesReady&&!incomplete&&missingReasons.length===0&&
+      (!hasEnvironmentalRows||environmentCheck.status==='declaredComparable'),missing,environmentCheck};
 }
 
 export function comparisons(caseData: StrategicCase):OptionComparison[] {
@@ -456,6 +467,7 @@ export function validateCaseImport(value: unknown): StrategicCase {
   // Upgrade saved cases from the original four-KPI builder safely.
   const upgraded=structuredClone(x as StrategicCase);
   upgraded.dependencyRoutes=validateRoutes(upgraded.dependencyRoutes,upgraded.options.map(o=>o.id));
+  upgraded.environmentalBasis=validateEnvironmentalBasis(upgraded.environmentalBasis,upgraded.options.map(o=>o.id));
   upgraded.parameters??=defaultParameterStates(upgraded.kind);
   if(!upgraded.parameters||typeof upgraded.parameters!=='object'||Array.isArray(upgraded.parameters))throw new Error('Invalid applicability catalogue');
   // Version-1 JSON files predate the optional joint-event field.
