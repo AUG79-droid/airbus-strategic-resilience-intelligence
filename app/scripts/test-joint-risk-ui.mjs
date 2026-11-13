@@ -28,6 +28,24 @@ try {
   if(await overlap.getAttribute('aria-invalid')!=='false')throw Error('A feasible 50% overlap was rejected.');
   if(!(await joint.locator('.cy-universal__option').first().innerText()).includes('Admissible joint range'))
     throw Error('The expected admissible joint range was not displayed.');
+  // Opt-in browser draft recovery is permitted ONLY for hypothetical examples.
+  await page.goto(url+'/#/investigate',{waitUntil:'networkidle'});
+  await page.locator('.case-mode-switch button').last().click();
+  const optIn=page.locator('section[aria-label="Optional local draft saving"] input[type=checkbox]');
+  await optIn.check();
+  await page.locator('.cy-preset-grid button').first().click();
+  await page.locator('textarea[data-case-field=title]').fill('Saved fictional example regression');
+  await page.waitForFunction(()=>{
+    const raw=localStorage.getItem('asri-demo-draft-v2');
+    return raw&&JSON.parse(raw).title==='Saved fictional example regression';
+  });
+  await page.reload({waitUntil:'networkidle'});
+  await page.locator('.case-mode-switch button').last().click();
+  if(await page.locator('textarea[data-case-field=title]').inputValue()!=='Saved fictional example regression')
+    throw Error('Opt-in fictional draft was not restored after reload.');
+  await page.locator('section[aria-label="Optional local draft saving"] input[type=checkbox]').uncheck();
+  if(await page.evaluate(()=>localStorage.getItem('asri-demo-draft-v2'))!==null)
+    throw Error('Disabling draft saving did not remove local data.');
   if(errors.length)throw Error(errors.join('; '));
   console.log('PASS: v2 joint-risk input enforces Fréchet bounds in the browser.');
   await context.close();
