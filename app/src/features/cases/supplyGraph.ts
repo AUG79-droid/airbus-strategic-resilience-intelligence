@@ -38,11 +38,14 @@ export function analyzeRoutes(routes:DependencyRoute[],optionId:string,reviewedE
   let independentPairs=0;
   for(let i=0;i<usable.length;i++)for(let j=i+1;j<usable.length;j++){
     const a=new Set(usable[i].dependencies.map(x=>x.trim().toLowerCase()).filter(Boolean));
+    // Missing topology is unknown, not evidence of independence.
+    if(a.size===0||usable[j].dependencies.length===0)continue;
     const common=usable[j].dependencies.some(x=>a.has(x.trim().toLowerCase()));
     if(!common)independentPairs++;
   }
-  const capacityKnown=usable.length>0&&usable.every(x=>x.capacityPercent!==null);
-  const declaredQualifiedCapacityPercent=capacityKnown?
+  const capacityKnown=usable.length>0&&usable.every(x=>x.capacityPercent!==null&&x.dependencies.length>0);
+  // Do not sum capacity across overlapping/unknown supply chains.
+  const declaredQualifiedCapacityPercent=capacityKnown&&overlappingNodes.length===0?
     Math.min(100,usable.reduce((sum,x)=>sum+(x.capacityPercent??0),0)):null;
   const reviewed=new Set(reviewedEvidenceIds);
   const reviewedRoutes=usable.filter(x=>x.evidenceId&&reviewed.has(x.evidenceId)).length;
