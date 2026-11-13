@@ -9,7 +9,7 @@ const pdfDirectory = path.join(root, 'output', 'pdf');
 const jsonDirectory = path.join(root, 'output', 'json');
 await mkdir(pdfDirectory, { recursive: true });
 await mkdir(jsonDirectory, { recursive: true });
-const browser = await chromium.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', headless: true, args: ['--disable-extensions', '--no-first-run'] });
+const browser = await chromium.launch({ executablePath: process.env.CHROME_BIN || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', headless: true, args: ['--disable-extensions', '--no-first-run'] });
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true, reducedMotion: 'reduce' });
 const page = await context.newPage();
 const errors = [];
