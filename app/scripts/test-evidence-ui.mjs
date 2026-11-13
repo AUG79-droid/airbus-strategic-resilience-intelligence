@@ -16,7 +16,7 @@ try{
   if(active!=='strategy:repairFirst')throw Error('Filtered evidence focus lost');
   const claims=page.getByRole('tab',{name:/What can we state\?/});await claims.click();
   await page.getByTestId('claim-operationalBenefit').waitFor();
-  const state=await page.getByTestId('claim-operationalBenefit').innerText();
+  const state=await page.getByTestId('claim-operationalBenefit').locator('.gate-state').textContent();
   if(!/Blocked|Rejected/.test(state))throw Error('Unvalidated operational claims were presented as approved: '+state);
   await page.getByRole('tab',{name:/Public documents/}).click();
   await page.getByTestId('source-AIRBUS-MMS-01').waitFor();
