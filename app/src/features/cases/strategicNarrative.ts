@@ -385,6 +385,13 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
  * A modelled recovery gain is NOT proof of fleet readiness, technical
  * authorisation, mission continuity or commercial acceptance.
  */
+/**
+ * Answer the audience's ACTUAL decision question in clear, everyday language.
+ *
+ * The result is limited to what the scenario calculates. The existing case
+ * status and evidence register identify simulated data; the answer doesn't
+ * repeat a disclaimer after every useful conclusion.
+ */
 export function strategicDecisionAnswer(
   data:StrategicCase,c:OptionComparison,audience:Audience,locale:Locale
 ):string {
@@ -394,115 +401,136 @@ export function strategicDecisionAnswer(
   const cost=measure(c,'expectedCost');
   const unit=data.kind==='climate'?(es?'horas':'hours'):
     data.kind==='wildfire'?(es?'minutos':'minutes'):(es?'días':'days');
-  const exercise=data.hypothetical
-    ?(es?' Es una conclusión del escenario simulado, no una capacidad operativa acreditada.':
-      ' This is a simulated scenario conclusion, not a verified operational capability.')
-    :(es?' La decisión operativa requiere validación técnica y aceptación de los datos utilizados.':
-      ' Operational use requires technical validation and acceptance of the underlying data.');
+  const subject={
+    ecodesign:es?'el componente':'the component',
+    climate:es?'el servicio de apoyo en tierra':'ground-support operations',
+    saf:es?'el suministro de combustible':'fuel supply',
+    wildfire:es?'la coordinación durante el incendio':'coordination during a wildfire',
+    general:es?'el servicio analizado':'the assessed service'
+  }[data.kind];
+  const change=(row:NonNullable<typeof recovery>):'better'|'worse'|'same'=>
+    row.delta!< -1e-8?'better':row.delta!>1e-8?'worse':'same';
+  const recoveryState=recovery?change(recovery):undefined;
+  const targetState=deadline?deadline.delta!>1e-8?'better':
+    deadline.delta!< -1e-8?'worse':'same':undefined;
+  const costState=cost?change(cost):undefined;
+  const measures:string[]=[];
+  if(recovery){
+    const difference=n(Math.abs(recovery.delta!),locale);
+    measures.push(es
+      ?recoveryState==='better'
+        ?`se tarda ${difference} ${unit} menos en recuperar ${subject} (de ${n(recovery.baseline!,locale)} a ${n(recovery.candidate!,locale)} ${unit})`
+        :recoveryState==='worse'
+          ?`se tarda ${difference} ${unit} más en recuperar ${subject} (de ${n(recovery.baseline!,locale)} a ${n(recovery.candidate!,locale)} ${unit})`
+          :`el tiempo de recuperación de ${subject} sigue siendo de ${n(recovery.candidate!,locale)} ${unit}`
+      :recoveryState==='better'
+        ?`recovering ${subject} takes ${difference} fewer ${unit} (from ${n(recovery.baseline!,locale)} to ${n(recovery.candidate!,locale)} ${unit})`
+        :recoveryState==='worse'
+          ?`recovering ${subject} takes ${difference} more ${unit} (from ${n(recovery.baseline!,locale)} to ${n(recovery.candidate!,locale)} ${unit})`
+          :`recovery time for ${subject} stays at ${n(recovery.candidate!,locale)} ${unit}`);
+  }
+  if(deadline){
+    measures.push(es
+      ?`la probabilidad calculada de cumplir el plazo pasa del ${asPercent(deadline.baseline!,locale)} al ${asPercent(deadline.candidate!,locale)}`
+      :`the modelled chance of meeting the deadline moves from ${asPercent(deadline.baseline!,locale)} to ${asPercent(deadline.candidate!,locale)}`);
+  }
+  const measureText=measures.length
+    ?(es?`En la comparación, ${measures.join(' y ')}.`:
+      `In the comparison, ${measures.join(' and ')}.`)
+    :'';
   if(!recovery&&!deadline){
     return es
-      ?'Todavía no se puede responder con datos: faltan resultados comparables de recuperación y cumplimiento del plazo. Deben completarse las condiciones y sus evidencias antes de valorar la decisión.'
-      :'The current data cannot answer this yet: comparable recovery and deadline outcomes are missing. Complete the relevant inputs and evidence before assessing the decision.';
+      ?'Todavía no hay datos suficientes para responder. Introduce los tiempos de recuperación y el plazo objetivo de las alternativas para obtener una conclusión.'
+      :'There are not enough data to answer yet. Enter recovery times and a common deadline for the options to see a conclusion.';
   }
-  const improvement=recovery&&recovery.delta!< -1e-8;
-  const worse=recovery&&recovery.delta!>1e-8;
-  const higherDeadline=deadline&&deadline.delta!>1e-8;
-  const lowerDeadline=deadline&&deadline.delta!< -1e-8;
-  const changes=[
-    recovery
-      ?(es
-        ?`el tiempo estimado de recuperación ${improvement?'disminuye':worse?'aumenta':'se mantiene'} de ${n(recovery.baseline!,locale)} a ${n(recovery.candidate!,locale)} ${unit}`
-        :`modelled recovery time ${improvement?'falls':worse?'rises':'remains unchanged'} from ${n(recovery.baseline!,locale)} to ${n(recovery.candidate!,locale)} ${unit}`)
-      :'',
-    deadline
-      ?(es
-        ?`la probabilidad calculada de cumplir el plazo ${higherDeadline?'mejora':lowerDeadline?'empeora':'se mantiene'} del ${asPercent(deadline.baseline!,locale)} al ${asPercent(deadline.candidate!,locale)}`
-        :`modelled deadline attainment ${higherDeadline?'improves':lowerDeadline?'worsens':'remains unchanged'} from ${asPercent(deadline.baseline!,locale)} to ${asPercent(deadline.candidate!,locale)}`)
-      :''
-  ].filter(Boolean).join(es?' y ':' and ');
-  const costChange=cost
+  const effect=recoveryState==='better'&&targetState!=='worse'
+    ?(es?'La alternativa permite recuperar antes el servicio y disponer de otra opción ante una interrupción.':
+      'The option restores the service sooner and provides an additional way to respond to disruption.')
+    :recoveryState==='better'&&targetState==='worse'
+      ?(es?'Aunque la recuperación media es más rápida, se reduce la probabilidad de llegar a tiempo. Hay que revisar ese riesgo antes de elegirla.':
+        'Average recovery is faster, but the chance of meeting the deadline falls. Review that risk before choosing the option.')
+      :recoveryState==='worse'
+        ?(es?'La alternativa tarda más en recuperar el servicio. No mejora la rapidez de respuesta en esta comparación.':
+          'The option takes longer to restore the service. It does not improve response speed in this comparison.')
+        :targetState==='better'
+          ?(es?'La opción aumenta la probabilidad de llegar a tiempo, aunque no reduce el tiempo medio de recuperación.':
+            'The option improves the chance of meeting the deadline, although average recovery time does not fall.')
+          :(es?'No se observa una mejora clara en la recuperación frente a la opción actual.':
+            'There is no clear recovery improvement over the baseline.');
+  const costText=cost
     ?(es
-      ?` El coste esperado ${cost.delta!<0?'disminuye':cost.delta!>0?'aumenta':'se mantiene'} ${n(Math.abs(cost.delta!),locale,0)} € frente a la referencia.`
-      :` Expected cost ${cost.delta!<0?'decreases':cost.delta!>0?'increases':'remains unchanged'} by €${n(Math.abs(cost.delta!),locale,0)} against baseline.`)
+      ?costState==='better'
+        ?` También reduce el coste esperado en ${n(Math.abs(cost.delta!),locale,0)} €.`
+        :costState==='worse'
+          ?` Su coste esperado es ${n(Math.abs(cost.delta!),locale,0)} € mayor.`
+          :' Su coste esperado es el mismo.'
+      :costState==='better'
+        ?` It also lowers expected cost by €${n(Math.abs(cost.delta!),locale,0)}.`
+        :costState==='worse'
+          ?` Its expected cost is €${n(Math.abs(cost.delta!),locale,0)} higher.`
+          :' Expected cost is unchanged.')
     :'';
   if(audience==='defenceCustomer'){
-    const prefix=improvement&&higherDeadline
-      ?(es?'Sí, parcialmente: en este escenario ':'Partly yes: in this scenario ')
-      :improvement||higherDeadline
-        ?(es?'El escenario muestra una mejora parcial: ':'The scenario shows a partial improvement: ')
-        :worse||lowerDeadline
-          ?(es?'No se demuestra una mejora de recuperación: ':'The scenario does not show improved recovery: ')
-          :(es?'No se demuestra una mejora operativa clara: ':'No clear operational improvement is demonstrated: ');
-    const boundary=data.kind==='ecodesign'
-      ?(es?' Esto indica una recuperación potencialmente más rápida del componente, pero no demuestra por sí solo que se mantengan los requisitos de capacidad ni la disponibilidad de flota.':
-        ' This suggests potentially faster component restoration, but does not itself establish that capability requirements or fleet availability are maintained.')
-      :data.kind==='saf'
-        ?(es?' Estas cifras modelan la continuidad de abastecimiento, pero no demuestran disponibilidad real de combustible autorizado ni la continuidad de la misión.':
-          ' These numbers model supply continuity, but do not establish access to approved fuel or mission continuity.')
-        :data.kind==='climate'
-          ?(es?' La reducción de recuperación modelizada no demuestra por sí sola continuidad operativa real durante calor extremo.':
-            ' Modelled recovery improvement alone does not prove actual operational continuity during extreme heat.')
+    const value=data.kind==='ecodesign'
+      ?(es?'En Eurodrone, contar con una reparación cualificada reduce el tiempo de espera respecto a sustituir la pieza y ofrece más opciones para recuperar el componente.':
+        'In the Eurodrone case, qualified repair reduces the wait compared with replacing the part and provides another way to restore the component.')
+      :data.kind==='climate'
+        ?(es?'Esto permite valorar qué medida ayuda a restablecer antes las operaciones de apoyo durante episodios de calor extremo.':
+          'This shows which option can restore support operations sooner during extreme heat.')
+        :data.kind==='saf'
+          ?(es?'Así podemos comparar qué alternativa recupera antes el abastecimiento necesario para la misión.':
+            'This lets us compare which option restores the required fuel supply sooner.')
           :data.kind==='wildfire'
-            ?(es?' La recuperación de la coordinación no equivale a haber probado tiempos de alerta o eficacia de extinción.':
-              ' Restoring coordination does not demonstrate alert-detection times or firefighting effectiveness.')
-            :(es?' La mejora calculada no acredita por sí sola que el servicio mantenga sus requisitos operativos.':
-              ' The calculated improvement does not itself establish that service requirements are met.');
-    return prefix+changes+'.'+boundary+exercise;
+            ?(es?'Así identificamos qué opción restablece antes la información y la coordinación necesarias durante la emergencia.':
+              'This identifies which option restores information and coordination sooner during the emergency.')
+            :(es?'Esto ayuda a elegir la opción que permite recuperar el servicio con menos interrupciones.':
+              'This helps identify the option that restores the service with less disruption.');
+    if(recoveryState==='better'&&targetState!=='worse')return measureText+' '+value;
+    return measureText+' '+effect;
   }
   if(audience==='engineering'){
     const checks={
-      ecodesign:es?'ensayos de reparación, equivalencia funcional, trazabilidad del material, seguridad y autorización del cambio':
-        'repair tests, functional equivalence, material traceability, safety and change authorisation',
-      climate:es?'ensayos térmicos, límites ambientales, seguridad y aceptación técnica del equipo protegido':
-        'thermal tests, environmental operating limits, safety and technical acceptance of protected equipment',
-      saf:es?'calidad y mezcla de combustible, compatibilidad de plataforma y motor, trazabilidad y aprobaciones aplicables':
-        'fuel quality and blending, platform and engine compatibility, traceability and applicable authorisations',
-      wildfire:es?'latencia y falsas alertas, conectividad redundante, interoperabilidad y seguridad de datos':
-        'latency and false alarms, redundant links, interoperability and data security',
-      general:es?'ensayos específicos, límites funcionales, seguridad, método y criterios de aceptación':
-        'case-specific testing, functional limits, safety, measurement method and acceptance criteria'
+      ecodesign:es?'ensayos de reparación, requisitos funcionales, seguridad y autorización del cambio':
+        'repair tests, functional requirements, safety and change approval',
+      climate:es?'ensayos térmicos y límites de funcionamiento de los equipos':
+        'thermal tests and equipment operating limits',
+      saf:es?'compatibilidad del combustible, calidad, trazabilidad y autorizaciones de uso':
+        'fuel compatibility, quality, traceability and operating approvals',
+      wildfire:es?'tiempos de alerta, fiabilidad de la información y comunicaciones de respaldo':
+        'alert times, information reliability and backup communications',
+      general:es?'requisitos técnicos, ensayos y criterios de aceptación del caso':
+        'technical requirements, testing and acceptance criteria for the case'
     }[data.kind];
     return es
-      ?`La respuesta técnica es condicional: para utilizar «${c.option.name}» deben verificarse ${checks}. El cálculo muestra que ${changes}, pero no sustituye esa cualificación.${exercise}`
-      :`The technical answer is conditional: using “${c.option.name}” requires verification of ${checks}. The model shows that ${changes}, but does not replace technical qualification.${exercise}`;
+      ?`Ingeniería debe comprobar ${checks}. ${measureText} Así sabremos si la mejora calculada puede aplicarse sin comprometer el funcionamiento del sistema.`
+      :`Engineering needs to check ${checks}. ${measureText} This will show whether the modelled improvement can be used without compromising system operation.`;
   }
   if(audience==='programmeManager'){
-    const tradeoff=recovery&&cost
-      ?(improvement&&cost.delta!<0
-        ?(es?' Combina una recuperación más rápida con un coste esperado inferior en este escenario.':
-          ' It combines faster recovery with lower expected cost in this scenario.')
-        :improvement&&cost.delta!>0
-          ?(es?' La mayor rapidez exige asumir un sobrecoste y comprobar si está justificado por los compromisos del programa.':
-            ' Faster recovery comes at a premium that must be justified against programme commitments.')
-          :worse&&cost.delta!<0
-            ?(es?' El ahorro implica recuperar más tarde; la decisión depende de la importancia del plazo.':
-              ' Cost savings involve slower recovery, so the decision depends on how critical the deadline is.')
-            :(es?' No hay una ventaja simultánea demostrada en plazo y coste.':
-              ' No simultaneous time-and-cost advantage is demonstrated.'))
-      :'';
-    return es
-      ?`Con las hipótesis introducidas, ${changes}.${costChange}${tradeoff} El programa debe contrastarlo con los compromisos y el plazo objetivo antes de escoger una estrategia.${exercise}`
-      :`Under the entered assumptions, ${changes}.${costChange}${tradeoff} Programme Management must compare this with its commitments and target deadline before selecting a strategy.${exercise}`;
+    const decision=recoveryState==='better'&&costState==='better'
+      ?(es?'La alternativa ofrece una recuperación más rápida y un menor coste esperado; merece la pena evaluarla como opción de programa.':
+        'The option offers faster recovery at a lower expected cost; it merits consideration by the programme.')
+      :recoveryState==='better'&&costState==='worse'
+        ?(es?'La alternativa permite recuperar antes, pero cuesta más. Programa debe valorar si el tiempo ganado justifica ese sobrecoste.':
+          'The option restores service sooner but costs more. Programme Management must assess whether the time saved justifies the premium.')
+        :recoveryState==='worse'&&costState==='better'
+          ?(es?'La alternativa reduce costes, pero retrasa la recuperación. Hay que comprobar si el programa puede asumirlo.':
+            'The option costs less but takes longer to restore service. The programme must decide if that delay is acceptable.')
+          :(es?'No se observa una ventaja clara en plazo y coste a la vez. Conviene comparar también la otra alternativa.':
+            'There is no clear advantage in both timing and cost. The other option should also be compared.');
+    return measureText+costText+' '+decision;
   }
-  const mechanism=data.kind==='ecodesign'
-    ?(c.option.id==='option-b'
-      ?(es?'desarrollar reparación y una vía alternativa de abastecimiento':
-        'developing repair alongside an alternative sourcing route')
-      :(es?'desarrollar una capacidad de reparación cualificada':
-        'developing a qualified repair capability'))
-    :(data.mechanism.trim()||(es?'desarrollar la alternativa estudiada':
-      'developing the proposed alternative'));
-  const recommendation=improvement&&(!cost||cost.delta!<=0)
-    ?(es?'Los resultados justifican estudiar prioritariamente la alternativa, no aprobar automáticamente una inversión.':
-      'The results justify prioritising further assessment of the option, not automatically approving investment.')
-    :improvement&&cost&&cost.delta!>0
-      ?(es?'Existe una posible mejora de recuperación con sobrecoste: la inversión depende del valor de ese tiempo ganado.':
-        'There is a potential recovery gain with a cost premium; investment depends on the value of the time saved.')
-      :(es?'Los resultados actuales no justifican por sí solos priorizar esta inversión frente a otras opciones.':
-        'The current outcomes alone do not justify prioritising this investment over other options.');
-  return es
-    ?`La opción estratégica a evaluar es ${mechanism}. Según el modelo, ${changes}.${costChange} ${recommendation} Harían falta umbrales de riesgo, coste y aceptación técnica para decidir.${exercise}`
-    :`The strategic capability to assess is ${mechanism}. The model shows that ${changes}.${costChange} ${recommendation} Risk, cost and technical acceptance thresholds are needed before deciding.${exercise}`;
+  const investment=recoveryState==='better'&&costState!=='worse'
+    ?(es?'La opción merece un estudio prioritario porque mejora la recuperación sin aumentar el coste esperado.':
+      'This option merits priority assessment because it improves recovery without increasing expected cost.')
+    :recoveryState==='better'&&costState==='worse'
+      ?(es?'La opción mejora la recuperación, pero requiere justificar el coste adicional antes de invertir.':
+        'The option improves recovery, but its additional cost needs justification before investment.')
+      :recoveryState==='worse'
+        ?(es?'Esta opción no mejora la velocidad de recuperación; conviene revisar la otra alternativa antes de invertir.':
+          'This option does not improve recovery speed; review the other alternative before investing.')
+        :(es?'La comparación todavía no muestra una ventaja suficiente para priorizar esta inversión.':
+          'The comparison does not yet show enough benefit to prioritise this investment.');
+  return measureText+costText+' '+investment;
 }
 
 export function strategicNarrativeText(data:StrategicCase,c:OptionComparison,audience:Audience,locale:Locale):string{
