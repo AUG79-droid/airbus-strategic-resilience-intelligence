@@ -143,11 +143,19 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
       :` This option has a base operating time of ${fmt(base.v,locale)} ${unit}; no additional supply lead-time constraint is applicable.`;
   }
   if(recovery){
-    const result=recovery.delta!<0?(es?'menos':'less'):recovery.delta!>0?(es?'más':'more'):(es?'de diferencia':'difference');
-    bottleneck+=es
-      ?` Frente a la situación actual, la ${scope} tarda ${fmt(Math.abs(recovery.delta!),locale)} ${unit} ${result}.`
-      :` Compared with the baseline, ${scope} takes ${fmt(Math.abs(recovery.delta!),locale)} ${unit} ${result}.`;
+    if(recovery.delta===0){
+      bottleneck+=es
+        ?` Frente a la situación actual, el tiempo de ${scope} no cambia.`
+        :` Compared with the baseline, the time needed for ${scope} is unchanged.`;
+    }else{
+      bottleneck+=es
+        ?` Frente a la situación actual, la ${scope} tarda ${fmt(Math.abs(recovery.delta!),locale)} ${unit} ${recovery.delta!<0?'menos':'más'}.`
+        :` Compared with the baseline, ${scope} takes ${fmt(Math.abs(recovery.delta!),locale)} ${unit} ${recovery.delta!<0?'less':'more'}.`;
+    }
   }
+  if(!lead&&!base&&!recovery)bottleneck+=es
+    ?' Todavía faltan tiempos comparables para saber qué actividad provoca la espera.'
+    :' There are not yet comparable timings to identify what causes the delay.';
   insights.push({id:'bottleneck',title:es?'1. Qué está retrasando la recuperación':'1. What is slowing recovery',body:bottleneck});
 
   // Conditional exposure: parameter inputs, not empirical interruption probabilities.
@@ -171,7 +179,10 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   if(target)riskPieces.push(es
     ?`Con estas hipótesis, la probabilidad calculada de cumplir el plazo pasa del ${percent(target.baseline!,locale)} al ${percent(target.candidate!,locale)}.`
     :`Under these assumptions, the modelled probability of meeting the deadline moves from ${percent(target.baseline!,locale)} to ${percent(target.candidate!,locale)}.`);
-  riskPieces.push(es
+  if(!riskPieces.length)riskPieces.push(es
+    ?'Todavía faltan probabilidades y retrasos comparables para saber cómo cambian los riesgos.'
+    :'Comparable likelihoods and delays are still needed to assess changes in risk.');
+  if((shock||success)&&(failure||shockDelay))riskPieces.push(es
     ?'El cálculo trata el fallo técnico y la interrupción externa como dos riesgos separados.'
     :'The calculation treats technical failure and external disruption as separate risks.');
   insights.push({id:'risk',title:es?'2. Cómo cambian los riesgos':'2. How the risks change',body:riskPieces.join(' ')});
@@ -200,6 +211,8 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
       ?' La alternativa cuesta más y tarda más en recuperar; no muestra ventaja en estas dos dimensiones.'
       :' The option costs more and restores service more slowly; it offers no advantage on these two dimensions.';
   }
+  if(!cost)economic+=es?' Todavía faltan costes comparables para evaluar esta alternativa.':
+    ' Comparable costs are still needed to assess this option.';
   insights.push({id:'economics',title:es?'3. Coste de la alternativa':'3. What the option costs',body:economic});
 
   // Report all relevant environmental measures, including increases.
@@ -217,9 +230,12 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
       ?`La variable «${esLabel}» pasa de ${fmt(v.baseline!,locale)} a ${fmt(v.candidate!,locale)} ${u}; ${outcomePhrase(v.delta!,locale,u)}.`
       :`The “${enLabel}” measure moves from ${fmt(v.baseline!,locale)} to ${fmt(v.candidate!,locale)} ${u}; it ${outcomePhrase(v.delta!,locale,u)}.`);
   }
-  envPieces.push(es
-    ?'Una alternativa puede mejorar la recuperación y, aun así, utilizar más materiales o generar más emisiones. Estas cifras comparan solo los impactos incluidos en el caso.'
-    :'An option may restore service sooner while using more materials or producing more emissions. These figures cover only the impacts included in this case.');
+  if(!envPieces.length)envPieces.push(es
+    ?'Aún no hay datos ambientales comparables entre alternativas.'
+    :'Environmental impacts cannot yet be compared between options.');
+  else envPieces.push(es
+    ?'Estos datos corresponden a los impactos ambientales incluidos en el caso, no a todos los impactos posibles.'
+    :'These figures cover the environmental impacts included in this case, not every possible impact.');
   insights.push({id:'environment',title:es?'4. Impactos ambientales':'4. Environmental impact',body:envPieces.join(' ')});
 
   // Compare the selected option directly with the other candidate, not only baseline.
