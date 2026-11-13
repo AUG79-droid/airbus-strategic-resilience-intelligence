@@ -178,7 +178,7 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
 
   // Explicit economic trade-off, including a ratio only when higher cost buys faster recovery.
   let economic=es?'Comparamos el coste de las alternativas para el mismo servicio y periodo.':
-    'We compare the options' costs for the same service and period.';
+    'We compare costs for the same service and period.';
   if(cost){
     economic+=es
       ?` El coste esperado pasa de ${fmt(cost.baseline!,locale,0)} € a ${fmt(cost.candidate!,locale,0)} €: ${outcomePhrase(cost.delta!,locale,'€')}.`
