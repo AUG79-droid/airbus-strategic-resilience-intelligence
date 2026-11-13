@@ -14,11 +14,11 @@ try{
   await page.getByTestId('evidence-focus').selectOption('strategy:repairFirst');
   const active=await page.getByTestId('evidence-focus').inputValue();
   if(active!=='strategy:repairFirst')throw Error('Filtered evidence focus lost');
-  const claims=page.getByRole('tab',{name:/Claim Gates/});await claims.click();
+  const claims=page.getByRole('tab',{name:/What can we state\?/});await claims.click();
   await page.getByTestId('claim-operationalBenefit').waitFor();
   const state=await page.getByTestId('claim-operationalBenefit').innerText();
   if(!/Blocked|Rejected/.test(state))throw Error('Unvalidated operational claims were presented as approved: '+state);
-  await page.getByRole('tab',{name:/Source Library/}).click();
+  await page.getByRole('tab',{name:/Public documents/}).click();
   await page.getByTestId('source-AIRBUS-MMS-01').waitFor();
   const width=await page.evaluate(()=>({window:innerWidth,document:document.documentElement.scrollWidth}));
   if(width.document>width.window)throw Error('Horizontal overflow in Check: '+JSON.stringify(width));
