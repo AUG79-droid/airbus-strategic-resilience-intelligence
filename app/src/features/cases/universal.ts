@@ -45,6 +45,8 @@ export const UNIVERSAL_PARAMETERS:ParameterDefinition[]=[
   def('jointFailureShock','risk','Fallo técnico y disrupción simultáneos','Technical failure AND disruption together','%',
     'Probabilidad CONJUNTA de los dos eventos: no es la probabilidad condicional. Activa este parámetro solo si hay evidencia sobre dependencia; debe respetar los límites matemáticos. Si no aplica se supone independencia de forma explícita.',
     'JOINT likelihood of BOTH events, not a conditional probability. Enable only with dependency evidence; must satisfy mathematical bounds. Otherwise independence is explicitly assumed.',0,100),
+  def('jointExtraDelay','risk','Retraso adicional cuando coinciden ambos fallos','Additional delay if both events coincide','time',
+    'Solo si se ha declarado una probabilidad CONJUNTA de fallo técnico y disrupción. Retraso ADICIONAL al de ambos sucesos por separado, no duplicar impactos.','Requires a declared joint failure/disruption probability. Additional delay beyond the separate event delays; do not double-count.'),
   def('baseCost','economic','Coste de la alternativa','Base option cost','€',
     'Coste directo comparable por unidad funcional.','Comparable direct cost per functional unit.'),
   def('downtimeRate','economic','Coste por unidad de tiempo de interrupción','Cost per recovery-time unit','€/time',
@@ -58,6 +60,8 @@ export const UNIVERSAL_PARAMETERS:ParameterDefinition[]=[
     'Coste condicional ponderado por la probabilidad de disrupción.','Conditional cost weighted by disruption likelihood.'),
   def('failureCost','economic','Sobrecoste si falla la vía técnica','Technical failure surcharge','€',
     'Coste condicional ponderado por la probabilidad de fallo.','Conditional cost weighted by technical failure likelihood.'),
+  def('jointExtraCost','economic','Sobrecoste adicional por fallo simultáneo','Extra cost of concurrent failures','€',
+    'Solo si se ha declarado la probabilidad conjunta; coste adicional a los costes independientes, no duplicar penalizaciones.','Requires explicit joint-event probability; incremental cost beyond isolated-event costs. Avoid double-counting.'),
   def('reservationFee','contract','Coste de reserva o activación','Reservation / activation fee','€',
     'Obligación fija del contrato.','Fixed contractual commitment.'),
   def('cancellationProbability','contract','Probabilidad de cancelación','Cancellation probability','%',
@@ -195,26 +199,29 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
   const invalidPair=(x:DerivedValue):DerivedValue=>
     pairIssues.length?result('missing',null,x.formula,[...x.missing,...pairIssues]):x;
   const recovery=invalidPair(join(
-    ['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay'],
-    'max(baseRecovery,supplyLead if applicable) + (1-P(success))*failureDelay + P(shock)*shockDelay',
+    ['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay'],
+    'max(baseRecovery,supplyLead) + P(failure)*failureDelay + P(shock)*shockDelay + P(both)*extraDelay if applicable',
     v=>{
       const base=v('baseRecovery'); if(base===null)return NaN;
       const supply=v('supplyLead');
       const tech=v('technicalSuccess'),failure=v('failureDelay');
       const risk=v('shockProbability'),delay=v('shockDelay');
+      const both=v('jointFailureShock'),jointDelay=v('jointExtraDelay');
+      if(jointDelay!==null&&(both===null||tech===null||risk===null))return NaN;
       return Math.max(base,supply??0)+(tech===null?0:(1-tech/100)*(failure??0))
-        +(risk===null?0:risk/100*(delay??0));
+        +(risk===null?0:risk/100*(delay??0))+(both??0)/100*(jointDelay??0);
     }
   ));
   const deadline=invalidPair(join(
-    ['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock'],
+    ['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay'],
     'Σ joint-risk branch probability × I(completion<=target); independence only when joint probability is N/A',
     v=>{
       const base=v('baseRecovery'),target=v('recoveryTarget');
       if(base===null||target===null)return NaN;
       const start=Math.max(base,v('supplyLead')??0);
       // Joint overlap requires both underlying risks to be defined.
-      const overlap=v('jointFailureShock');
+      const overlap=v('jointFailureShock'),jointDelay=v('jointExtraDelay');
+      if(jointDelay!==null&&overlap===null)return NaN;
       if(overlap!==null&&(v('technicalSuccess')===null||v('shockProbability')===null))return NaN;
       let branches:JointRiskBranch[];
       try {
@@ -223,7 +230,8 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
       let output=0;
       for(const branch of branches){
         const time=start+(branch.technicalSuccess?0:(v('failureDelay')??0))+
-          (branch.shock?(v('shockDelay')??0):0);
+          (branch.shock?(v('shockDelay')??0):0)+
+          (!branch.technicalSuccess&&branch.shock?(jointDelay??0):0);
         if(time<=target)output+=branch.probability;
       }
       return output*100;
@@ -231,16 +239,19 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
   ));
   const costBasis=invalidPair(join(
     ['baseCost','logisticsCost','investmentCost','shockProbability','shockSurcharge',
-      'technicalSuccess','failureCost','reservationFee','cancellationProbability','cancellationFee','downtimeRate'],
-    'base + fixed expenses + P(shock)*surcharge + P(failure)*failureCost + P(cancel)*fee + downtimeRate*expectedRecovery (if applicable)',
+      'technicalSuccess','failureCost','reservationFee','cancellationProbability','cancellationFee','downtimeRate','jointFailureShock','jointExtraCost'],
+    'base + fixed expenses + P(shock)*surcharge + P(failure)*failureCost + P(cancel)*fee + optional downtime + P(both)*jointExtraCost',
     v=>{
       if(v('baseCost')===null)return NaN;
+      const joint=v('jointFailureShock'),extra=v('jointExtraCost');
+      if(extra!==null&&joint===null)return NaN;
       const r=(v('shockProbability')??0)/100,t=(v('technicalSuccess')??100)/100,
         p=(v('cancellationProbability')??0)/100;
       return v('baseCost')!+(v('logisticsCost')??0)+(v('investmentCost')??0)+
         (v('reservationFee')??0)+r*(v('shockSurcharge')??0)+
         (1-t)*(v('failureCost')??0)+p*(v('cancellationFee')??0)+
-        (v('downtimeRate')===null?0:v('downtimeRate')!*(recovery.value??NaN));
+        (v('downtimeRate')===null?0:v('downtimeRate')!*(recovery.value??NaN))+
+        (joint??0)/100*(extra??0);
     }
   ));
   const cost=states.downtimeRate?.applicability==='applies'&&recovery.state!=='calculated'
@@ -257,7 +268,9 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
       states.jointFailureShock?.applicability==='applies'
         ? 'An explicit joint technical-failure/disruption probability is supplied; it must satisfy Fréchet limits and be supported by evidence.'
         : 'Technical failure and external disruption are assumed independent for deadline probability; this is not a demonstrated property of the scenario.',
-      'Expected time and economic cost use additive marginal-event terms; correlations alone do not change these means under this simplifying assumption.',
+      states.jointExtraDelay?.applicability==='applies'||states.jointExtraCost?.applicability==='applies'
+        ? 'Extra concurrent-event delay/cost is modelled when explicitly declared; assumptions and double counting need independent verification.'
+        : 'Expected recovery and cost are additive marginal-event estimates unless additional concurrent-event effects are explicitly enabled.',
       states.downtimeRate?.applicability==='applies'
         ? 'Downtime valuation is an assumed incremental € per time unit times expected recovery. Verify contract and avoid double-counting against fixed and conditional costs.'
         : 'No monetary value is attributed to downtime; the expected cost may understate operational consequences.',
