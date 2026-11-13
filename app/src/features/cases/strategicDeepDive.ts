@@ -36,16 +36,16 @@ function outcomePhrase(delta:number,locale:Locale,unit:string){
 const units=(kind:StrategicCase['kind'],locale:Locale)=>kind==='climate'?(locale==='es'?'horas':'hours'):
   kind==='wildfire'?(locale==='es'?'minutos':'minutes'):(locale==='es'?'días':'days');
 const scopeByKind={
-  ecodesign:['recuperación de un componente de soporte, no disponibilidad de flota',
-    'restoration of a support component, not fleet availability'],
-  climate:['restablecimiento de una actividad de soporte ante calor extremo, no disponibilidad de flota',
-    'recovery of a ground-support activity during extreme heat, not fleet availability'],
-  saf:['restablecimiento del suministro de una misión equivalente, no certificación de combustible',
-    'restoration of supply for an equivalent mission, not fuel certification'],
-  wildfire:['restablecimiento de la coordinación, no tiempo de detección de incendios ni hectáreas protegidas',
-    'restoration of coordination, not fire-detection speed or hectares protected'],
-  general:['restablecimiento del servicio definido, no resultados de otros programas',
-    'restoration of the defined service, not outcomes from other programmes']
+  ecodesign:['recuperación de un componente de soporte',
+    'restoration of a support component'],
+  climate:['recuperación del servicio de apoyo durante calor extremo',
+    'recovery of ground-support operations during extreme heat'],
+  saf:['recuperación del suministro para una misión equivalente',
+    'recovery of supply for an equivalent mission'],
+  wildfire:['recuperación de la coordinación ante incendios',
+    'restoration of wildfire coordination'],
+  general:['recuperación del servicio definido',
+    'restoration of the defined service']
 } as const;
 
 const actions:Record<StrategicCase['kind'],Record<Audience,[string,string]>>={
@@ -125,29 +125,30 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
 
   // Operational bottleneck - distinguish supply lead from base work, no incorrect "repair always improves".
   let bottleneck=es
-    ?'La primera pregunta es qué condiciona de verdad la continuidad del servicio.'
-    :'First identify what actually constrains service continuity.';
+    ?'Para mejorar la recuperación, primero hay que identificar qué nos hace esperar más tiempo.'
+    :'To improve recovery, first identify which step takes the most time.';
   if(lead&&base){
     const slow=Math.max(lead.v,base.v);
     const driver=lead.v>base.v
-      ?(es?'el suministro es el plazo condicionante':'supply is the binding lead time')
+      ?(es?'el suministro tarda más y limita la recuperación':'supply takes longer and limits recovery')
       :base.v>lead.v
-        ?(es?'la ejecución operativa es el plazo condicionante':'operational execution is the binding lead time')
-        :(es?'operación y suministro condicionan por igual':'operation and supply are equally binding');
+        ?(es?'el trabajo operativo tarda más y limita la recuperación':'the work takes longer and limits recovery')
+        :(es?'el trabajo y el suministro tardan lo mismo':'operations and supply take the same time');
     bottleneck+=es
-      ?` En esta alternativa, el plazo operativo base es ${fmt(base.v,locale)} ${unit} y el suministro ${fmt(lead.v,locale)} ${unit}: ${driver} (${fmt(slow,locale)} ${unit}). Reducir solo el otro plazo no elimina este cuello de botella.`
-      :` For this option, operational work takes ${fmt(base.v,locale)} ${unit} and supply lead time is ${fmt(lead.v,locale)} ${unit}: ${driver} (${fmt(slow,locale)} ${unit}). Reducing the other interval alone does not remove this constraint.`;
+      ?` En esta alternativa, el tiempo de trabajo es ${fmt(base.v,locale)} ${unit} y el suministro ${fmt(lead.v,locale)} ${unit}: ${driver} (${fmt(slow,locale)} ${unit}). Acortar la otra actividad no serviría de mucho mientras este plazo siga siendo el mayor.`
+      :` For this option, the work takes ${fmt(base.v,locale)} ${unit} and supply lead time is ${fmt(lead.v,locale)} ${unit}: ${driver} (${fmt(slow,locale)} ${unit}). Shortening the other activity will not help much while this remains the longest step.`;
   }else if(base){
     bottleneck+=es
       ?` El tiempo operativo de esta alternativa se sitúa en ${fmt(base.v,locale)} ${unit}; el análisis no incluye una restricción adicional de suministro aplicable.`
       :` This option has a base operating time of ${fmt(base.v,locale)} ${unit}; no additional supply lead-time constraint is applicable.`;
   }
   if(recovery){
+    const result=recovery.delta!<0?(es?'menos':'less'):recovery.delta!>0?(es?'más':'more'):(es?'de diferencia':'difference');
     bottleneck+=es
-      ?` El modelo estima una variación neta de ${fmt(Math.abs(recovery.delta!),locale)} ${unit} en la ${scope}.`
-      :` The model estimates a net difference of ${fmt(Math.abs(recovery.delta!),locale)} ${unit} in ${scope}.`;
+      ?` Frente a la situación actual, la ${scope} tarda ${fmt(Math.abs(recovery.delta!),locale)} ${unit} ${result}.`
+      :` Compared with the baseline, ${scope} takes ${fmt(Math.abs(recovery.delta!),locale)} ${unit} ${result}.`;
   }
-  insights.push({id:'bottleneck',title:es?'1. ¿Dónde está el cuello de botella?':'1. What is the binding constraint?',body:bottleneck});
+  insights.push({id:'bottleneck',title:es?'1. Qué está retrasando la recuperación':'1. What is slowing recovery',body:bottleneck});
 
   // Conditional exposure: parameter inputs, not empirical interruption probabilities.
   const riskPieces:string[]=[];
@@ -171,13 +172,13 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
     ?`Con estas hipótesis, la probabilidad calculada de cumplir el plazo pasa del ${percent(target.baseline!,locale)} al ${percent(target.candidate!,locale)}.`
     :`Under these assumptions, the modelled probability of meeting the deadline moves from ${percent(target.baseline!,locale)} to ${percent(target.candidate!,locale)}.`);
   riskPieces.push(es
-    ?'Son parámetros del escenario, no probabilidades observadas ni garantías. La fórmula supone independencia entre fallo técnico y disrupción externa.'
-    :'These are scenario assumptions, not observed probabilities or guarantees. The equation assumes technical failure and external disruption are independent.');
-  insights.push({id:'risk',title:es?'2. ¿Qué vulnerabilidades cambian?':'2. Which vulnerabilities change?',body:riskPieces.join(' ')});
+    ?'El cálculo trata el fallo técnico y la interrupción externa como dos riesgos separados.'
+    :'The calculation treats technical failure and external disruption as separate risks.');
+  insights.push({id:'risk',title:es?'2. Cómo cambian los riesgos':'2. How the risks change',body:riskPieces.join(' ')});
 
   // Explicit economic trade-off, including a ratio only when higher cost buys faster recovery.
-  let economic=es?'Los costes deben interpretarse en el mismo perímetro y unidad funcional.':
-    'Costs must be interpreted within the same scope and functional unit.';
+  let economic=es?'Comparamos el coste de las alternativas para el mismo servicio y periodo.':
+    'We compare the options' costs for the same service and period.';
   if(cost){
     economic+=es
       ?` El coste esperado pasa de ${fmt(cost.baseline!,locale,0)} € a ${fmt(cost.candidate!,locale,0)} €: ${outcomePhrase(cost.delta!,locale,'€')}.`
@@ -185,21 +186,21 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   }
   if(recovery&&cost){
     if(recovery.delta!<0&&cost.delta!<0)economic+=es
-      ?' En este escenario, la alternativa combina recuperación más rápida y menor coste esperado; ambas ventajas deben comprobarse antes de decidir.'
-      :' In this scenario, the option combines faster recovery with lower expected cost; both advantages require verification.';
+      ?' Esta alternativa recupera antes el servicio y tiene un coste esperado menor.'
+      :' This option restores service sooner and has a lower expected cost.';
     else if(recovery.delta!<0&&cost.delta!>0){
       const ratio=cost.delta!/(-recovery.delta!);
       economic+=es
-        ?` La mayor rapidez implica un sobrecoste: ${fmt(ratio,locale,0)} € adicionales por ${unit.slice(0,-1)||unit} de recuperación anticipada, como cociente incremental del escenario, no como ROI.`
-        :` Faster recovery carries a premium: about €${fmt(ratio,locale,0)} per unit of recovery time saved, an incremental scenario ratio, not ROI.`;
+        ?` La recuperación más rápida cuesta más: ${fmt(ratio,locale,0)} € adicionales por ${unit.slice(0,-1)||unit} de recuperación anticipada, como relación entre coste adicional y tiempo ganado.`
+        :` Faster recovery costs more: about €${fmt(ratio,locale,0)} per unit of recovery time saved, as a comparison of extra cost against time saved.`;
     }else if(recovery.delta!>0&&cost.delta!<0)economic+=es
-      ?' El ahorro esperado implica una recuperación más lenta: el decisor debe valorar el compromiso.'
-      :' Expected savings come with slower recovery: the decision-maker must evaluate that trade-off.';
+      ?' Se ahorra dinero, pero la recuperación es más lenta.'
+      :' This saves money, but recovery is slower.';
     else if(recovery.delta!>0&&cost.delta!>0)economic+=es
       ?' La alternativa cuesta más y tarda más en recuperar; no muestra ventaja en estas dos dimensiones.'
       :' The option costs more and restores service more slowly; it offers no advantage on these two dimensions.';
   }
-  insights.push({id:'economics',title:es?'3. ¿Cuánto cuesta ganar resiliencia?':'3. What is the cost of resilience?',body:economic});
+  insights.push({id:'economics',title:es?'3. Coste de la alternativa':'3. What the option costs',body:economic});
 
   // Report all relevant environmental measures, including increases.
   const envIds:[string,string,string][]=[
@@ -217,15 +218,15 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
       :`The “${enLabel}” measure moves from ${fmt(v.baseline!,locale)} to ${fmt(v.candidate!,locale)} ${u}; it ${outcomePhrase(v.delta!,locale,u)}.`);
   }
   envPieces.push(es
-    ?'El análisis ambiental no equivale a un ACV completo ni permite declarar por sí solo un beneficio climático o de biodiversidad. Una mejora operativa puede aumentar algunos impactos.'
-    :'This is not a full life-cycle assessment and cannot by itself establish climate or biodiversity benefits. Operational improvements can increase some impacts.');
-  insights.push({id:'environment',title:es?'4. ¿Cuál es el compromiso ambiental real?':'4. What is the environmental trade-off?',body:envPieces.join(' ')});
+    ?'Una alternativa puede mejorar la recuperación y, aun así, utilizar más materiales o generar más emisiones. Estas cifras comparan solo los impactos incluidos en el caso.'
+    :'An option may restore service sooner while using more materials or producing more emissions. These figures cover only the impacts included in this case.');
+  insights.push({id:'environment',title:es?'4. Impactos ambientales':'4. Environmental impact',body:envPieces.join(' ')});
 
   // Compare the selected option directly with the other candidate, not only baseline.
   const other=comparisons(data).find(item=>item.option.id!==c.option.id);
   let alternativeText=es
-    ?'Además de comparar con la situación actual, interesa contrastar las dos soluciones propuestas.'
-    :'Beyond the baseline, the two candidate options should be assessed against each other.';
+    ?'También comparamos esta opción con la otra alternativa, no solo con la situación actual.'
+    :'We also compare this option with the other alternative, not just the baseline.';
   if(other){
     const otherTime=metric(other,'expectedRecovery');
     const otherCost=metric(other,'expectedCost');
@@ -264,13 +265,13 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
       ?` Otros indicadores específicos registrados en el caso: ${values.join(' ')}`
       :` Additional user-defined case indicators: ${values.join(' ')}`;
     if(filled(data.decision))alternativeText+=es
-      ?` La decisión que este caso pretende fundamentar es: «${data.decision}».`
-      :` The decision this case is intended to inform is: “${data.decision}”.`;
+      ?` Decisión que queremos tomar: «${data.decision}».`
+      :` Decision to be made: “${data.decision}”.`;
   }
   alternativeText+=es
-    ?' No hay ganador universal: depende del objetivo operativo, las restricciones técnicas y la tolerancia al coste.'
-    :' There is no universal winner: it depends on the operating objective, technical limits and cost tolerance.';
-  insights.push({id:'alternatives',title:es?'5. ¿Y si elegimos la otra alternativa?':'5. What if we select the other option?',body:alternativeText});
+    ?' La mejor opción depende de qué sea más importante: recuperar antes, gastar menos o reducir un riesgo concreto.'
+    :' The best choice depends on what matters most: faster recovery, lower cost or a specific risk.';
+  insights.push({id:'alternatives',title:es?'5. Comparación con la otra alternativa':'5. Comparison with the other option',body:alternativeText});
 
   // Show review coverage and the user-defined margin without pretending it is statistical confidence.
   const active=c.rows.filter(row=>row.issue!=='excluded');
@@ -289,21 +290,21 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   if(c.missing.length)readiness+=es
     ?` Quedan ${c.missing.length} comprobaciones o fuentes pendientes de resolver.`
     :` ${c.missing.length} checks or source gaps remain unresolved.`;
-  insights.push({id:'evidence',title:es?'6. ¿Hasta dónde es defendible la conclusión?':'6. How far can the claim be defended?',body:readiness});
+  insights.push({id:'evidence',title:es?'6. Qué información respalda el análisis':'6. What supports the analysis',body:readiness});
 
   // A concrete NEXT decision, specialised by both audience and initiative.
   const action=(customCase?actions.general:actions[data.kind])[audience][es?0:1];
   const requestedDecision=customCase&&filled(data.decision)
-    ?(es?` Decisión concreta planteada en Investigate: «${data.decision}».`:
-      ` Specific decision stated in Investigate: “${data.decision}”.`)
+    ?(es?` Decisión definida al crear el caso: «${data.decision}».`:
+      ` Decision set when creating the case: “${data.decision}”.`)
     :'';
   const responsible=customCase&&filled(data.owner)
-    ?(es?` Equipo indicado para coordinar: ${data.owner}.`:
-      ` Listed coordination owner: ${data.owner}.`)
+    ?(es?` Equipo responsable: ${data.owner}.`:
+      ` Responsible team: ${data.owner}.`)
     :'';
   const gateText=es
-    ?' Decisión propuesta: avanzar a una validación acotada, con responsables, criterios de aceptación y los datos que faltan.'
-    :' Proposed decision: progress to a bounded validation with owners, acceptance criteria and the required data.';
-  insights.push({id:'action',title:es?'7. ¿Qué decisión permite tomar?':'7. What decision does it enable?',body:action+requestedDecision+responsible+gateText});
+    ?' Siguiente paso: contrastar los resultados con los equipos responsables y acordar las pruebas necesarias antes de aplicarlos.'
+    :' Next step: review the results with the responsible teams and agree the checks needed before using them.';
+  insights.push({id:'action',title:es?'7. Próximo paso recomendado':'7. Recommended next step',body:action+requestedDecision+responsible+gateText});
   return insights;
 }
