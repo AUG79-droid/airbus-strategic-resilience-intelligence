@@ -39,6 +39,35 @@ describe('Time-valued cash flows: explicit incremental costs',()=>{
     expect(()=>validateFinancePlan({...valid,flows:[flow('bad','baseline',81,10)]},['baseline','option-a'])).toThrow(/cash flow/);
     expect(()=>validateFinancePlan({...valid,flows:[flow('bad','baseline',1,Infinity)]},['baseline','option-a'])).toThrow(/cash flow/);
   });
+  it('distinguishes nominal future cash flows from base-year euros and applies escalation only once',()=>{
+    const plan={annualDiscountPercent:10,annualEscalationPercent:5,flows:[
+      {...flow('constant','baseline',2,100),priceBasis:'baseYear' as const},
+      {...flow('nominal','option-a',2,100),priceBasis:'futureNominal' as const}
+    ]};
+    expect(evaluateDiscountedFinance(plan,'baseline').incrementalPresentValueEuro)
+      .toBeCloseTo(100*(1.05/1.1)**2);
+    expect(evaluateDiscountedFinance(plan,'option-a').incrementalPresentValueEuro)
+      .toBeCloseTo(100/1.1**2);
+  });
+  it('refuses false present values for constant-price flows without declared price escalation',()=>{
+    const plan={annualDiscountPercent:10,flows:[
+      {...flow('constant','baseline',2,100),priceBasis:'baseYear' as const}
+    ]};
+    const result=evaluateDiscountedFinance(plan,'baseline');
+    expect(result.status).toBe('notAssessed');
+    expect(result.incrementalPresentValueEuro).toBeNull();
+    expect(result.assumptions.join(' ')).toMatch(/escalation/);
+  });
+  it('rejects invalid price basis and escalation but retains legacy nominal cashflows',()=>{
+    const one=flow('base','baseline',2,100);
+    expect(validateFinancePlan({annualDiscountPercent:10,flows:[one]},['baseline']).annualEscalationPercent).toBeNull();
+    expect(evaluateDiscountedFinance({annualDiscountPercent:10,flows:[one]},'baseline').incrementalPresentValueEuro)
+      .toBeCloseTo(100/1.1**2);
+    expect(()=>validateFinancePlan({annualDiscountPercent:10,annualEscalationPercent:-100,flows:[one]},['baseline']))
+      .toThrow(/escalation rate/);
+    expect(()=>validateFinancePlan({annualDiscountPercent:10,flows:[{...one,priceBasis:'unknown'}]},['baseline']))
+      .toThrow(/cash flow/);
+  });
   it('upgrades old strategic cases and preserves new finance records on import',()=>{
     const c=createCase();
     c.discountedFinance={annualDiscountPercent:5,flows:[flow('a','baseline',1,100)]};
