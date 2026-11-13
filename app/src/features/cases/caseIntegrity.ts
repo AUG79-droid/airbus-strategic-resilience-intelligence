@@ -10,7 +10,7 @@ const FORMAT='asri-case-export';
 const VERSION=2;
 interface CaseEnvelope {
   format:typeof FORMAT;
-  envelopeVersion:typeof VERSION;
+  envelopeVersion:1|typeof VERSION;
   integrity:{algorithm:'SHA-256';digest:string;canonicalization?:'sorted-keys-v1'};
   caseData:StrategicCase;
 }
