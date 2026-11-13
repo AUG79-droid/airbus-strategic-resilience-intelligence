@@ -25,7 +25,7 @@ try {
   await baselineFields.nth(1).fill('4');
   await baselineFields.nth(2).fill('3');
   await baselineFields.nth(3).fill('2');
-  await options.nth(0).getByText(/conditional completion/i).waitFor();
+  await options.nth(0).getByText(/illustrative completion/i).waitFor();
   if(!(await options.nth(0).innerText()).includes('14 days'))
     throw Error('FIFO workshop baseline conditional completion is incorrect');
   const secondFields=options.nth(1).locator('input[type=number]');
