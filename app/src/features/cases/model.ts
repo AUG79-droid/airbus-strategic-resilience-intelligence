@@ -73,7 +73,7 @@ export interface IndicatorComparison {
   delta: number | null;
   percentChange: number | null;
   improvement: number | null;
-  robustness: 'stable' | 'sensitive' | 'insufficient';
+  robustness: 'stable' | 'sensitive' | 'insufficient' | 'equivalent';
   evidenceReady: boolean;
   observedEvidence: boolean;
   issue?: 'excluded' | 'missing';
@@ -250,6 +250,55 @@ const COMPUTED_INDICATORS:{
   {id:'lifeExtension',label:'Vida útil adicional / Additional service life',unit:'hours',direction:'higher',category:'operational',sourceIds:['lifeExtension']}
 ];
 const OUTPUT_KEYS=['recovery','deadline','cost','material','waste','ghg','lifeExtension'] as const;
+/**
+ * Local, one-at-a-time (OAT) input sensitivity:
+ * perturb every applicable contributing parameter in each alternative
+ * in both directions, recalculate the model, and check if the signed
+ * decision difference changes. This is not a confidence interval and
+ * does not test correlated input changes or prove causal robustness.
+ */
+function localInputSensitivity(
+  caseData:StrategicCase, baseline:Option, candidate:Option,
+  outputKey:typeof OUTPUT_KEYS[number], sourceIds:string[],
+  baseValue:number, candidateValue:number, direction:Direction
+):IndicatorComparison['robustness']{
+  const original=(direction==='lower'?1:-1)*(baseValue-candidateValue);
+  if(!Number.isFinite(original))return 'insufficient';
+  if(Math.abs(original)<1e-9)return 'equivalent';
+  if(caseData.robustnessPercent<=0)return 'insufficient';
+  const referenceSign=Math.sign(original);
+  let tested=0;
+  for(const id of sourceIds){
+    if(caseData.parameters[id]?.applicability!=='applies')continue;
+    const definition=UNIVERSAL_PARAMETERS.find(p=>p.id===id);
+    if(!definition)continue;
+    for(const option of [baseline,candidate]){
+      const present=option.parameterValues[id]?.value;
+      if(typeof present!=='number'||!Number.isFinite(present))continue;
+      // For a zero starting value, use a 1-unit floor so the check can
+      // still explore adding a small chance/cost/delay rather than 0 × %.
+      const step=Math.max(Math.abs(present),1)*caseData.robustnessPercent/100;
+      for(const directionStep of [-1,1]){
+        const changedValue=Math.max(definition.minimum??-Infinity,
+          Math.min(definition.maximum??Infinity,present+directionStep*step));
+        if(changedValue===present)continue;
+        const changed:Option={...option,parameterValues:{
+          ...option.parameterValues,
+          [id]:{...option.parameterValues[id],value:changedValue}
+        }};
+        const output=calculateUniversal(caseData,changed)[outputKey];
+        if(output.state!=='calculated'||output.value===null)return 'insufficient';
+        const nextBaseline=option===baseline?output.value:baseValue;
+        const nextCandidate=option===candidate?output.value:candidateValue;
+        const signed=(direction==='lower'?1:-1)*(nextBaseline-nextCandidate);
+        tested++;
+        if(Math.abs(signed)<1e-9||Math.sign(signed)!==referenceSign)return 'sensitive';
+      }
+    }
+  }
+  return tested>0?'stable':'insufficient';
+}
+
 function parameterEvidence(caseData:StrategicCase,option:Option,ids:string[],kind:'reviewed'|'observed'):boolean{
   return ids.filter(id=>caseData.parameters[id]?.applicability==='applies').every(id=>{
     const measure=option.parameterValues[id];
@@ -282,7 +331,8 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
     }
     const delta=a.value!-b.value!;
     const improvement=definition.direction==='lower'?-delta:delta;
-    const margin=(Math.abs(a.value!)+Math.abs(b.value!))*caseData.robustnessPercent/100;
+    const robustness=localInputSensitivity(caseData,baseline,candidate,key,
+      definition.sourceIds,b.value!,a.value!,definition.direction);
     const evidenceReady=parameterEvidence(caseData,baseline,definition.sourceIds,'reviewed')&&
       parameterEvidence(caseData,candidate,definition.sourceIds,'reviewed');
     const observedEvidence=parameterEvidence(caseData,baseline,definition.sourceIds,'observed')&&
@@ -290,7 +340,7 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
     if(!evidenceReady)missing.push(definition.label+': missing traceable review for baseline and alternative');
     return {metric,baseline:b.value,candidate:a.value,delta,
       percentChange:b.value===0?null:delta/Math.abs(b.value!)*100,improvement,
-      robustness:Math.abs(improvement)>margin?'stable':'sensitive',evidenceReady,observedEvidence};
+      robustness,evidenceReady,observedEvidence};
   });
   const active=rows.filter(r=>r.issue!=='excluded');
   const incomplete=active.length===0||active.some(r=>r.improvement===null);
