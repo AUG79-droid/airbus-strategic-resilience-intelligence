@@ -74,6 +74,11 @@ export interface IndicatorComparison {
   percentChange: number | null;
   improvement: number | null;
   robustness: 'stable' | 'sensitive' | 'insufficient' | 'equivalent';
+  /** Raw delta range under isolated input changes, NOT a confidence interval. */
+  sensitivityRange?: {
+    minDelta:number;maxDelta:number;
+    switchingParameter?:string;switchingAlternative?:string;switchingValue?:number;
+  };
   evidenceReady: boolean;
   observedEvidence: boolean;
   issue?: 'excluded' | 'missing';
@@ -263,13 +268,18 @@ function localInputSensitivity(
   caseData:StrategicCase, baseline:Option, candidate:Option,
   outputKey:typeof OUTPUT_KEYS[number], sourceIds:string[],
   baseValue:number, candidateValue:number, direction:Direction
-):IndicatorComparison['robustness']{
+):{
+  status:IndicatorComparison['robustness'];
+  range?:IndicatorComparison['sensitivityRange'];
+}{
   const original=(direction==='lower'?1:-1)*(baseValue-candidateValue);
-  if(!Number.isFinite(original))return 'insufficient';
-  if(Math.abs(original)<1e-9)return 'equivalent';
-  if(caseData.robustnessPercent<=0)return 'insufficient';
+  if(!Number.isFinite(original))return {status:'insufficient'};
+  if(caseData.robustnessPercent<=0)return {status:Math.abs(original)<1e-9?'equivalent':'insufficient'};
   const referenceSign=Math.sign(original);
+  const startDelta=candidateValue-baseValue;
+  let minDelta=startDelta,maxDelta=startDelta;
   let tested=0;
+  let switchingParameter:string|undefined,switchingAlternative:string|undefined,switchingValue:number|undefined;
   for(const id of sourceIds){
     if(caseData.parameters[id]?.applicability!=='applies')continue;
     const definition=UNIVERSAL_PARAMETERS.find(p=>p.id===id);
@@ -277,8 +287,6 @@ function localInputSensitivity(
     for(const option of [baseline,candidate]){
       const present=option.parameterValues[id]?.value;
       if(typeof present!=='number'||!Number.isFinite(present))continue;
-      // For a zero starting value, use a 1-unit floor so the check can
-      // still explore adding a small chance/cost/delay rather than 0 × %.
       const step=Math.max(Math.abs(present),1)*caseData.robustnessPercent/100;
       for(const directionStep of [-1,1]){
         const changedValue=Math.max(definition.minimum??-Infinity,
@@ -289,16 +297,29 @@ function localInputSensitivity(
           [id]:{...option.parameterValues[id],value:changedValue}
         }};
         const output=calculateUniversal(caseData,changed)[outputKey];
-        if(output.state!=='calculated'||output.value===null)return 'insufficient';
+        // Invalid perturbed states (e.g. a joint probability outside Fréchet
+        // limits) are not counted as simulated outcomes or proof of stability.
+        if(output.state!=='calculated'||output.value===null)continue;
         const nextBaseline=option===baseline?output.value:baseValue;
         const nextCandidate=option===candidate?output.value:candidateValue;
+        const delta=nextCandidate-nextBaseline;
+        minDelta=Math.min(minDelta,delta);
+        maxDelta=Math.max(maxDelta,delta);
         const signed=(direction==='lower'?1:-1)*(nextBaseline-nextCandidate);
         tested++;
-        if(Math.abs(signed)<1e-9||Math.sign(signed)!==referenceSign)return 'sensitive';
+        if(referenceSign!==0 && !switchingParameter &&
+          (Math.abs(signed)<1e-9||Math.sign(signed)!==referenceSign)){
+          switchingParameter=id;
+          switchingAlternative=option.id;
+          switchingValue=changedValue;
+        }
       }
     }
   }
-  return tested>0?'stable':'insufficient';
+  if(!tested)return {status:Math.abs(original)<1e-9?'equivalent':'insufficient'};
+  const range={minDelta,maxDelta,switchingParameter,switchingAlternative,switchingValue};
+  if(Math.abs(original)<1e-9)return {status:'equivalent',range};
+  return {status:switchingParameter?'sensitive':'stable',range};
 }
 
 function parameterEvidence(caseData:StrategicCase,option:Option,ids:string[],kind:'reviewed'|'observed'):boolean{
@@ -333,7 +354,7 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
     }
     const delta=a.value!-b.value!;
     const improvement=definition.direction==='lower'?-delta:delta;
-    const robustness=localInputSensitivity(caseData,baseline,candidate,key,
+    const sensitivity=localInputSensitivity(caseData,baseline,candidate,key,
       definition.sourceIds,b.value!,a.value!,definition.direction);
     const evidenceReady=parameterEvidence(caseData,baseline,definition.sourceIds,'reviewed')&&
       parameterEvidence(caseData,candidate,definition.sourceIds,'reviewed');
@@ -342,7 +363,7 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
     if(!evidenceReady)missing.push(definition.label+': missing traceable review for baseline and alternative');
     return {metric,baseline:b.value,candidate:a.value,delta,
       percentChange:b.value===0?null:delta/Math.abs(b.value!)*100,improvement,
-      robustness,evidenceReady,observedEvidence};
+      robustness:sensitivity.status,sensitivityRange:sensitivity.range,evidenceReady,observedEvidence};
   });
   const active=rows.filter(r=>r.issue!=='excluded');
   const incomplete=active.length===0||active.some(r=>r.improvement===null);
