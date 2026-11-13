@@ -45,6 +45,9 @@ export const UNIVERSAL_PARAMETERS:ParameterDefinition[]=[
     'JOINT likelihood of BOTH events, not a conditional probability. Enable only with dependency evidence; must satisfy mathematical bounds. Otherwise independence is explicitly assumed.',0,100),
   def('baseCost','economic','Coste de la alternativa','Base option cost','€',
     'Coste directo comparable por unidad funcional.','Comparable direct cost per functional unit.'),
+  def('downtimeRate','economic','Coste por unidad de tiempo de interrupción','Cost per recovery-time unit','€/time',
+    'Opcional: coste incremental por día, hora o minuto según el caso. NO lo actives si ese impacto ya está incluido en el coste base o penalizaciones: evitar doble contabilización. Requiere estimar también el tiempo de recuperación.',
+    'Optional incremental cost per day, hour or minute according to this case. DO NOT enable if the same impact is already in baseline cost or penalties: avoid double counting. Requires expected recovery time.'),
   def('logisticsCost','economic','Costes logísticos','Logistics costs','€',
     'Solo costes adicionales no incluidos en el coste base.','Additional logistics not included in base cost.'),
   def('investmentCost','economic','Inversión de adaptación','Adaptation investment','€',
@@ -222,19 +225,25 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
       return output*100;
     }
   ));
-  const cost=invalidPair(join(
+  const costBasis=invalidPair(join(
     ['baseCost','logisticsCost','investmentCost','shockProbability','shockSurcharge',
-      'technicalSuccess','failureCost','reservationFee','cancellationProbability','cancellationFee'],
-    'base + applicable fixed expenses + P(shock)*surcharge + P(failure)*failureCost + P(cancel)*fee',
+      'technicalSuccess','failureCost','reservationFee','cancellationProbability','cancellationFee','downtimeRate'],
+    'base + fixed expenses + P(shock)*surcharge + P(failure)*failureCost + P(cancel)*fee + downtimeRate*expectedRecovery (if applicable)',
     v=>{
       if(v('baseCost')===null)return NaN;
       const r=(v('shockProbability')??0)/100,t=(v('technicalSuccess')??100)/100,
         p=(v('cancellationProbability')??0)/100;
       return v('baseCost')!+(v('logisticsCost')??0)+(v('investmentCost')??0)+
         (v('reservationFee')??0)+r*(v('shockSurcharge')??0)+
-        (1-t)*(v('failureCost')??0)+p*(v('cancellationFee')??0);
+        (1-t)*(v('failureCost')??0)+p*(v('cancellationFee')??0)+
+        (v('downtimeRate')===null?0:v('downtimeRate')!*(recovery.value??NaN));
     }
   ));
+  const cost=states.downtimeRate?.applicability==='applies'&&recovery.state!=='calculated'
+    ?result('missing',null,costBasis.formula,[
+      'Downtime valuation needs a calculated recovery time',...recovery.missing
+    ])
+    :costBasis;
   // Financial and environmental outputs stay separate; no arbitrary combined score.
   return {
     recovery,deadline,cost,
@@ -245,6 +254,9 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
         ? 'An explicit joint technical-failure/disruption probability is supplied; it must satisfy Fréchet limits and be supported by evidence.'
         : 'Technical failure and external disruption are assumed independent for deadline probability; this is not a demonstrated property of the scenario.',
       'Expected time and economic cost use additive marginal-event terms; correlations alone do not change these means under this simplifying assumption.',
+      states.downtimeRate?.applicability==='applies'
+        ? 'Downtime valuation is an assumed incremental € per time unit times expected recovery. Verify contract and avoid double-counting against fixed and conditional costs.'
+        : 'No monetary value is attributed to downtime; the expected cost may understate operational consequences.',
       'Calculated outcomes are conditional scenarios, not calibrated predictions.',
       ...reasons
     ]
