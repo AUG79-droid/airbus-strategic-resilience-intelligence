@@ -9,6 +9,7 @@ import type { Locale, ViewId } from './types';
 import type { StrategyId } from '../domain';
 import { CaseJourney } from '../features/cases/CaseJourney';
 import { createCase, validateCaseImport } from '../features/cases/model';
+import { MODEL_PROVENANCE } from '../features/cases/modelProvenance';
 
 const DEMO_DRAFT_KEY='asri-demo-draft-v2';
 const DEMO_DRAFT_CONSENT='asri-demo-draft-opt-in';
@@ -241,6 +242,12 @@ export function App() {
             <button type="button" className={caseMode === 'demo' ? 'is-active' : ''} aria-pressed={caseMode === 'demo'} onClick={() => { setCaseMode('demo'); navigate('investigate'); }}>DEMO-60</button>
             <button type="button" className={caseMode === 'custom' ? 'is-active' : ''} aria-pressed={caseMode === 'custom'} onClick={() => { setCaseMode('custom'); navigate('investigate'); }}>{locale === 'es' ? 'Crear tu propio caso estratégico' : 'Create your own strategic case'}</button>
           </nav>
+          <p className="cy-help" data-testid="model-provenance">
+            {MODEL_PROVENANCE[caseMode].title[locale]} · {MODEL_PROVENANCE[caseMode].scope[locale]}
+            {' '}{locale==='es'
+              ?'Las cifras de DEMO-60 y del creador de casos no son directamente intercambiables.'
+              :'DEMO-60 figures and Case Studio figures cannot be directly compared.'}
+          </p>
           {caseMode === 'custom' && view === 'investigate' && <section className="cy-panel" aria-label={locale==='es'?'Guardado local opcional':'Optional local draft saving'}>
             <label className="cy-field">
               <span>{locale==='es'?'Guardar automáticamente ejemplos ficticios en este navegador':'Auto-save fictional examples on this browser'}</span>
