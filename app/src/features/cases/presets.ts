@@ -382,5 +382,17 @@ export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCas
   // fictional traceability; no exercise-only review is a real Airbus approval.
   if(kind==='ecodesign')populateEurodroneExercise(result,locale);
   else populateOtherSimulatedExercise(result,kind,locale);
+  // Comparison metadata is consistent ONLY within the fictional exercise.
+  // These are synthetic training assumptions, not ISO-compliant LCA boundaries.
+  result.environmentalBasis=result.options.map(option=>({
+    optionId:option.id,
+    functionalUnit:locale==='es'?'Misma unidad funcional ficticia':'Same fictional functional unit',
+    period:result.timeHorizon,
+    boundary:result.boundary,
+    inventoryMethod:'SIMULATED illustrative inventory, not an LCA / Inventario ilustrativo ficticio, no ACV',
+    allocationRule:'Identical simulated allocation assumptions / Supuestos de asignación ficticios idénticos',
+    factorSourceVersion:'SYNTHETIC-EXERCISE-ONLY-v1',
+    evidenceId:''
+  }));
   return result;
 }
