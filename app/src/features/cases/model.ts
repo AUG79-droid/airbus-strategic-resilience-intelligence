@@ -3,6 +3,7 @@ import { validateRoutes, type DependencyRoute } from './supplyGraph';
 import { compareEnvironmentalBasis, validateEnvironmentalBasis, type EnvironmentalBasis, type EnvironmentBasisCheck } from './environmentBasis';
 import { validateMissionBridges, type MissionBridge } from './missionBridge';
 import { emptyFinancePlan, validateFinancePlan, type DiscountedFinancePlan } from './discountedCashFlows';
+import {validateWorkshopCapacity,type WorkshopCapacityScenario} from './workshopCapacity';
 // Independent custom-case model. This is a transparent comparative calculator, not
 // a predictive aerospace certification, LCA, mission-availability or emissions model.
 export type CaseKind = 'general' | 'ecodesign' | 'climate' | 'saf' | 'wildfire';
@@ -81,6 +82,8 @@ export interface StrategicCase {
   environmentalBasis: EnvironmentalBasis[];
   missionBridges: MissionBridge[];
   discountedFinance: DiscountedFinancePlan;
+  /** Optional illustrative FIFO capacity planning, separate from recovery KPI. */
+  workshopCapacity: WorkshopCapacityScenario[];
 }
 
 export interface IndicatorComparison {
@@ -239,7 +242,7 @@ export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): S
     boundary:'', timeHorizon:'', owner:'', metrics,
     parameters:defaultParameterStates(kind,locale),
     options:makeOptions(metrics,locale), evidence:[], gates:emptyGates(),
-    robustnessPercent:10, hypothetical:false, dependencyRoutes:[], environmentalBasis:[], missionBridges:[], discountedFinance:emptyFinancePlan()
+    robustnessPercent:10, hypothetical:false, dependencyRoutes:[], environmentalBasis:[], missionBridges:[], discountedFinance:emptyFinancePlan(), workshopCapacity:[]
   };
 }
 
@@ -578,6 +581,7 @@ export function validateCaseImport(value: unknown): StrategicCase {
   upgraded.environmentalBasis=validateEnvironmentalBasis(upgraded.environmentalBasis,upgraded.options.map(o=>o.id));
   upgraded.missionBridges=validateMissionBridges(upgraded.missionBridges,upgraded.options.map(o=>o.id));
   upgraded.discountedFinance=validateFinancePlan(upgraded.discountedFinance,upgraded.options.map(o=>o.id));
+  upgraded.workshopCapacity=validateWorkshopCapacity(upgraded.workshopCapacity,upgraded.options.map(o=>o.id));
   upgraded.parameters??=defaultParameterStates(upgraded.kind);
   if(!upgraded.parameters||typeof upgraded.parameters!=='object'||Array.isArray(upgraded.parameters))throw new Error('Invalid applicability catalogue');
   // Version-1 JSON files predate the optional joint-event field.
@@ -630,7 +634,8 @@ export function validateCaseImport(value: unknown): StrategicCase {
     ...upgraded.dependencyRoutes.map(x=>x.evidenceId),
     ...upgraded.environmentalBasis.map(x=>x.evidenceId),
     ...upgraded.missionBridges.map(x=>x.evidenceId),
-    ...upgraded.discountedFinance.flows.map(x=>x.evidenceId)
+    ...upgraded.discountedFinance.flows.map(x=>x.evidenceId),
+    ...upgraded.workshopCapacity.map(x=>x.evidenceId)
   ];
   const unresolved=[...new Set(references.filter(id=>id.length>0&&!evidenceIds.has(id)))];
   if(unresolved.length)throw new Error('Unresolved evidence references: '+unresolved.slice(0,12).join(', '));
