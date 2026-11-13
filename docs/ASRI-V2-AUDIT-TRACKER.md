@@ -1,53 +1,54 @@
-# ASRI 2.0 — Registro de seguimiento de la auditoría externa
+# ASRI 2.0 — Registro técnico de los 24 hallazgos de auditoría
 
-**Fecha de referencia:** 13/11/2026. **Alcance:** hallazgos ASRI-001 a ASRI-024.
-**Rama de trabajo:** `asri-v2-audit-remediation` (PR #1, borrador). **Versión pública `main`: intacta.**
+**Auditoría de referencia:** revisión externa de ASRI del 13/11/2026 (ASRI-001 a ASRI-024).
+**Desarrollo:** `asri-v2-audit-remediation`, PR #1. **Despliegue público original:** `main`, protegido.
 
-## Criterio de cierre
+## Interpretación de estados
+- **FIXED** = el fallo concreto ha sido corregido y cubierto por pruebas automáticas; no significa aprobación de Airbus.
+- **PARTIAL** = el prototipo mejora técnicamente el hallazgo, pero su alcance sigue limitado respecto a la recomendación completa.
+- **NEEDS AIRBUS** = no se puede acreditar cumplimiento sin identidad corporativa, permisos, fuentes reales y validaciones de responsables autorizados.
+- **No confundir:** evidencia o aprobación *declarada por el usuario* ≠ revisión autenticada; datos simulados ≠ predicción calibrada; comprobación matemática ≠ operación real.
 
-- **FIXED:** se ha corregido un defecto verificable, con pruebas, en la versión correspondiente.
-- **PARTIAL:** el prototipo incorpora una mejora real, pero faltan mecanismos de mayor alcance o validaciones de terceros.
-- **NEEDS AIRBUS:** requieren identidad, permisos, datos operativos, validación metodológica o una aprobación que la aplicación no puede concederse a sí misma.
-- **Ningún test con datos sintéticos** demuestra beneficios operativos reales ni certificación ambiental.
-
-| Hallazgo | Estado | Trabajo realizado / condición que sigue pendiente |
+| ID | Estado | Entregado en ASRI 2.0 / condición pendiente |
 |---|---|---|
-| 001 · Motores matemáticos separados | PARTIAL | DEMO-60 y Case Studio comparten ahora el motor de probabilidades conjuntas; proveniencia y ámbitos explícitos en interfaz. Siguen existiendo modelos de tiempo, coste y decisiones con semánticas distintas; **no debe compararse directamente una cifra de un modo con otra del segundo**. Pendiente armonización de dominio y validación entre modelos. |
-| 002 · Independencia/correlación de riesgos | PARTIAL | Probabilidad conjunta explícita, cuatro ramas y límites de Fréchet; riesgos dependientes afectan al cumplimiento de plazos. El tiempo esperado sigue siendo aditivo bajo hipótesis simplificadas, sin colas ni fallos de modo común modelados en detalle. |
-| 003 · Proveedores y fallos comunes | PARTIAL | Editor opcional de rutas por alternativa, nodos compartidos, potenciales puntos únicos de fallo y capacidad nominal declarada; no suma capacidades compartidas. **No infiere independencia por contar proveedores** ni cambia automáticamente los tiempos de recuperación. Falta calibrar redes, capacidades y rutas reales. |
-| 004 · Sensibilidad | PARTIAL | Recalcula alteraciones individuales, muestra rangos de diferencia, entrada que invierte la conclusión y valores de prueba; ya no presenta un margen heurístico como estadística. Falta incertidumbre conjunta y validación probabilística. |
-| 005 · Texto de Ingeniería contradictorio | FIXED | Descripción neutral incluso cuando un resultado empeora. |
-| 006 · Revisión declarada por el usuario | PARTIAL | Se exige nombre de propietario y revisor diferentes y fuentes trazables; **no existe verificación de identidad** ni aprobación de fuentes externas. |
-| 007 · Gates sin autenticación | NEEDS AIRBUS | Las casillas siguen siendo declaraciones, no autorizaciones. La integración con identidad corporativa, roles y firma/aprobación de cambios requiere infraestructura aprobada y responsables designados. |
-| 008 · Inventarios ambientales incomparables | PARTIAL | Ficha de unidad funcional, periodo, límites, método, asignación y versión de factores por alternativa; gate de comparabilidad declarada y bloqueo de mensajes numéricos de beneficio si difieren. Falta ACV revisado, factores trazables, representatividad e incertidumbre. |
-| 009 · Pieza frente a misión | PARTIAL | Cadena opcional componente → subsistema → plataforma → función de misión con evidencia y disponibilidad observada **introducida por separado**. Se prohíbe inferir disponibilidad de flota a partir de recuperación de una pieza. Falta modelo real de sistema y validación operativa. |
-| 010 · Vite afectado | FIXED | Versión parcheada Vite 8.3.8 con `package-lock.json` sincronizado. |
-| 011 · Importación JSON | PARTIAL | Estructura, fechas, IDs, rangos, rutas, inventario, enlaces de misión y checksum SHA-256 revisados. Archivos anteriores siguen siendo compatibles. Pendiente esquema formal de migración a una versión mayor. |
-| 012 · Cambio de idioma reiniciaba selección | FIXED | No se remonta el workspace solo por cambiar EN/ES. |
-| 013 · Unicode PDF | PARTIAL | Sustitución semántica de caracteres no WinAnsi, salto de línea y ajuste por ancho real del texto. Sigue pendiente tipografía Unicode embebida y comprobación visual de todos los glifos. |
-| 014 · Saltos de línea Markdown | FIXED | Informe Markdown conserva párrafos vacíos. |
-| 015 · Cobertura E2E CI | PARTIAL | Calidad incluye tests unitarios, compilación, responsive, traducción, laboratorio, evidencias, recorrido guiado, informes PDF/JSON, riesgos conjuntos y almacenamiento opcional. La cobertura de todos los caminos y accesibilidad sigue ampliable. |
-| 016 · Versión manifiestos | FIXED | Versiones en `package.json` y `package-lock.json` coherentes. |
-| 017 · Economía simplificada | PARTIAL | Nuevo coste incremental por unidad de tiempo de interrupción, vinculado al tiempo esperado y con advertencia de doble contabilización; no afecta a ejemplos previos si no se activa. Falta descuento, escenarios contractuales avanzados y costes de disrupción de programa. |
-| 018 · Precisión incierta | PARTIAL | Diferencias en rangos de sensibilidad **deterministas**, nunca percentiles o bandas de confianza; fuentes ficticias visibles. No existen distribuciones calibradas ni intervalos de confianza reales. |
-| 019 · Idiomas y numeración | PARTIAL | Etapa Translate corregida, documentación, etiquetas y condiciones del informe revisadas. Falta comprobación manual integral de toda la aplicación. |
-| 020 · Gramática inglesa | FIXED | Concordancia singular/plural de días y sujeto/verbo. |
-| 021 · Navegación móvil oculta | FIXED | Cuatro etapas visibles en tarjetas móviles, sin scroll horizontal oculto. |
-| 022 · Borradores sin guardar | PARTIAL | Aviso al abandonar casos reales con cambios. **Solo para ejemplos ficticios**, guardado local opcional con consentimiento y eliminación al desactivarlo. Los datos reales se exportan a archivo; no se guardan en navegador ni nube. |
-| 023 · Sourcemaps públicos | FIXED | Desactivados en producción. |
-| 024 · Integridad de archivos y firmas | PARTIAL / NEEDS AIRBUS | JSON de caso con huella SHA-256 e importación que detecta alteraciones; el archivo anterior sin huella se identifica. No es firma digital, no autentica autores ni certifica fuentes. Para historial firmado se necesita infraestructura aprobada. |
+| ASRI-001 · Dos motores | PARTIAL | DEMO-60 y Case Studio comparten ahora núcleo validado de probabilidades conjuntas. La UI muestra el tipo y ámbito de modelo; las dos arquitecturas de plazos y costes **no** son todavía equivalentes y sus KPI no deben mezclarse. Pendiente unificar el motor integral y comprobar casos equivalentes. |
+| ASRI-002 · Correlación y aditividad | PARTIAL | Probabilidad conjunta introducible, límites de Fréchet, cuatro ramas y recalculado de cumplimiento. Retrasos y costes **adicionales** de fallos simultáneos opcionales y trazables. Falta modelo de colas, distribuciones, eventos en secuencia, capacidad de taller y validación de parámetros. |
+| ASRI-003 · Dependencias | PARTIAL | Grafo editable de rutas cualificadas, nodos upstream compartidos, potenciales fallos comunes, capacidad nominal y enlaces a evidencias; rutas compartidas no suman capacidad ni acreditan independencia. Falta convertir red y capacidad reales en tiempos/fiabilidad calibrados. |
+| ASRI-004 · Sensibilidad incorrecta | **FIXED** | Sustituido margen heurístico por recálculos por parámetro y rango de diferencias; localización del **umbral aproximado de inversión** mediante bisección. Prueba de cuatro escenarios coordinados separada y etiquetada como determinista, no estadística. La previsión calibrada sigue siendo un objetivo diferente. |
+| ASRI-005 · Contradicción Ingeniería | **FIXED** | La narrativa distingue mejoras, deterioros y compromisos. Pruebas de combinación de alternativas, cuatro audiencias, español e inglés, incluidos casos desfavorables. |
+| ASRI-006 · Revisión autodeclarada | PARTIAL | Se exige propietario/revisor distintos; evidencia ahora admite revisión documental, SHA-256 local, fragmento, versión, vigencia y revocación. Caducidad o revocación invalida el estado revisado. Los nombres continúan sin autenticación. |
+| ASRI-007 · Gates sin firma/rol | **NEEDS AIRBUS** | Casillas explícitamente presentadas como declaraciones, NO aprobaciones. Faltan identidad, segregación de funciones, autorización y firma integradas con servicios corporativos aprobados. Nadie puede autoprestarse estos permisos desde la demo. |
+| ASRI-008 · Inventarios ambientales | PARTIAL | Comparador de unidades funcionales, periodo, límites, método, asignación y versión de factores; limita las afirmaciones si difieren y exige evidencia de metodología para una comparación declarada observada. Pendiente inventario de procesos validado, factores, incertidumbre, asignaciones, ACV y revisión competente. |
+| ASRI-009 · Pieza vs misión | PARTIAL | Cadena declarada componente → subsistema → plataforma → función de misión, con métrica de disponibilidad SOLO si procede de observación separada. No infiere flota ni misión desde tiempo de una pieza. Pendiente modelo autorizado de disponibilidad/MTBF/MTTR/colas/inventarios y datos reales. |
+| ASRI-010 · Vite vulnerable | **FIXED** | Vite actualizado de versión afectada a 8.3.8, manifiesto y lockfile reproducibles. |
+| ASRI-011 · Importación malformada | **FIXED** | ID, tipos, métricas, fechas, límites, alternativas y evidencia validados. Versión de esquema explícita (v2), migración de documentos antiguos, comprobación de relaciones/IDs y SHA-256 opcional en sobres JSON. Pendiente consolidación en biblioteca externa de esquemas para interoperabilidad institucional. |
+| ASRI-012 · Reinicio de selección EN/ES | **FIXED** | Cambio de idioma sin desmontar selección. E2E comprueba alternativa B y Dirección al cambiar EN→ES→EN. |
+| ASRI-013 · Unicode PDF | PARTIAL | Sustituciones científicas auditables (CO₂e, flechas, fórmulas, subíndices), saltos y ajuste tipográfico. Glifos fuera de WinAnsi quedan identificados por su código Unicode, NO silenciosamente eliminados. Para conservar todos los glifos originales hace falta incorporar fuente embebida Unicode con licencia y pruebas PDF visuales. |
+| ASRI-014 · Líneas Markdown | **FIXED** | Se mantienen encabezados, separaciones y líneas en blanco. |
+| ASRI-015 · CI E2E insuficiente | **FIXED** | GitHub Actions ejecuta Vitest, TypeScript, compilación, laboratorio, Check, Translate, recorrido de fases, idioma, 320/390 px, importación/exportación PDF/JSON y riesgos conjuntos. Errores de navegador han hecho fallar CI y se han corregido. |
+| ASRI-016 · Versionado incoherente | **FIXED** | `package.json` es la fuente única; lockfile, interfaz, procedencia del motor y exportación usan su versión. Test automático bloquea discrepancias. |
+| ASRI-017 · Economía sencilla | PARTIAL | Coste de indisponibilidad por unidad de tiempo, sobrecostes correlacionados explícitos y flujo de caja descontado opcional por alternativa con tasa y exclusión de costes ya contabilizados. Faltan escalación, divisas, calendario contractual verificado, simulación de contingencias y criterios de Programme. |
+| ASRI-018 · Precisión engañosa | PARTIAL | Sensibilidad OAT, extremos coordinados y rangos deterministas de diferencias con número de escenarios válidos. Translate advierte que no son bandas de confianza ni distribuciones predictivas. La calibración requiere series históricas y evaluación fuera de muestra. |
+| ASRI-019 · Traducción y numeración | PARTIAL | Corregidas fases 4/Translate y expresiones conflictivas; matriz automatizada de 32 combinaciones en dos idiomas. Queda revisión editorial completa de interfaz, información de usuario e informes. |
+| ASRI-020 · Gramática inglesa | **FIXED** | Concordancia singular de días y verbos comparativos corregida y cubierta por pruebas de redacción. |
+| ASRI-021 · Navegación móvil | **FIXED** | Cuatro fases visibles sin scroll oculto; pruebas responsive de 320 px y 390 px más escritorio. |
+| ASRI-022 · Continuidad | PARTIAL | Advertencia para casos reales no exportados y guardado local voluntario **solo de ejemplos ficticios**, con recuperación y borrado al retirar consentimiento. Casos reales no se persisten sin aprobación corporativa. Historial autentificado/cifrado de casos reales pendiente. |
+| ASRI-023 · Sourcemaps | **FIXED** | Los mapas de código de producción ya no se publican. |
+| ASRI-024 · Integridad y auditoría | PARTIAL | JSON de caso con suma SHA-256, rechazo de cambios no correspondientes, documentos con huella calculada localmente sin subida, versión, fragmento, vencimiento y revocación. No hay firma de usuario, libro de auditoría inmutable ni gestor documental corporativo; **NO puede declararse integridad forense autenticada**. |
 
-## Pruebas de aceptación del prototipo
+**Balance por hallazgo: 11 FIXED, 12 PARTIAL, 1 NEEDS AIRBUS.** Los 24 tienen un tratamiento documentado; NO equivale a afirmar que los 24 hayan quedado cerrados.
 
-- `npm test`: baterías unitarias y regresión.
-- `npm run build`: tipado TypeScript y producción.
-- CI: recorrido responsive y bilingüe, comparativas, revisión de evidencias, exportaciones PDF/JSON, pruebas de riesgos dependientes y recuperación de borrador hipotético.
-- Garantía de despliegue: los cambios de esta rama no se mezclan automáticamente con el sitio publicado.
+## Qué puede usar Dirección y qué no
 
-## Conclusiones metodológicas
+**Sí:** recorridos didácticos, escenarios supuestos, comparación condicional con costes/riesgos/compensaciones, preguntas de validación y narrativa ajustada al público.
 
-1. **La aplicación es todavía un prototipo de análisis condicional**, no un sistema predictivo calibrado.
-2. **DEMO-60 y Case Studio tienen límites de modelo diferentes** y no pueden intercambiar sus cifras sin una armonización del dominio.
-3. **Los ejemplos didácticos siguen siendo ficticios**, y las verificaciones simuladas no representan firmas de Airbus.
-4. Solo Airbus puede aceptar datos, permisos, aprobaciones y afirmaciones reales ante clientes.
-5. El fin de la programación NO implica cierre de todos los 24 hallazgos como verificaciones operacionales.
+**No:** decisiones operativas certificadas, predicciones calibradas, evidencia de aprobación Airbus, acreditación de proveedores, ACV conforme a ISO, disponibilidad de misión inferida, cumplimiento contractual autorizado, ROI garantizado.
+
+## Puertas antes de publicar una versión 2.0
+
+1. Todos los tests y comprobaciones de navegador/exports deben superar CI en el último commit.
+2. Revisión visual y editorial bilingüe de cambios nuevos en una vista previa independiente.
+3. Mantener el despliegue actual de `main` intacto hasta que se autorice expresamente la publicación.
+4. Para piloto operativo real: departamentos competentes deben aportar fuentes reales, metodología validada, identidad/roles, firma y aceptación.
+
+**No fusionar este PR de desarrollo como despliegue operativo aprobado.**
