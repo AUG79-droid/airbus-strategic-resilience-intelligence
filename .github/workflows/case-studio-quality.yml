@@ -4,6 +4,7 @@ on:
     branches: [main, asri-v2-audit-remediation]
     paths:
       - 'app/**'
+      - 'docs/ASRI-V2-AUDIT-TRACKER.md'
       - '.github/workflows/case-studio-quality.yml'
   workflow_dispatch:
 
