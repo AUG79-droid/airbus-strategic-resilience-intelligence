@@ -58,8 +58,8 @@ try {
   await download.saveAs(file);
   const raw=JSON.parse(await readFile(file,'utf-8'));
   if(raw.envelopeVersion!==2||raw.caseData.workshopCapacity.length!==2||
-    raw.caseData.environmentalBasis[0]?.relativeUncertaintyPercent!==10||
-    raw.caseData.environmentalBasis[1]?.relativeUncertaintyPercent!==20)
+    raw.caseData.environmentalBasis.find(x=>x.optionId==='baseline')?.relativeUncertaintyPercent!==10||
+    raw.caseData.environmentalBasis.find(x=>x.optionId==='option-a')?.relativeUncertaintyPercent!==20)
     throw Error('New FIFO and inventory margins were not preserved in checksum case JSON');
   if(errors.length)throw Error(errors.join('; '));
   console.log('PASS: FIFO workshop capacity, bounded environmental comparison, Translate and JSON round-trip UI.');
