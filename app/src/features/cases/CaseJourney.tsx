@@ -11,6 +11,7 @@ import { exportCaseEnvelope, importCaseEnvelope } from './caseIntegrity';
 import { UniversalControls } from './UniversalControls';
 import { DependencyRoutes } from './DependencyRoutes';
 import { EnvironmentalMethod } from './EnvironmentalMethod';
+import { MissionBridgeReview } from './MissionBridgeReview';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
 import { calculateUniversal, parameterUnit, UNIVERSAL_PARAMETERS } from './universal';
@@ -98,6 +99,10 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     }),
     '',es?'## Comparabilidad ambiental declarada':'## Declared environmental comparability',
     ...data.environmentalBasis.map(x=>`- ${x.optionId}: functionalUnit=${x.functionalUnit}; period=${x.period}; boundary=${x.boundary}; method=${x.inventoryMethod}; allocation=${x.allocationRule}; factorVersion=${x.factorSourceVersion}; evidence=${x.evidenceId||'unlinked'}`),
+    '',es?'## Relación entre componente y misión':'## Component-to-mission evidence bridge',
+    ...(data.missionBridges.length
+      ?data.missionBridges.map(link=>`- ${link.optionId}: ${link.componentOrService} > ${link.subsystem} > ${link.platform} > ${link.missionFunction}; dependency=${link.dependencyType}; USER-DECLARED mission availability=${link.observedMissionAvailabilityPercent??'not measured'}%; evidence=${link.evidenceId||'none'}`)
+      :[es?'Sin evaluación de disponibilidad de misión. No se infiere a partir de la recuperación del componente.':'Mission availability not assessed. Never inferred from component recovery.']),
     '',es?'## Dependencias de rutas':'## Supply and repair dependencies',
     ...(data.dependencyRoutes.length
       ?data.dependencyRoutes.map(route=>`- ${route.optionId} / ${route.label}: ${route.qualified?'qualified (user-declared)':'unqualified'}; nodes=[${route.dependencies.join(', ')}]; declaredCapacity=${route.capacityPercent??'not specified'}%; evidence=${route.evidenceId||'unlinked'}`)
@@ -327,6 +332,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
       <UniversalControls locale={locale} data={data} setData={setData}/>
       <DependencyRoutes locale={locale} data={data} setData={setData}/>
       <EnvironmentalMethod locale={locale} data={data} setData={setData}/>
+      <MissionBridgeReview locale={locale} data={data} setData={setData}/>
       <section className="cy-panel">
         <h3>{t('Comparación de las alternativas','Comparison of alternatives')}</h3>
         <p>{t('Los indicadores se calculan con los controles anteriores. Los que no aplican se excluyen, y los desconocidos bloquean las conclusiones afectadas. No hay un ganador automático si existen compromisos.',
