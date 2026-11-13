@@ -16,7 +16,7 @@ describe('Extended strategic translator',()=>{
         expect(sections.every(x=>x.title.length>10&&x.body.length>40)).toBe(true);
         expect(sections[6].body.length).toBeGreaterThan(130);
         expect(sections[5].body.toLowerCase()).toMatch(locale==='es'?/simulad/:/simulated/);
-        expect(sections[6].body).toContain(locale==='es'?'Decisión propuesta':'Proposed decision');
+        expect(sections[6].body).toContain(locale==='es'?'Siguiente paso':'Next step');
       }
     }
   });
@@ -26,7 +26,7 @@ describe('Extended strategic translator',()=>{
     const r=strategicInsights(c,repair,'defenceCustomer','es');
     expect(r[0].body).toContain('65');
     expect(r[0].body).toContain('78');
-    expect(r[0].body).toContain('suministro es el plazo condicionante');
+    expect(r[0].body).toContain('suministro tarda más y limita la recuperación');
     expect(r[0].body).toContain('49,3');
     const b=strategicInsights(c,combined,'defenceCustomer','es');
     expect(b[0].body).toContain('50');
@@ -39,14 +39,14 @@ describe('Extended strategic translator',()=>{
     expect(insights[1].body).toContain('28 %');
     expect(insights[1].body).toContain('75 %');
     expect(insights[1].body).toContain('90 %');
-    expect(insights[1].body).toContain('supone independencia');
+    expect(insights[1].body).toContain('dos riesgos separados');
     expect(insights[5].body).toContain('simuladas');
   });
   it('states trade-offs only when computed: savings with faster recovery or premium per time unit',()=>{
     const c=fromPreset('ecodesign','es');
     const [repair,combined]=comparisons(c);
     const first=strategicInsights(c,repair,'programmeManager','es');
-    expect(first[2].body).toContain('recuperación más rápida y menor coste');
+    expect(first[2].body).toContain('recupera antes el servicio y tiene un coste esperado menor');
     const second=strategicInsights(c,combined,'programmeManager','es');
     expect(second[2].body).toMatch(/sobrecoste|coste esperado/);
     expect(second[2].body).toContain('€');
@@ -58,7 +58,7 @@ describe('Extended strategic translator',()=>{
     expect(message[3].body).toMatch(/5.?000/);
     expect(message[3].body).toMatch(/7.?000/);
     expect(message[3].body).toContain('aumenta');
-    expect(message[3].body).toContain('no equivale a un ACV');
+    expect(message[3].body).toContain('impactos incluidos en el caso');
   });
   it('distinguishes the selected alternative from the other candidate, changing when switched',()=>{
     const c=fromPreset('saf','es');
@@ -76,7 +76,7 @@ describe('Extended strategic translator',()=>{
     c.options[1].parameterValues.baseCost.value=400000;
     const after=strategicInsights(c,comparisons(c)[0],'programmeManager','es');
     expect(after[0].body).toContain('200');
-    expect(after[0].body).toContain('ejecución operativa');
+    expect(after[0].body).toContain('trabajo operativo tarda más');
     expect(after[2].body).toContain('aumenta');
     expect(after[0].body).not.toBe(before[0].body);
     expect(after[2].body).not.toBe(before[2].body);
