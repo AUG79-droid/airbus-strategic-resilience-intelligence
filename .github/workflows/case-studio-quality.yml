@@ -62,6 +62,7 @@ jobs:
           npm run test:evidence-ui
           npm run test:guided-ui
           node scripts/test-joint-risk-ui.mjs
+          node scripts/test-capacity-ui.mjs
       - name: Report granular quality status on commit
         if: always()
         env:
