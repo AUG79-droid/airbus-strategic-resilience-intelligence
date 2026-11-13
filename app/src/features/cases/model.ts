@@ -255,12 +255,12 @@ const COMPUTED_INDICATORS:{
   category:MetricDefinition['category']; sourceIds:string[];
 }[]=[
   {id:'expectedRecovery',label:'Tiempo medio de recuperación / Expected recovery',unit:'time',direction:'lower',category:'resilience',
-    sourceIds:['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay']},
+    sourceIds:['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay']},
   {id:'deadlineAttainment',label:'Probabilidad de cumplir el plazo / Deadline attainment',unit:'%',direction:'higher',category:'operational',
-    sourceIds:['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock']},
+    sourceIds:['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay']},
   {id:'expectedCost',label:'Coste esperado / Expected cost',unit:'€',direction:'lower',category:'cost',
     sourceIds:['baseCost','logisticsCost','investmentCost','shockProbability','shockSurcharge','technicalSuccess','failureCost',
-      'reservationFee','cancellationProbability','cancellationFee','downtimeRate']},
+      'reservationFee','cancellationProbability','cancellationFee','downtimeRate','jointFailureShock','jointExtraCost']},
   {id:'materialKg',label:'Material virgen / Virgin material',unit:'kg',direction:'lower',category:'environment',sourceIds:['materialKg']},
   {id:'wasteKg',label:'Residuos / Waste',unit:'kg',direction:'lower',category:'environment',sourceIds:['wasteKg']},
   {id:'ghgKg',label:'GEI parciales / Bounded GHG',unit:'kg CO₂e',direction:'lower',category:'environment',sourceIds:['ghgKg']},
@@ -531,6 +531,12 @@ export function validateCaseImport(value: unknown): StrategicCase {
       reason:'Legacy model: technical failure and external shock assumed independent / Modelo anterior: independencia supuesta.'
     };
   }
+  if(!upgraded.parameters.jointExtraDelay){
+    upgraded.parameters.jointExtraDelay={applicability:'notApplicable',reason:'Concurrent-event delay not specified in archived model / Retraso conjunto no especificado en el modelo anterior.'};
+  }
+  if(!upgraded.parameters.jointExtraCost){
+    upgraded.parameters.jointExtraCost={applicability:'notApplicable',reason:'Concurrent-event surcharge not specified in archived model / Sobrecoste conjunto no especificado en el modelo anterior.'};
+  }
   if(!upgraded.parameters.downtimeRate){
     upgraded.parameters.downtimeRate={
       applicability:'notApplicable',
@@ -547,6 +553,8 @@ export function validateCaseImport(value: unknown): StrategicCase {
     if(!option.parameterValues||typeof option.parameterValues!=='object'||Array.isArray(option.parameterValues))throw new Error('Invalid parameter values');
     option.parameterValues.jointFailureShock??={value:null,evidenceId:''};
     option.parameterValues.downtimeRate??={value:null,evidenceId:''};
+    option.parameterValues.jointExtraDelay??={value:null,evidenceId:''};
+    option.parameterValues.jointExtraCost??={value:null,evidenceId:''};
     for(const p of UNIVERSAL_PARAMETERS){
       const m=option.parameterValues[p.id];
       if(!m||typeof m.evidenceId!=='string'||m.evidenceId.length>100||
