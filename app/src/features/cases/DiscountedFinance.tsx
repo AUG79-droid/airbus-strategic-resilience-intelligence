@@ -13,11 +13,15 @@ export function DiscountedFinance({locale,data,setData}:Props){
     ...c.discountedFinance,annualDiscountPercent:value===''?null:
       Math.min(100,Math.max(0,Number(value)||0))
   }}));
+  const changeEscalation=(value:string)=>setData(c=>({...c,discountedFinance:{
+    ...c.discountedFinance,annualEscalationPercent:value===''?null:
+      Math.min(100,Math.max(-99,Number(value)||0))
+  }}));
   const add=(optionId:string)=>setData(c=>{
     if(c.discountedFinance.flows.length>=90)return c;
-    const id='FLOW-'+Date.now().toString(36)+'-'+c.discountedFinance.flows.length;
+    const id='FLOW-'+crypto.randomUUID();
     const entry:ScenarioCashFlow={id,optionId,year:1,amountEuro:0,
-      accounting:'incremental',evidenceId:'',explanation:''};
+      accounting:'incremental',priceBasis:'futureNominal',evidenceId:'',explanation:''};
     return {...c,discountedFinance:{...c.discountedFinance,
       flows:[...c.discountedFinance.flows,entry]}};
   });
@@ -30,11 +34,17 @@ export function DiscountedFinance({locale,data,setData}:Props){
   const reference=evaluateDiscountedFinance(plan,data.options[0].id);
   return <details className="cy-panel" data-testid="discounted-finance">
     <summary><strong>{t('Costes futuros y valor actual (avanzado)','Future cash flows and present value (advanced)')}</strong></summary>
-    <p>{t('Análisis opcional de desembolsos adicionales respecto al coste esperado del modelo. Se aplica descuento anual solo a los flujos declarados como adicionales. Los importes ya contabilizados se excluyen expresamente para evitar duplicaciones. Deben utilizarse el mismo año base, moneda, alcance y unidad funcional.',
-      'Optional present-value worksheet for future cash flows additional to expected model cost. Annual discounting applies ONLY to declared incremental items. Flows already counted in expected cost are excluded to prevent double counting. Use the same base year, currency, boundary and functional unit.')}</p>
+    <p>{t('Análisis opcional de costes futuros adicionales. Distingue entre importes nominales del año futuro e importes expresados en euros del año base. Solo estos últimos se actualizan con la tasa de escalación declarada antes del descuento. Los costes ya incluidos en el modelo quedan excluidos. Usa la misma moneda, año base, alcance y unidad funcional.',
+      'Optional present-value worksheet for incremental future costs. Distinguish nominal future-year euros from constant base-year euros. Only constant-price amounts are escalated at the declared rate before discounting. Already-counted costs are excluded. Use consistent currency, base year, boundary and functional unit.')}</p>
     <label className="cy-field"><span>{t('Tasa anual de descuento, declarada por el usuario (%)','User-declared annual discount rate (%)')}</span>
       <input type="number" step="any" min="0" max="100" value={percent??''}
         onChange={e=>changeRate(e.target.value)} placeholder={t('Sin evaluar','Not assessed')}/>
+    </label>
+    <label className="cy-field"><span>{t('Escalación anual para importes en euros del año base (%)','Annual price escalation for base-year EUR amounts (%)')}</span>
+      <input type="number" step="any" min="-99" max="100" value={plan.annualEscalationPercent??''}
+        onChange={e=>changeEscalation(e.target.value)} placeholder={t('No declarada','Not declared')}/>
+      <small>{t('Si no se declara, los importes en euros constantes no se valoran. Los importes nominales no se escalan de nuevo.',
+        'Without this rate, constant-price flows are not valued. Future nominal amounts are never escalated again.')}</small>
     </label>
     {data.options.map(option=>{
       const result=evaluateDiscountedFinance(plan,option.id);
@@ -45,7 +55,10 @@ export function DiscountedFinance({locale,data,setData}:Props){
         <p className="cy-help">{result.status==='calculated'
           ?t('Valor actual de flujos adicionales declarados: ','Present value of declared incremental cash flows: ')+
             number(result.incrementalPresentValueEuro!)+' €'
-          :t('Sin tasa de descuento: valoración financiera NO calculada.','Discount rate missing: financial present value NOT calculated.')}
+          :percent===null
+            ?t('Sin tasa de descuento: valoración financiera NO calculada.','Discount rate missing: financial present value NOT calculated.')
+            :t('Falta escalación para flujos en euros del año base: valor actual NO calculado.',
+              'Escalation is missing for base-year flows: financial present value NOT calculated.')}
           {delta!==null&&option.id!==data.options[0].id&&
             <span>{' · '}{t('Diferencia frente a la referencia: ','Difference against baseline: ')}{number(delta)} €</span>}
         </p>
@@ -57,6 +70,11 @@ export function DiscountedFinance({locale,data,setData}:Props){
             <input type="number" step="any" value={flow.amountEuro} onChange={e=>{
               const n=Number(e.target.value);if(Number.isFinite(n))patch(flow.id,{amountEuro:Math.min(1e12,Math.max(-1e12,n))});
             }}/></label>
+          <label className="cy-field"><span>{t('Base del importe','Amount price basis')}</span>
+            <select value={flow.priceBasis??'futureNominal'} onChange={e=>patch(flow.id,{priceBasis:e.target.value as ScenarioCashFlow['priceBasis']})}>
+              <option value="futureNominal">{t('Euros nominales del año del flujo','Future-year nominal EUR')}</option>
+              <option value="baseYear">{t('Euros constantes del año base','Constant base-year EUR')}</option>
+            </select></label>
           <label className="cy-field"><span>{t('¿Es un coste nuevo o ya incluido?','Incremental or already included?')}</span>
             <select value={flow.accounting} onChange={e=>patch(flow.id,{accounting:e.target.value as ScenarioCashFlow['accounting']})}>
               <option value="incremental">{t('Adicional; calcular valor actual','Incremental; include in present value')}</option>
