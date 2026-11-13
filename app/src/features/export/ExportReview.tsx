@@ -61,7 +61,7 @@ export function ExportReview(props: Props) {
 
   return <section className="export-review" aria-labelledby="export-review-title">
     <button className="export-review__trigger" type="button" data-testid="open-export-review" aria-expanded={open} onClick={() => { setOpen((value) => !value); setConfirmed(false); setMessage(''); }}>
-      <span>06</span><div><strong>{es ? 'Revisar y exportar' : 'Review and export'}</strong><small>{es ? 'Informe PDF y archivo de datos JSON' : 'PDF report and JSON data file'}</small></div><b>{open ? '−' : '+'}</b>
+      <span aria-hidden="true">↧</span><div><strong>{es ? 'Revisar y exportar' : 'Review and export'}</strong><small>{es ? 'Informe PDF y archivo de datos JSON' : 'PDF report and JSON data file'}</small></div><b>{open ? '−' : '+'}</b>
     </button>
     {open && <div className="export-review__panel">
       <header><div><p className="kicker">{es ? 'REVISIÓN DEL INFORME' : 'REPORT REVIEW'}</p><h3 id="export-review-title">{es ? 'Informe de decisión' : 'Decision report'}</h3></div><strong>{es ? 'PROTOTIPO · SIN VALIDACIÓN INTERNA' : 'PROTOTYPE · NOT INTERNALLY VALIDATED'}</strong></header>
