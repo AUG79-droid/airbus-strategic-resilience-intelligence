@@ -156,15 +156,28 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
   return lines.join('\n');
 }
 async function downloadReportPdf(text:string, filename:string):Promise<void>{
-  const { PDFDocument, StandardFonts, rgb }=await import('pdf-lib');
+  const [{ PDFDocument, rgb }, {default: fontkit}]=await Promise.all([
+    import('pdf-lib'),import('@pdf-lib/fontkit')
+  ]);
   const doc=await PDFDocument.create();
-  const font=await doc.embedFont(StandardFonts.Helvetica);
-  const fontBold=await doc.embedFont(StandardFonts.HelveticaBold);
+  doc.registerFontkit(fontkit);
+  const fetchFont=async(filename:string):Promise<Uint8Array>=>{
+    const response=await fetch(import.meta.env.BASE_URL+'fonts/'+filename);
+    if(!response.ok)throw new Error('Bundled PDF font unavailable: '+filename);
+    return new Uint8Array(await response.arrayBuffer());
+  };
+  // Locally bundled OFL-licensed font: no third-party network request or
+  // runtime font service. UTF-8 scientific characters remain selectable text.
+  const [regularBytes,boldBytes]=await Promise.all([
+    fetchFont('Lato-Regular.ttf'),fetchFont('Lato-Bold.ttf')
+  ]);
+  const font=await doc.embedFont(regularBytes,{subset:true});
+  const fontBold=await doc.embedFont(boldBytes,{subset:true});
+  const rawFont=fontkit.create(regularBytes);
+  const clean=(value:string)=>Array.from(value,ch=>
+    rawFont.hasGlyphForCodePoint(ch.codePointAt(0)!)?ch:pdfSafeText(ch)).join('');
   const A4:[number,number]=[595.28,841.89];
   let page=doc.addPage(A4),y=A4[1]-42;
-  // Standard PDF font has no full Unicode: explicitly preserve technical
-  // notation, or display a U+codepoint marker instead of silent data loss.
-  const clean=pdfSafeText;
   const maxWidth=A4[0]-76;
   for(const raw of text.split('\n')){
     const bold=raw.startsWith('#')||raw.startsWith('NOTICE:')||raw.startsWith('AVISO:');
