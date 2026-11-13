@@ -34,7 +34,7 @@
 | ASRI-021 · Navegación móvil | **FIXED** | Cuatro fases visibles sin scroll oculto; pruebas responsive de 320 px y 390 px más escritorio. |
 | ASRI-022 · Continuidad | PARTIAL | Advertencia para casos reales no exportados y guardado local voluntario **solo de ejemplos ficticios**, con recuperación y borrado al retirar consentimiento. Casos reales no se persisten sin aprobación corporativa. Historial autentificado/cifrado de casos reales pendiente. |
 | ASRI-023 · Sourcemaps | **FIXED** | Los mapas de código de producción ya no se publican. |
-| ASRI-024 · Integridad y auditoría | PARTIAL | JSON de caso con suma SHA-256, rechazo de cambios no correspondientes, documentos con huella calculada localmente sin subida, versión, fragmento, vencimiento y revocación. No hay firma de usuario, libro de auditoría inmutable ni gestor documental corporativo; **NO puede declararse integridad forense autenticada**. |
+| ASRI-024 · Integridad y auditoría | PARTIAL | JSON de caso con suma SHA-256 canónica (orden de claves irrelevante, versión de sobre 2), compatibilidad con los sobres v1 y rechazo de cambios no correspondientes, documentos con huella calculada localmente sin subida, versión, fragmento, vencimiento y revocación. No hay firma de usuario, libro de auditoría inmutable ni gestor documental corporativo; **NO puede declararse integridad forense autenticada**. |
 
 **Balance por hallazgo: 11 FIXED, 12 PARTIAL, 1 NEEDS AIRBUS.** Los 24 tienen un tratamiento documentado; NO equivale a afirmar que los 24 hayan quedado cerrados.
 
