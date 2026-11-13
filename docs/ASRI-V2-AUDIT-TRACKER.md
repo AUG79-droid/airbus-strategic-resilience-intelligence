@@ -36,6 +36,8 @@
 | ASRI-023 · Sourcemaps | **FIXED** | Los mapas de código de producción ya no se publican. |
 | ASRI-024 · Integridad y auditoría | PARTIAL | JSON de caso con suma SHA-256 canónica (orden de claves irrelevante, versión de sobre 2), compatibilidad con los sobres v1 y rechazo de cambios no correspondientes, documentos con huella calculada localmente sin subida, versión, fragmento, vencimiento y revocación. No hay firma de usuario, libro de auditoría inmutable ni gestor documental corporativo; **NO puede declararse integridad forense autenticada**. |
 
+**Plan de validación para el siguiente paso:** [Matriz Airbus de datos, responsables funcionales y criterios de cierre](./ASRI-V2-AIRBUS-VALIDATION-PLAN-ES.md). Distingue tareas que aún puede completar desarrollo de las que dependen de datos, método o autorización corporativa. No asigna propietarios reales ni autoriza recopilar datos Airbus en GitHub.
+
 **Balance por hallazgo: 11 FIXED, 12 PARTIAL, 1 NEEDS AIRBUS.** Los 24 tienen un tratamiento documentado; NO equivale a afirmar que los 24 hayan quedado cerrados.
 
 ## Qué puede usar Dirección y qué no
