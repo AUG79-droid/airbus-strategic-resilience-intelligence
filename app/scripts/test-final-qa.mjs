@@ -21,7 +21,7 @@ for (const viewport of viewports) {
     if (active !== 1) throw new Error(`${viewport.name}/${route} has ${active} active navigation entries.`);
   }
   await page.goto(`${baseUrl}/#/investigate`, { waitUntil: 'networkidle' });
-  for (const label of ['02 Challenge', '03 Validate', '04 Translate', '01 Investigate']) await page.getByRole('button', { name: new RegExp(label) }).click();
+  for (const index of [1, 2, 3, 0]) await page.locator('.workflow-button').nth(index).click();
   await page.getByRole('button', { name: 'ES', exact: true }).click();
   if (await page.locator('html').getAttribute('lang') !== 'es') throw new Error(`${viewport.name}: language did not switch to Spanish.`);
   await page.getByRole('button', { name: 'EN', exact: true }).click();
