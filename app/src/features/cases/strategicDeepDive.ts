@@ -233,7 +233,13 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
     ['lifeExtension','vida útil adicional modelizada','modelled additional service life']
   ];
   const envPieces:string[]=[];
+  if(c.environmentCheck.status!=='declaredComparable'){
+    envPieces.push(es
+      ?'Los inventarios NO son aún comparables: sus unidades funcionales, límites, periodos o métodos están incompletos o son incompatibles. No puede afirmarse una reducción ambiental con estos datos.'
+      :'Inventories are NOT yet comparable: their functional units, boundaries, periods or methods are missing or incompatible. No environmental reduction can be claimed from these data.');
+  }
   for(const [id,esLabel,enLabel] of envIds){
+    if(c.environmentCheck.status!=='declaredComparable')break;
     const v=metric(c,id);if(!v)continue;
     const u=id==='ghgKg'?'kg CO₂e':id==='lifeExtension'?(es?'horas':'hours'):'kg';
     envPieces.push(es
@@ -243,9 +249,9 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   if(!envPieces.length)envPieces.push(es
     ?'Aún no hay datos ambientales comparables entre alternativas.'
     :'Environmental impacts cannot yet be compared between options.');
-  else envPieces.push(es
-    ?'Estos datos corresponden a los impactos ambientales incluidos en el caso, no a todos los impactos posibles.'
-    :'These figures cover the environmental impacts included in this case, not every possible impact.');
+  else if(c.environmentCheck.status==='declaredComparable')envPieces.push(es
+    ?'Las magnitudes son comparables según los metadatos introducidos por el usuario, pero todavía requieren verificación de factores, trazabilidad, incertidumbre y metodología. No constituyen un ACV validado.'
+    :'Figures are comparable under user-declared metadata, but factor sources, traceability, uncertainty and methodology still require independent verification. This is not a validated LCA.');
   insights.push({id:'environment',title:es?'4. Impactos ambientales':'4. Environmental impact',body:envPieces.join(' ')});
 
   // Compare the selected option directly with the other candidate, not only baseline.
