@@ -242,7 +242,7 @@ const COMPUTED_INDICATORS:{
   {id:'expectedRecovery',label:'Tiempo medio de recuperación / Expected recovery',unit:'time',direction:'lower',category:'resilience',
     sourceIds:['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay']},
   {id:'deadlineAttainment',label:'Probabilidad de cumplir el plazo / Deadline attainment',unit:'%',direction:'higher',category:'operational',
-    sourceIds:['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay']},
+    sourceIds:['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock']},
   {id:'expectedCost',label:'Coste esperado / Expected cost',unit:'€',direction:'lower',category:'cost',
     sourceIds:['baseCost','logisticsCost','investmentCost','shockProbability','shockSurcharge','technicalSuccess','failureCost',
       'reservationFee','cancellationProbability','cancellationFee']},
@@ -429,6 +429,14 @@ export function validateCaseImport(value: unknown): StrategicCase {
   const upgraded=structuredClone(x as StrategicCase);
   upgraded.parameters??=defaultParameterStates(upgraded.kind);
   if(!upgraded.parameters||typeof upgraded.parameters!=='object'||Array.isArray(upgraded.parameters))throw new Error('Invalid applicability catalogue');
+  // Version-1 JSON files predate the optional joint-event field.
+  // Keep them readable and retain explicit independence as the legacy assumption.
+  if(!upgraded.parameters.jointFailureShock){
+    upgraded.parameters.jointFailureShock={
+      applicability:'notApplicable',
+      reason:'Legacy model: technical failure and external shock assumed independent / Modelo anterior: independencia supuesta.'
+    };
+  }
   for(const item of UNIVERSAL_PARAMETERS){
     const p=upgraded.parameters[item.id];
     if(!p||!['applies','notApplicable','unknown'].includes(p.applicability)||
@@ -437,6 +445,7 @@ export function validateCaseImport(value: unknown): StrategicCase {
   for(const option of upgraded.options){
     option.parameterValues??=emptyParameterValues();
     if(!option.parameterValues||typeof option.parameterValues!=='object'||Array.isArray(option.parameterValues))throw new Error('Invalid parameter values');
+    option.parameterValues.jointFailureShock??={value:null,evidenceId:''};
     for(const p of UNIVERSAL_PARAMETERS){
       const m=option.parameterValues[p.id];
       if(!m||typeof m.evidenceId!=='string'||m.evidenceId.length>100||
