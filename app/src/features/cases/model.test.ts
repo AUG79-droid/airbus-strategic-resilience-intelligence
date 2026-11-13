@@ -162,12 +162,36 @@ describe('Create your own strategic case', () => {
     expect(outcome.verdict).toBe('incomplete');
     expect(outcome.missing.some(x=>x.includes('invalid or out of bounds'))).toBe(true);
   });
-  it('sensitivity is a margin test, never confidence significance', () => {
+  it('recalculates real one-at-a-time input variations instead of a delta margin', () => {
     const c=fromPreset('ecodesign');
     c.robustnessPercent=100;
-    expect(compareOption(c,c.options[1]).rows[0].robustness).toBe('sensitive');
+    const change=compareOption(c,c.options[1]);
+    expect(change.rows[0].robustness).toBe('sensitive');
     c.robustnessPercent=0;
-    expect(compareOption(c,c.options[1]).rows[0].robustness).toBe('stable');
+    expect(compareOption(c,c.options[1]).rows[0].robustness).toBe('insufficient');
+  });
+  it('labels identical alternatives equivalent rather than pretending the difference is sensitive', () => {
+    const c=fromPreset('ecodesign');
+    c.options[1].parameterValues=structuredClone(c.options[0].parameterValues);
+    const result=compareOption(c,c.options[1]);
+    expect(result.rows[0].delta).toBe(0);
+    expect(result.rows[0].robustness).toBe('equivalent');
+  });
+  it('rejects imported cases with missing IDs, inconsistent numeric bounds or out-of-range inputs', () => {
+    const c=fromPreset('ecodesign');
+    const missingId=structuredClone(c) as typeof c & {id?:string};
+    delete missingId.id;
+    expect(()=>validateCaseImport(missingId)).toThrow(/Unsupported case structure/);
+    const bounds=structuredClone(c);
+    bounds.metrics[0].min=50;
+    bounds.metrics[0].max=2;
+    expect(()=>validateCaseImport(bounds)).toThrow(/Invalid indicator/);
+    const invalidParam=structuredClone(c);
+    invalidParam.options[1].parameterValues.technicalSuccess.value=200;
+    expect(()=>validateCaseImport(invalidParam)).toThrow(/Invalid parameter/);
+    const duplicateEvidence=structuredClone(c);
+    duplicateEvidence.evidence.push({...duplicateEvidence.evidence[0]});
+    expect(()=>validateCaseImport(duplicateEvidence)).toThrow(/Invalid evidence/);
   });
   it('requires a real reviewer, date, owner and reference for reviewed evidence', () => {
     const c=createCase();
