@@ -1,4 +1,5 @@
 import type { CausalStage, Locale, ViewId } from '../app/types';
+import { APP_VERSION } from '../version';
 
 export interface Copy {
   skip: string;
@@ -70,7 +71,7 @@ export const copy: Record<Locale, Copy> = {
     skip: 'Skip to main content',
     brandSub: 'Strategic resilience decision studio',
     prototypeStatus: 'EXPLORATORY · NOT AIRBUS APPROVED',
-    phaseLabel: 'PROTOTYPE / MODEL 0.6',
+    phaseLabel: `PROTOTYPE / MODEL ${APP_VERSION}`,
     navLabel: 'Primary workflow',
     railHint: 'INVESTIGATE / CHALLENGE / VALIDATE / TRANSLATE',
     railBottom: 'PUBLIC DATA / SCENARIO',
@@ -221,7 +222,7 @@ export const copy: Record<Locale, Copy> = {
     skip: 'Saltar al contenido principal',
     brandSub: 'Estudio de decisiones de resiliencia estratégica',
     prototypeStatus: 'EXPLORATORIO · SIN APROBACIÓN DE AIRBUS',
-    phaseLabel: 'PROTOTIPO / MODELO 0.6',
+    phaseLabel: `PROTOTIPO / MODELO ${APP_VERSION}`,
     navLabel: 'Flujo principal',
     railHint: 'INVESTIGAR / CUESTIONAR / VALIDAR / TRADUCIR',
     railBottom: 'DATOS PÚBLICOS / ESCENARIO',
