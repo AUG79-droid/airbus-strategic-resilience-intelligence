@@ -54,6 +54,26 @@ export function App() {
     document.documentElement.lang = locale;
   }, [locale]);
 
+  // Protect unsaved user-created work without storing case data in the
+  // browser or a remote account. Browsers choose their own warning text.
+  useEffect(() => {
+    if(caseMode!=='custom'||customCase.hypothetical)return;
+    const hasEdits=[customCase.title,customCase.programme,customCase.decision,
+      customCase.initiative,customCase.vulnerability,customCase.mechanism,
+      customCase.boundary,customCase.timeHorizon,customCase.owner]
+      .some(value=>value.trim().length>0) ||
+      customCase.options.some(option=>Object.values(option.parameterValues)
+        .some(measure=>measure.value!==null)) ||
+      customCase.evidence.length>0;
+    if(!hasEdits)return;
+    const warnBeforeLeaving=(event:BeforeUnloadEvent)=>{
+      event.preventDefault();
+      event.returnValue='';
+    };
+    window.addEventListener('beforeunload',warnBeforeLeaving);
+    return ()=>window.removeEventListener('beforeunload',warnBeforeLeaving);
+  }, [caseMode,customCase]);
+
   useEffect(() => {
     const onNavigation = () => {
       const next = viewFromHash();
