@@ -41,6 +41,12 @@ export function displayOptionName(option:Pick<Option,'id'|'name'>,locale:'es'|'e
 export interface EvidenceItem {
   id: string; title: string; reference: string; owner: string; reviewer: string;
   reviewedOn: string; status: EvidenceStatus; nature: EvidenceNature; limitations: string;
+  /** Optional source provenance declarations; none authenticates a reviewer. */
+  documentVersion?:string;
+  documentSha256?:string;
+  excerptUsed?:string;
+  validUntil?:string;
+  revokedOn?:string;
 }
 export interface ReviewGates {
   comparableBoundary: boolean;
@@ -245,6 +251,9 @@ export function evidenceReviewed(caseData: StrategicCase, measure: Measure): boo
     !!record.owner.trim() && !!record.reviewer.trim() &&
     record.owner.trim().toLowerCase()!==record.reviewer.trim().toLowerCase() &&
     /^\d{4}-\d{2}-\d{2}$/.test(record.reviewedOn) &&
+    record.reviewedOn<=new Date().toISOString().slice(0,10) &&
+    (!record.validUntil||record.validUntil>=new Date().toISOString().slice(0,10)) &&
+    !record.revokedOn &&
     !!record.title.trim();
 }
 
@@ -527,6 +536,12 @@ export function validateCaseImport(value: unknown): StrategicCase {
       typeof e.reviewer!=='string'||e.reviewer.length>250||
       typeof e.reviewedOn!=='string'||e.reviewedOn.length>20||
       typeof e.limitations!=='string'||e.limitations.length>4000||
+      (e.documentVersion!==undefined&&(typeof e.documentVersion!=='string'||e.documentVersion.length>120))||
+      (e.documentSha256!==undefined&&(typeof e.documentSha256!=='string'||
+        (e.documentSha256!==''&&!/^[a-f0-9]{64}$/.test(e.documentSha256))))||
+      (e.excerptUsed!==undefined&&(typeof e.excerptUsed!=='string'||e.excerptUsed.length>4000))||
+      (e.validUntil!==undefined&&(typeof e.validUntil!=='string'||e.validUntil.length>20))||
+      (e.revokedOn!==undefined&&(typeof e.revokedOn!=='string'||e.revokedOn.length>20))||
       !['pending','reviewed','rejected'].includes(e.status)||
       !['observed','estimate','method'].includes(e.nature))return true;
     evidenceIds.add(e.id);
@@ -534,6 +549,12 @@ export function validateCaseImport(value: unknown): StrategicCase {
       if(!/^\d{4}-\d{2}-\d{2}$/.test(e.reviewedOn))return true;
       const d=new Date(e.reviewedOn);
       if(Number.isNaN(d.getTime())||d.toISOString().slice(0,10)!==e.reviewedOn)return true;
+    }
+    for(const dateValue of [e.validUntil,e.revokedOn]){
+      if(dateValue===undefined||dateValue==='')continue;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(dateValue))return true;
+      const d=new Date(dateValue);
+      if(Number.isNaN(d.getTime())||d.toISOString().slice(0,10)!==dateValue)return true;
     }
     return false;
   })) throw new Error('Invalid evidence register');
