@@ -97,7 +97,9 @@ export interface IndicatorComparison {
     switchingParameter?:string;switchingAlternative?:string;switchingValue?:number;
   };
   /** Four coordinated ± input-stress scenarios; not statistical confidence bounds. */
-  coordinatedStress?: {minDelta:number;maxDelta:number;validScenarios:number;attemptedScenarios:number};
+  coordinatedStress?: {minDelta:number;maxDelta:number;validScenarios:number;attemptedScenarios:number;
+    /** Scope of the extreme-scenario evaluation, never a confidence score. */
+    coverage:'none'|'partial'|'complete'};
   evidenceReady: boolean;
   observedEvidence: boolean;
   issue?: 'excluded' | 'missing';
@@ -398,7 +400,8 @@ function coordinatedInputStress(
     result.push(y.value-x.value);
     validScenarios++;
   }
-  return {minDelta:Math.min(...result),maxDelta:Math.max(...result),validScenarios,attemptedScenarios:4};
+  return {minDelta:Math.min(...result),maxDelta:Math.max(...result),validScenarios,attemptedScenarios:4,
+    coverage:validScenarios===0?'none':validScenarios===4?'complete':'partial'};
 }
 
 function parameterEvidence(caseData:StrategicCase,option:Option,ids:string[],kind:'reviewed'|'observed'):boolean{
