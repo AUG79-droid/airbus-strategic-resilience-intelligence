@@ -182,3 +182,11 @@
 .cy-deep-dive__item--risk{border-top:3px solid #ac8558}
 .cy-deep-dive__item--evidence{background:#f6f7f3}
 @media(max-width:800px){.cy-deep-dive__grid{grid-template-columns:1fr}.cy-deep-dive__item--action{grid-column:auto}}
+
+
+/* Translate: every strategic question is followed by an explicit answer. */
+.cy-strategic-decision{display:grid;gap:12px}
+.cy-strategic-question{font-size:18px!important;line-height:1.6!important;font-weight:750;margin:0;color:#214e39}
+.cy-strategic-answer{display:grid;gap:9px;padding:18px 21px;background:#eaf1e7;border-left:5px solid #39744b;color:#1f402e}
+.cy-strategic-answer>strong{font-size:16px;line-height:1.4}
+.cy-strategic-answer>p{font-size:18px!important;line-height:1.65!important;font-weight:500;margin:0!important}
