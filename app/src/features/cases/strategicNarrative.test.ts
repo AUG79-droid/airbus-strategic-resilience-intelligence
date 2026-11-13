@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { comparisons, createCase } from './model';
 import { fromPreset } from './presets';
-import { strategicMessage, strategicNarrativeText } from './strategicNarrative';
+import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 
 describe('Strategic resilience translation',()=>{
   it('translates component recovery into a concrete defence resilience mechanism',()=>{
@@ -144,6 +144,87 @@ describe('Strategic resilience translation',()=>{
     expect(output.operationalMeaning).toContain('Dependencia de un servicio externo');
     expect(output.quantifiedFinding).toMatch(/No hay todavía datos suficientes/);
     expect(output.quantifiedFinding).not.toMatch(/141,3|92 días/);
+  });
+
+
+  it('answers Eurodrone Defence Customer question with the actual recovery and deadline results',()=>{
+    const c=fromPreset('ecodesign','es');
+    const comp=comparisons(c)[0];
+    const a=strategicDecisionAnswer(c,comp,'defenceCustomer','es');
+    expect(a).toContain('Sí, parcialmente');
+    expect(a).toContain('141,3');
+    expect(a).toContain('92');
+    expect(a).toContain('0 %');
+    expect(a).toContain('64,8 %');
+    expect(a).toMatch(/capacidad|flota/);
+    expect(a).toContain('simulado');
+    const report=strategicNarrativeText(c,comp,'defenceCustomer','es');
+    expect(report).toContain('Respuesta del análisis: ');
+    expect(report).toContain(a);
+  });
+  it('answers dynamically in English for both options and all four audiences',()=>{
+    const c=fromPreset('ecodesign','en');
+    const [repair,combined]=comparisons(c);
+    const a=strategicDecisionAnswer(c,repair,'defenceCustomer','en');
+    const b=strategicDecisionAnswer(c,combined,'defenceCustomer','en');
+    expect(a).toContain('Partly yes');
+    expect(a).toContain('141.3');
+    expect(a).toContain('64.8%'.replace('%',' %'));
+    expect(a).not.toBe(b);
+    for(const audience of ['defenceCustomer','engineering','programmeManager','executiveLeadership'] as const){
+      const result=strategicDecisionAnswer(c,repair,audience,'en');
+      expect(result.length).toBeGreaterThan(100);
+      expect(result).toContain('scenario');
+      expect(strategicNarrativeText(c,repair,audience,'en')).toContain('Model-based answer: '+result);
+    }
+  });
+  it.each(['climate','saf','wildfire'] as const)('responds in both languages without claiming %s outcomes are authorised',kind=>{
+    for(const locale of ['es','en'] as const){
+      const c=fromPreset(kind,locale);
+      for(const cmp of comparisons(c)){
+        for(const audience of ['defenceCustomer','engineering','programmeManager','executiveLeadership'] as const){
+          const text=strategicDecisionAnswer(c,cmp,audience,locale);
+          expect(text.length).toBeGreaterThan(120);
+          expect(text.toLowerCase()).not.toMatch(/proven real-world mission availability|disponibilidad real de la flota demostrada/);
+          expect(strategicNarrativeText(c,cmp,audience,locale)).toContain(text);
+        }
+      }
+    }
+  });
+  it('does not answer positively when expected recovery worsens',()=>{
+    const c=fromPreset('ecodesign','es');
+    c.options[1].parameterValues.baseRecovery.value=250;
+    const answer=strategicDecisionAnswer(c,comparisons(c)[0],'defenceCustomer','es');
+    expect(answer).not.toContain('Sí, parcialmente');
+    expect(answer).toContain('aumenta');
+  });
+  it('leaves an explicit answer when a newly created case has no results',()=>{
+    const c=createCase('general','es');
+    const cmp=comparisons(c)[0];
+    const answer=strategicDecisionAnswer(c,cmp,'defenceCustomer','es');
+    expect(answer).toContain('Todavía no se puede responder con datos');
+    expect(answer).not.toContain('141,3');
+  });
+  it('updates the answer after editing a custom case and avoids inherited Eurodrone claims',()=>{
+    const c=createCase('general','es');
+    c.title='Mi proyecto de eficiencia operativa';
+    c.vulnerability='Dependencia de una vía de refrigeración';
+    c.options[0].parameterValues.baseRecovery.value=100;
+    c.options[1].parameterValues.baseRecovery.value=60;
+    c.options[0].parameterValues.recoveryTarget.value=95;
+    c.options[1].parameterValues.recoveryTarget.value=95;
+    for(const opt of c.options){
+      opt.parameterValues.shockProbability.value=0;
+      opt.parameterValues.shockDelay.value=0;
+    }
+    let text=strategicDecisionAnswer(c,comparisons(c)[0],'defenceCustomer','es');
+    expect(text).toContain('60');
+    expect(text).toContain('100');
+    expect(text).not.toContain('flota');
+    c.options[1].parameterValues.baseRecovery.value=120;
+    text=strategicDecisionAnswer(c,comparisons(c)[0],'defenceCustomer','es');
+    expect(text).toContain('120');
+    expect(text).not.toContain('Sí, parcialmente');
   });
 
 });
