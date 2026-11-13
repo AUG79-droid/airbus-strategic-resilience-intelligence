@@ -24,7 +24,7 @@ describe('No automatic aircraft or mission readiness inference',()=>{
   expect(()=>validateCaseImport(c)).toThrow(/Invalid mission/);
   c.missionBridges=[{...sample,observedMissionAvailabilityPercent:101}];
   expect(()=>validateCaseImport(c)).toThrow(/Invalid mission/);
-  expect(validateMissionBridges([{...sample,optionId:'other'}],['option-a'])).toThrow();
+  expect(()=>validateMissionBridges([{...sample,optionId:'other'}],['option-a'])).toThrow();
  });
  it('imports pre-v2 files without any mission-availability claim',()=>{
   const c=createCase();delete (c as unknown as {missionBridges?:unknown}).missionBridges;
