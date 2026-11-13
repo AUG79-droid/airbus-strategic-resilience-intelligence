@@ -314,17 +314,17 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
   const better=recovery&&recovery.delta!<0;
   const mechanism=isEco
     ?(combo
-      ?(es?'La combinación de una vía de reparación y otra de aprovisionamiento puede ampliar las opciones de recuperación cuando falla el suministro habitual.':
-        'Combining repair with another sourcing route can broaden recovery options if normal supply fails.')
-      :(es?'Una vía de reparación cualificada añade una opción de recuperación distinta a esperar la entrega de un componente nuevo. No significa disponer de otro proveedor.':
-        'Qualified repair provides a recovery route beyond waiting for a new component. It does not, by itself, add another supplier.'))
+      ?(es?'Combinar la reparación con un proveedor alternativo ofrece dos vías para recuperar el componente ante problemas de suministro.':
+        'Combining repair with an alternative supplier provides two ways to recover the component if normal supply is disrupted.')
+      :(es?'Una reparación cualificada permite recuperar el componente sin depender únicamente de recibir uno nuevo.':
+        'Qualified repair offers another way to recover the component without relying only on a new delivery.'))
     :(es?`La iniciativa plantea este mecanismo de resiliencia: ${data.mechanism||'reducir una vulnerabilidad operativa definida'}.`
       :`The initiative proposes this resilience mechanism: ${data.mechanism||'reducing a defined operational vulnerability'}.`);
   const improvementQualifier=better
-    ?(es?'En este escenario la vía alternativa permite recuperar antes el componente; no demuestra por sí sola una mejora de disponibilidad de toda la flota.':
-      'In this scenario the option restores the component sooner; this does not itself demonstrate fleet-level availability.')
-    :(es?'La comparación no muestra una reducción del tiempo estimado de recuperación; hay que valorar otras ventajas y compromisos.':
-      'The comparison does not show shorter estimated recovery; other benefits and trade-offs need assessment.');
+    ?(es?'En esta comparación, la alternativa permite recuperar el componente antes.':
+      'In this comparison, the option restores the component sooner.')
+    :(es?'En esta comparación, la alternativa no reduce el tiempo de recuperación.':
+      'In this comparison, the option does not reduce recovery time.');
   if(audience==='defenceCustomer'){
     return {
       headline:es?'Resiliencia operativa: más capacidad de respuesta ante problemas de suministro':
@@ -332,11 +332,11 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
       operationalMeaning:`${mechanism} ${improvementQualifier}`,
       quantifiedFinding:recoveryText+deadlineText,
       sustainabilityLink:es
-        ?`${materialText} El valor para Defensa no es solo consumir menos: es reducir la exposición del servicio a una única ruta de reposición.`
-        :`${materialText} The value for Defence is not merely using less material: it is reducing exposure to a single replacement route.`,
+        ?`${materialText} El valor para Defensa es consumir menos materiales y disponer de una alternativa a la sustitución convencional.`
+        :`${materialText} For Defence, the value is using less material and having an alternative to conventional replacement.`,
       decisionQuestion:es
-        ?'Decisión para el cliente: ¿permite esta opción mantener los requisitos de capacidad y recuperar antes el componente crítico bajo interrupciones comparables?'
-        :'Customer decision: can this option meet capability requirements and restore the critical component sooner under comparable disruptions?'
+        ?'Pregunta del cliente: ¿qué aporta esta alternativa a la recuperación del componente cuando falla el suministro?'
+        :'Customer question: what does this option add to component recovery when supply is disrupted?'
     };
   }
   if(audience==='engineering'){
@@ -349,8 +349,8 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
         ?`${materialText} Una reducción de material solo se convierte en resiliencia cuando la reparación mantiene función, seguridad y trazabilidad.`
         :`${materialText} Material savings support resilience only when repair maintains function, safety and traceability.`,
       decisionQuestion:es
-        ?'Decisión para Ingeniería: ¿qué ensayos, criterios de aceptación y autorizaciones permiten activar esta vía sin comprometer la aeronavegabilidad ni los requisitos funcionales?'
-        :'Engineering decision: which tests, acceptance criteria and approvals are needed to use this route without compromising airworthiness or functional requirements?'
+        ?'Pregunta para Ingeniería: ¿qué hay que comprobar para utilizar esta alternativa de forma segura?'
+        :'Engineering question: what needs to be checked before this option can be used safely?'
     };
   }
   if(audience==='programmeManager'){
@@ -361,8 +361,8 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
       quantifiedFinding:recoveryText+deadlineText,
       sustainabilityLink:`${costText} ${supplyText}`,
       decisionQuestion:es
-        ?'Decisión para Programa: ¿compensa la combinación de plazos, coste y contingencias para cumplir los compromisos de soporte?'
-        :'Programme decision: do timing, cost and contingency trade-offs justify the option against in-service commitments?'
+        ?'Pregunta para Programa: ¿merece la pena esta alternativa por sus plazos y costes?'
+        :'Programme question: is this option worthwhile in terms of time and cost?'
     };
   }
   return {
@@ -374,8 +374,8 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
       ?`${materialText} ${costText} Lo estratégico es disminuir la dependencia de una ruta crítica, sin esconder el coste de las alternativas.`
       :`${materialText} ${costText} The strategic value is reducing dependence on a critical route without hiding the alternatives' costs.`,
     decisionQuestion:es
-      ?'Decisión para Dirección: ¿qué capacidades de reparación o abastecimiento conviene desarrollar para reducir la vulnerabilidad y qué evidencia justificaría invertir?'
-      :'Leadership decision: which repair or sourcing capabilities merit investment to reduce vulnerability, and what evidence would justify it?'
+      ?'Pregunta para Dirección: ¿conviene invertir en esta alternativa de recuperación?'
+      :'Leadership question: is this recovery option worth investing in?'
   };
 }
 
@@ -472,8 +472,8 @@ export function strategicDecisionAnswer(
     :'';
   if(audience==='defenceCustomer'){
     const value=data.kind==='ecodesign'
-      ?(es?'En Eurodrone, contar con una reparación cualificada reduce el tiempo de espera respecto a sustituir la pieza y ofrece más opciones para recuperar el componente.':
-        'In the Eurodrone case, qualified repair reduces the wait compared with replacing the part and provides another way to restore the component.')
+      ?(es?'Contar con una vía de reparación, además de poder sustituir la pieza, ofrece más opciones para recuperar el componente ante un problema de suministro.':
+        'Having a repair route as well as replacement offers another way to recover the component when supply is disrupted.')
       :data.kind==='climate'
         ?(es?'Esto permite valorar qué medida ayuda a restablecer antes las operaciones de apoyo durante episodios de calor extremo.':
           'This shows which option can restore support operations sooner during extreme heat.')
