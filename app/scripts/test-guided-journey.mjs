@@ -3,7 +3,7 @@ const url=process.env.QA_URL??'http://127.0.0.1:4174';
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:true});
 const checks=[],errors=[];
 try {
- for(const viewport of [{width:1440,height:900},{width:390,height:844}]){
+ for(const viewport of [{width:1440,height:900},{width:390,height:844},{width:320,height:800}]){
   const context=await browser.newContext({viewport,reducedMotion:'reduce'});
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url+'/#/investigate',{waitUntil:'networkidle'});
