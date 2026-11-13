@@ -12,6 +12,8 @@ import { UniversalControls } from './UniversalControls';
 import { DependencyRoutes } from './DependencyRoutes';
 import { EnvironmentalMethod } from './EnvironmentalMethod';
 import { MissionBridgeReview } from './MissionBridgeReview';
+import { DiscountedFinance } from './DiscountedFinance';
+import { evaluateDiscountedFinance } from './discountedCashFlows';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
 import { calculateUniversal, parameterUnit, UNIVERSAL_PARAMETERS } from './universal';
@@ -100,6 +102,16 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     }),
     '',es?'## Comparabilidad ambiental declarada':'## Declared environmental comparability',
     ...data.environmentalBasis.map(x=>`- ${x.optionId}: functionalUnit=${x.functionalUnit}; period=${x.period}; boundary=${x.boundary}; method=${x.inventoryMethod}; allocation=${x.allocationRule}; factorVersion=${x.factorSourceVersion}; evidence=${x.evidenceId||'unlinked'}`),
+    '',es?'## Flujos de caja descontados adicionales (opcional)':'## Additional discounted cash flows (optional)',
+    `${es?'Tasa anual de descuento declarada':'User-declared annual discount rate'}: ${data.discountedFinance.annualDiscountPercent??'N/A'}%`,
+    ...data.options.map(option=>{
+      const result=evaluateDiscountedFinance(data.discountedFinance,option.id);
+      return `- ${displayOptionName(option,locale)}: ${result.status==='calculated'
+        ?`${present(result.incrementalPresentValueEuro,locale)} EUR ${es?'de valor actual incremental':'incremental present value'}`
+        :es?'Valor actual no evaluado':'Present value not assessed'}`;
+    }),
+    ...data.discountedFinance.flows.map(flow=>`- ${flow.optionId} / ${flow.id}: year=${flow.year}; netEUR=${flow.amountEuro}; account=${flow.accounting}; evidence=${flow.evidenceId||'unlinked'}; ${flow.explanation}`),
+    `${es?'El descuento NO verifica los flujos, los costes de proyecto ni la doble contabilización':'Discounting does NOT validate the flows, programme costs or double counting'}.`,
     '',es?'## Relación entre componente y misión':'## Component-to-mission evidence bridge',
     ...(data.missionBridges.length
       ?data.missionBridges.map(link=>`- ${link.optionId}: ${link.componentOrService} > ${link.subsystem} > ${link.platform} > ${link.missionFunction}; dependency=${link.dependencyType}; USER-DECLARED mission availability=${link.observedMissionAvailabilityPercent??'not measured'}%; evidence=${link.evidenceId||'none'}`)
@@ -334,6 +346,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
       <DependencyRoutes locale={locale} data={data} setData={setData}/>
       <EnvironmentalMethod locale={locale} data={data} setData={setData}/>
       <MissionBridgeReview locale={locale} data={data} setData={setData}/>
+      <DiscountedFinance locale={locale} data={data} setData={setData}/>
       <section className="cy-panel">
         <h3>{t('Comparación de las alternativas','Comparison of alternatives')}</h3>
         <p>{t('Los indicadores se calculan con los controles anteriores. Los que no aplican se excluyen, y los desconocidos bloquean las conclusiones afectadas. No hay un ganador automático si existen compromisos.',
