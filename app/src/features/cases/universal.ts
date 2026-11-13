@@ -1,4 +1,5 @@
 import { buildRiskTable } from '../../domain/model/probability';
+import {aggregateTimingMoments} from '../../domain/model/timingMoments';
 
 /**
  * Shared parameter catalogue for ALL custom case families.
@@ -203,44 +204,39 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
     ...paired('cancellationProbability','cancellationFee')];
   const invalidPair=(x:DerivedValue):DerivedValue=>
     pairIssues.length?result('missing',null,x.formula,[...x.missing,...pairIssues]):x;
+  // DEMO-60 and Case Studio share the SAME risk-branch aggregation kernel.
+  // Their strategy-specific completion rules differ and remain labelled as such.
+  const timingMoments=(v:(id:string)=>number|null,target?:number)=>{
+    const base=v('baseRecovery'),tech=v('technicalSuccess'),shock=v('shockProbability');
+    const overlap=v('jointFailureShock'),jointDelay=v('jointExtraDelay');
+    if(base===null||jointDelay!==null&&(overlap===null||tech===null||shock===null)||
+      !validJoint(tech,shock,overlap))return null;
+    try{
+      const branches=jointRiskBranches(tech??100,shock??0,overlap);
+      const startTime=Math.max(base,v('supplyLead')??0);
+      return aggregateTimingMoments(branches.map(branch=>{
+        const completionTime=startTime+
+          (branch.technicalSuccess?0:(v('failureDelay')??0))+
+          (branch.shock?(v('shockDelay')??0):0)+
+          (!branch.technicalSuccess&&branch.shock?(jointDelay??0):0);
+        return {probability:branch.probability,completionTime,
+          ...(target===undefined?{}:{targetMet:completionTime<=target})};
+      }));
+    }catch{return null;}
+  };
   const recovery=invalidPair(join(
     ['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay'],
-    'max(baseRecovery,supplyLead) + P(failure)*failureDelay + P(shock)*shockDelay + P(both)*extraDelay if applicable',
-    v=>{
-      const base=v('baseRecovery'); if(base===null)return NaN;
-      const supply=v('supplyLead');
-      const tech=v('technicalSuccess'),failure=v('failureDelay');
-      const risk=v('shockProbability'),delay=v('shockDelay');
-      const both=v('jointFailureShock'),jointDelay=v('jointExtraDelay');
-      if(jointDelay!==null&&(both===null||tech===null||risk===null))return NaN;
-      if(!validJoint(tech,risk,both))return NaN;
-      return Math.max(base,supply??0)+(tech===null?0:(1-tech/100)*(failure??0))
-        +(risk===null?0:risk/100*(delay??0))+(both??0)/100*(jointDelay??0);
-    }
+    'Σ branch probability × branch completion time, shared risk-moment kernel',
+    v=>timingMoments(v)?.meanCompletionTime??NaN
   ));
   const deadline=invalidPair(join(
     ['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay'],
-    'Σ joint-risk branch probability × I(completion<=target); independence only when joint probability is N/A',
+    'Σ branch probability × I(branch completion<=target), shared risk-moment kernel',
     v=>{
-      const base=v('baseRecovery'),target=v('recoveryTarget');
-      if(base===null||target===null)return NaN;
-      const start=Math.max(base,v('supplyLead')??0);
-      // Joint overlap requires both underlying risks to be defined.
-      const overlap=v('jointFailureShock'),jointDelay=v('jointExtraDelay');
-      if(jointDelay!==null&&overlap===null)return NaN;
-      if(overlap!==null&&(v('technicalSuccess')===null||v('shockProbability')===null))return NaN;
-      let branches:JointRiskBranch[];
-      try {
-        branches=jointRiskBranches(v('technicalSuccess')??100,v('shockProbability')??0,overlap);
-      } catch { return NaN; }
-      let output=0;
-      for(const branch of branches){
-        const time=start+(branch.technicalSuccess?0:(v('failureDelay')??0))+
-          (branch.shock?(v('shockDelay')??0):0)+
-          (!branch.technicalSuccess&&branch.shock?(jointDelay??0):0);
-        if(time<=target)output+=branch.probability;
-      }
-      return output*100;
+      const target=v('recoveryTarget');
+      if(target===null)return NaN;
+      const probability=timingMoments(v,target)?.probabilityTargetMet;
+      return probability===null||probability===undefined?NaN:probability*100;
     }
   ));
   const costBasis=invalidPair(join(
