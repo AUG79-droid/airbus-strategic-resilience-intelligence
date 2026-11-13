@@ -62,12 +62,18 @@ export function validateFinancePlan(value:unknown,optionIds:string[]):Discounted
     annualEscalationPercent:p.annualEscalationPercent??null,flows};
 }
 export function evaluateDiscountedFinance(plan:DiscountedFinancePlan,optionId:string):DiscountedScenarioCost{
+  const selected=plan.flows.filter(x=>x.optionId===optionId);
+  // Missing records are UNKNOWN, not demonstrated zero costs or savings.
+  // In particular, never subtract a populated baseline from an empty option.
+  if(selected.length===0)return {
+    status:'notAssessed',incrementalPresentValueEuro:null,excludedAlreadyCountedEuro:0,
+    flowCount:0,assumptions:['No cash flow records declared for this option; zero incremental cost cannot be inferred.']
+  };
   if(plan.annualDiscountPercent===null)return {
     status:'notAssessed',incrementalPresentValueEuro:null,excludedAlreadyCountedEuro:0,
     flowCount:plan.flows.filter(x=>x.optionId===optionId).length,
     assumptions:['Discount rate is not declared. No discounted financial estimate is produced.']
   };
-  const selected=plan.flows.filter(x=>x.optionId===optionId);
   const rate=plan.annualDiscountPercent/100;
   const counted=selected.filter(x=>x.accounting==='incremental');
   // A constant-price amount MUST NOT be silently treated as a future nominal
