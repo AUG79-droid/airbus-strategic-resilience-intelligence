@@ -6,6 +6,6 @@ export default defineConfig({
   base: '/airbus-strategic-resilience-intelligence/',
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
   },
 });
