@@ -30,7 +30,7 @@ function comparisonText(
   const timePart = days < .05 ? (es ? 'tarda lo mismo' : 'takes the same time')
     : es
       ? `tarda ${fmt(days, locale, 1)} días ${time < 0 ? 'menos' : 'más'}`
-      : `takes ${fmt(days, locale, 1)} ${time < 0 ? 'fewer' : 'more'} days`;
+      : `takes ${fmt(days, locale, 1)} ${Math.round(days * 10) / 10 === 1 ? 'day' : 'days'} ${time < 0 ? 'less' : 'more'}`;
   const costPart = Math.abs(cash) < .5 ? (es ? 'cuesta lo mismo' : 'costs the same')
     : es
       ? `cuesta ${currency(Math.abs(cash), locale)} ${cash < 0 ? 'menos' : 'más'}`
@@ -136,7 +136,7 @@ export function DecisionDesk({ locale, chosen, onChoose, activePanel, onPanel }:
         <p>{dominatedBy.length > 0
           ? es
             ? `Con estos tres indicadores simulados, ${dominatedBy.map((id) => t.strategies[id]).join(' y ')} ofrece igual o mejor plazo, coste y cumplimiento, y mejora al menos uno. Tu elección necesita una razón adicional no incluida en el modelo.`
-            : `On the three modelled metrics, ${dominatedBy.map((id) => t.strategies[id]).join(' and ')} is at least as good on time, cost and deadline attainment, and better on one. Your choice would need an additional reason outside this model.`
+            : `On the three modelled metrics, ${dominatedBy.map((id) => t.strategies[id]).join(' and ')} ${dominatedBy.length === 1 ? 'is' : 'are'} at least as good on time, cost and deadline attainment, and better on one. Your choice would need an additional reason outside this model.`
           : es
             ? 'Tu alternativa no queda superada simultáneamente en plazo, coste y cumplimiento por otra. Eso no la convierte automáticamente en la mejor: hay que valorar los compromisos y las condiciones reales.'
             : 'No other route is simultaneously as good or better in all three measures and strictly better in one. This does not automatically make your choice best: trade-offs and real conditions still matter.'}</p>
