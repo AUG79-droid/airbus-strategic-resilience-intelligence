@@ -356,11 +356,17 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
     readiness+=es
       ?` Además hemos recalculado cambios de varios parámetros a la vez mediante cuatro escenarios extremos por indicador: ${valid} de ${attempted} combinaciones fueron matemáticamente válidas. Son pruebas deterministas de estrés, NO intervalos de confianza ni distribuciones calibradas.`
       :` We also recalculated multiple inputs together using four extreme scenarios per indicator: ${valid} of ${attempted} combinations were mathematically valid. These are deterministic stress tests, NOT confidence intervals or calibrated distributions.`;
+    if(valid<attempted)readiness+=es
+      ?' COBERTURA INCOMPLETA: las combinaciones matemáticamente inválidas se han excluido. Los extremos observados NO son una cota de riesgo ni demuestran estabilidad.'
+      :' INCOMPLETE COVERAGE: mathematically invalid combinations were excluded. The tested extremes are NOT a risk bound or proof of robustness.';
     const attainment=c.rows.find(row=>row.metric.id==='deadlineAttainment')?.coordinatedStress;
-    if(attainment){
+    if(attainment?.coverage==='none')readiness+=es
+      ?' Para cumplimiento del plazo no existe ningún escenario extremo válido: NO puede interpretarse un rango de estrés.'
+      :' For deadline attainment no extreme scenario was valid: a stress range CANNOT be inferred.';
+    else if(attainment){
       readiness+=es
-        ?` Para cumplimiento del plazo, el rango de DIFERENCIA entre alternativas bajo estas pruebas es de ${fmt(attainment.minDelta,locale)} a ${fmt(attainment.maxDelta,locale)} puntos porcentuales.`
-        :` For deadline attainment, the stress-tested DIFFERENCE between options ranges from ${fmt(attainment.minDelta,locale)} to ${fmt(attainment.maxDelta,locale)} percentage points.`;
+        ?` Para cumplimiento del plazo, el rango de DIFERENCIA entre alternativas entre las combinaciones evaluadas es de ${fmt(attainment.minDelta,locale)} a ${fmt(attainment.maxDelta,locale)} puntos porcentuales.`
+        :` For deadline attainment, the DIFFERENCE between options across evaluated combinations ranges from ${fmt(attainment.minDelta,locale)} to ${fmt(attainment.maxDelta,locale)} percentage points.`;
     }
   }
   readiness+=data.hypothetical
