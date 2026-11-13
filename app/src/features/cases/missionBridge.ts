@@ -11,6 +11,9 @@ export interface MissionBridge {
   missionFunction:string;
   dependencyType:'critical'|'redundant'|'unknown';
   observedMissionAvailabilityPercent:number|null;
+  /** Denominator and observation window must be stated for any observed percentage. */
+  availabilityDefinition?:string;
+  observationPeriod?:string;
   evidenceId:string;
 }
 export interface MissionBridgeAssessment {
@@ -27,6 +30,8 @@ export function assessMissionBridge(
     return {status:'hypothesis',issues:['Component, subsystem, platform, mission function and dependency type must be defined'],availabilityPercent:null};
   if(input.observedMissionAvailabilityPercent===null)
     return {status:'hypothesis',issues:['No observed mission availability; cannot infer it from restoration time'],availabilityPercent:null};
+  if(!input.availabilityDefinition?.trim()||!input.observationPeriod?.trim())
+    return {status:'hypothesis',issues:['Observed mission availability needs a declared measurement definition/denominator and observation period'],availabilityPercent:null};
   if(!input.evidenceId||!acceptedObservedEvidenceIds.includes(input.evidenceId))
     return {status:'hypothesis',issues:['Mission availability not linked to a user-declared reviewed observed record'],availabilityPercent:null};
   return {status:'userDeclaredObservation',
@@ -43,6 +48,8 @@ export function validateMissionBridges(value:unknown,optionIds:string[]):Mission
     const x=item as Partial<MissionBridge>;
     if(typeof x.optionId!=='string'||!optionIds.includes(x.optionId)||seen.has(x.optionId)||
       fields.some(k=>typeof x[k]!=='string'||(x[k] as string).length>500)||
+      (x.availabilityDefinition!==undefined&&(typeof x.availabilityDefinition!=='string'||x.availabilityDefinition.length>500))||
+      (x.observationPeriod!==undefined&&(typeof x.observationPeriod!=='string'||x.observationPeriod.length>500))||
       !['critical','redundant','unknown'].includes(String(x.dependencyType))||
       x.observedMissionAvailabilityPercent!==null&&(
         typeof x.observedMissionAvailabilityPercent!=='number'||

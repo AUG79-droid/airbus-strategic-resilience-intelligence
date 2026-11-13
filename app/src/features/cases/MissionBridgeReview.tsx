@@ -4,7 +4,7 @@ import {assessMissionBridge,type MissionBridge} from './missionBridge';
 import {displayOptionName,evidenceObserved,type StrategicCase} from './model';
 type Props={locale:Locale;data:StrategicCase;setData:Dispatch<SetStateAction<StrategicCase>>};
 const blank=(optionId:string):MissionBridge=>({optionId,componentOrService:'',subsystem:'',
-  platform:'',missionFunction:'',dependencyType:'unknown',observedMissionAvailabilityPercent:null,evidenceId:''});
+  platform:'',missionFunction:'',dependencyType:'unknown',observedMissionAvailabilityPercent:null,availabilityDefinition:'',observationPeriod:'',evidenceId:''});
 export function MissionBridgeReview({locale,data,setData}:Props){
   const es=locale==='es',t=(a:string,b:string)=>es?a:b;
   const observed=data.evidence.filter(x=>evidenceObserved(data,{value:0,evidenceId:x.id})).map(x=>x.id);
@@ -19,7 +19,9 @@ export function MissionBridgeReview({locale,data,setData}:Props){
     ['componentOrService','Componente o servicio','Component or service'],
     ['subsystem','Subsistema que depende de él','Dependent subsystem'],
     ['platform','Plataforma o activo','Platform or asset'],
-    ['missionFunction','Función de misión afectada','Affected mission function']
+    ['missionFunction','Función de misión afectada','Affected mission function'],
+    ['availabilityDefinition','Definición del porcentaje y denominador observado','Availability definition and measured denominator'],
+    ['observationPeriod','Periodo de observación de la disponibilidad','Availability observation period']
   ];
   return <details className="cy-panel" data-testid="mission-bridge">
     <summary><strong>{t('De componente a misión: trazabilidad del impacto (avanzado)','Component-to-mission impact chain (advanced)')}</strong></summary>

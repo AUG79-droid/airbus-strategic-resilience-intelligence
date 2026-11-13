@@ -4,7 +4,7 @@ import { createCase, validateCaseImport } from './model';
 const sample:MissionBridge={
   optionId:'option-a',componentOrService:'component C',subsystem:'support system S',
   platform:'asset P',missionFunction:'mission M',dependencyType:'critical',
-  observedMissionAvailabilityPercent:83,evidenceId:'REAL-MISSION'
+  observedMissionAvailabilityPercent:83,availabilityDefinition:'available mission time / planned mission time',observationPeriod:'2026-Q3',evidenceId:'REAL-MISSION'
 };
 describe('No automatic aircraft or mission readiness inference',()=>{
  it('never turns component recovery into demonstrated mission availability',()=>{
@@ -13,6 +13,8 @@ describe('No automatic aircraft or mission readiness inference',()=>{
   expect(withoutData.status).toBe('hypothesis');
   expect(withoutData.availabilityPercent).toBeNull();
   expect(assessMissionBridge(sample,[]).status).toBe('hypothesis');
+  expect(assessMissionBridge({...sample,availabilityDefinition:''},['REAL-MISSION']).status).toBe('hypothesis');
+  expect(assessMissionBridge({...sample,observationPeriod:''},['REAL-MISSION']).status).toBe('hypothesis');
   const declared=assessMissionBridge(sample,['REAL-MISSION']);
   expect(declared.status).toBe('userDeclaredObservation');
   expect(declared.availabilityPercent).toBe(83);

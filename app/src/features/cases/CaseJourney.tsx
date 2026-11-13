@@ -128,7 +128,7 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
     `${es?'Un importe nominal futuro NO recibe escalación adicional; uno de euros constantes exige tasa explícita. No hay validación financiera ni contractual':'A future nominal amount is NOT escalated again; constant-price EUR requires an explicit escalation rate. Financial and contractual validation remains outstanding'}.`,
     '',es?'## Relación entre componente y misión':'## Component-to-mission evidence bridge',
     ...(data.missionBridges.length
-      ?data.missionBridges.map(link=>`- ${link.optionId}: ${link.componentOrService} > ${link.subsystem} > ${link.platform} > ${link.missionFunction}; dependency=${link.dependencyType}; USER-DECLARED mission availability=${link.observedMissionAvailabilityPercent??'not measured'}%; evidence=${link.evidenceId||'none'}`)
+      ?data.missionBridges.map(link=>`- ${link.optionId}: ${link.componentOrService} > ${link.subsystem} > ${link.platform} > ${link.missionFunction}; dependency=${link.dependencyType}; USER-DECLARED mission availability=${link.observedMissionAvailabilityPercent??'not measured'}%; metricDefinition=${link.availabilityDefinition||'not defined'}; observationPeriod=${link.observationPeriod||'not declared'}; evidence=${link.evidenceId||'none'}`)
       :[es?'Sin evaluación de disponibilidad de misión. No se infiere a partir de la recuperación del componente.':'Mission availability not assessed. Never inferred from component recovery.']),
     '',es?'## Capacidad de taller y cola FIFO (ilustrativa)':'## Repair-workshop capacity and FIFO queue (illustrative)',
     ...data.workshopCapacity.map(x=>{
