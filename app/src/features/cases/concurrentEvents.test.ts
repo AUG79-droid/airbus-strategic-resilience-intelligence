@@ -12,7 +12,7 @@ describe('Concurrent risk effects beyond additive failure penalties',()=>{
     for(const [id,value] of Object.entries({
       baseRecovery:10,recoveryTarget:30,technicalSuccess:50,failureDelay:10,
       shockProbability:50,shockDelay:10,jointFailureShock:50,jointExtraDelay:20,
-      baseCost:100,jointExtraCost:200
+      baseCost:100,logisticsCost:0,jointExtraCost:200
     }))o.parameterValues[id]={value,evidenceId:''};
     return {c,o};
   };
