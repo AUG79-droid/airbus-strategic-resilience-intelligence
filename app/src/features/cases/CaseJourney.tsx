@@ -106,14 +106,15 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     ...data.environmentalBasis.map(x=>`- ${x.optionId}: functionalUnit=${x.functionalUnit}; period=${x.period}; boundary=${x.boundary}; method=${x.inventoryMethod}; allocation=${x.allocationRule}; factorVersion=${x.factorSourceVersion}; evidence=${x.evidenceId||'unlinked'}`),
     '',es?'## Flujos de caja descontados adicionales (opcional)':'## Additional discounted cash flows (optional)',
     `${es?'Tasa anual de descuento declarada':'User-declared annual discount rate'}: ${data.discountedFinance.annualDiscountPercent??'N/A'}%`,
+    `${es?'Escalación anual declarada para euros constantes':'Declared annual escalation for constant-price EUR'}: ${data.discountedFinance.annualEscalationPercent??'N/A'}%`,
     ...data.options.map(option=>{
       const result=evaluateDiscountedFinance(data.discountedFinance,option.id);
       return `- ${displayOptionName(option,locale)}: ${result.status==='calculated'
         ?`${present(result.incrementalPresentValueEuro,locale)} EUR ${es?'de valor actual incremental':'incremental present value'}`
         :es?'Valor actual no evaluado':'Present value not assessed'}`;
     }),
-    ...data.discountedFinance.flows.map(flow=>`- ${flow.optionId} / ${flow.id}: year=${flow.year}; netEUR=${flow.amountEuro}; account=${flow.accounting}; evidence=${flow.evidenceId||'unlinked'}; ${flow.explanation}`),
-    `${es?'El descuento NO verifica los flujos, los costes de proyecto ni la doble contabilización':'Discounting does NOT validate the flows, programme costs or double counting'}.`,
+    ...data.discountedFinance.flows.map(flow=>`- ${flow.optionId} / ${flow.id}: year=${flow.year}; netEUR=${flow.amountEuro}; priceBasis=${flow.priceBasis??'futureNominal'}; account=${flow.accounting}; evidence=${flow.evidenceId||'unlinked'}; ${flow.explanation}`),
+    `${es?'Un importe nominal futuro NO recibe escalación adicional; uno de euros constantes exige tasa explícita. No hay validación financiera ni contractual':'A future nominal amount is NOT escalated again; constant-price EUR requires an explicit escalation rate. Financial and contractual validation remains outstanding'}.`,
     '',es?'## Relación entre componente y misión':'## Component-to-mission evidence bridge',
     ...(data.missionBridges.length
       ?data.missionBridges.map(link=>`- ${link.optionId}: ${link.componentOrService} > ${link.subsystem} > ${link.platform} > ${link.missionFunction}; dependency=${link.dependencyType}; USER-DECLARED mission availability=${link.observedMissionAvailabilityPercent??'not measured'}%; evidence=${link.evidenceId||'none'}`)
@@ -221,7 +222,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
   }));
   const addEvidence=()=>{
     setData(current=>({...current,evidence:[...current.evidence,{
-      id:'EV-'+Date.now().toString(36)+'-'+current.evidence.length,
+      id:'EV-'+crypto.randomUUID(),
       title:'',reference:'',owner:'',reviewer:'',reviewedOn:'',
       status:'pending',nature:'estimate',limitations:''
     }]}));
