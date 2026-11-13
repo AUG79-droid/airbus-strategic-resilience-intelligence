@@ -79,7 +79,7 @@ function describeVerdict(c:OptionComparison,locale:Locale){
 function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale:Locale):string{
   const es=locale==='es';
   const lines=[
-    '# ASRI — '+(data.title||'Custom strategic case'),
+    '# ASRI — '+(data.title||(es?'Caso estratégico sin título':'Untitled strategic case')),
     '',es?'AVISO: prototipo independiente, no aprobado por Airbus.':'NOTICE: independent prototype, not Airbus approved.',
     es?'RESULTADOS: modelización comparativa, no beneficios validados.':'RESULTS: comparative modelling, not validated benefits.',
     data.hypothetical?(es?'DATOS: 100 % HIPOTÉTICOS.':'DATA: 100% HYPOTHETICAL.'):'',
@@ -91,9 +91,9 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     '',es?'## 02 Cuestionar':'## 02 Challenge',
     `${es?'Referencia':'Baseline'}: ${displayOptionName(data.options[0],locale)}`,`${es?'Alternativa':'Alternative'}: ${displayOptionName(chosen.option,locale)}`,
     `${es?'Resultado':'Verdict'}: ${describeVerdict(chosen,locale)}`,
-    ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | evidence: ${r.evidenceReady?'reviewed':'pending'}${r.sensitivityRange
-      ?` | OAT Δ range: [${present(r.sensitivityRange.minDelta,locale)}, ${present(r.sensitivityRange.maxDelta,locale)}]${r.sensitivityRange.switchingParameter?` | approx switch threshold: ${r.sensitivityRange.switchingParameter}=${present(r.sensitivityRange.switchingValue??null,locale)}`:''}`
-      :''}${r.coordinatedStress?` | coordinated Δ range [${present(r.coordinatedStress.minDelta,locale)}, ${present(r.coordinatedStress.maxDelta,locale)}] (${r.coordinatedStress.validScenarios}/4 valid)`:''}`),
+    ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | ${es?'evidencia':'evidence'}: ${r.evidenceReady?(es?'revisada (declarada)':'reviewed (declared)'):(es?'pendiente':'pending')}${r.sensitivityRange
+      ?` | ${es?'rango Δ univariable':'OAT Δ range'}: [${present(r.sensitivityRange.minDelta,locale)}, ${present(r.sensitivityRange.maxDelta,locale)}]${r.sensitivityRange.switchingParameter?` | ${es?'umbral aproximado de cambio':'approx switch threshold'}: ${r.sensitivityRange.switchingParameter}=${present(r.sensitivityRange.switchingValue??null,locale)}`:''}`
+      :''}${r.coordinatedStress?` | ${es?'rango Δ simultáneo':'coordinated Δ range'} [${present(r.coordinatedStress.minDelta,locale)}, ${present(r.coordinatedStress.maxDelta,locale)}] (${r.coordinatedStress.validScenarios}/4 ${es?'válidos':'valid'})`:''}`),
     `${es?'Prueba de variación individual de parámetros':'One-at-a-time input test'}: ±${data.robustnessPercent} %. ${es?'Cada entrada se modifica por separado; no es un intervalo de confianza.':'Each input is changed separately; not a confidence interval.'}`,
     `${es?'Prueba de escenarios simultáneos':'Coordinated stress test'}: 4 ${es?'combinaciones extremas de entradas de referencia y alternativa':'extreme reference/option input combinations'}, ±${data.robustnessPercent} %. ${es?'Rango determinista, no probabilidad ni intervalo de confianza.':'Deterministic bound, not a probability or confidence interval.'}`,
     '',es?'## Controles y aplicabilidad':'## Universal controls and applicability',
@@ -124,13 +124,13 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
       ?data.dependencyRoutes.map(route=>`- ${route.optionId} / ${route.label}: ${route.qualified?'qualified (user-declared)':'unqualified'}; nodes=[${route.dependencies.join(', ')}]; declaredCapacity=${route.capacityPercent??'not specified'}%; evidence=${route.evidenceId||'unlinked'}`)
       :[es?'Dependencias no evaluadas; la independencia no está acreditada.':'Dependencies not assessed; independence not demonstrated.']),
     '',es?'## 03 Comprobar':'## 03 Check',
-    `Review gates: ${JSON.stringify(data.gates)}`,
-    `Evidence trace: ${chosen.reviewedData?'all inputs linked to reviewed records':'incomplete'}`,
-    `Observed measurements: ${chosen.observedData?'linked for all compared values':'not confirmed'}`,
+    `${es?'Controles de revisión declarados':'User-declared review gates'}: ${JSON.stringify(data.gates)}`,
+    `${es?'Trazabilidad documental':'Evidence trace'}: ${chosen.reviewedData?(es?'todas las entradas asociadas a registros revisados (declarados)':'all inputs linked to user-declared reviewed records'):(es?'incompleta':'incomplete')}`,
+    `${es?'Mediciones observadas':'Observed measurements'}: ${chosen.observedData?(es?'asociadas a todos los valores comparados':'linked for all compared values'):(es?'no confirmadas':'not confirmed')}`,
     ...chosen.missing.map(m=>'- '+m),
-    ...data.evidence.map(e=>`- ${e.id}: ${e.title} | ${e.status} / ${e.nature} | ${e.reference} | ${e.owner} | ${e.reviewer} ${e.reviewedOn} | version=${e.documentVersion||'not declared'} | sha256=${e.documentSha256||'not declared'} | expiry=${e.validUntil||'none'} | revoked=${e.revokedOn||'no'} | excerpt=${e.excerptUsed||'not supplied'} | limitations=${e.limitations}`),
+    ...data.evidence.map(e=>`- ${e.id}: ${e.title} | ${e.status} / ${e.nature} | ${e.reference} | ${e.owner} | ${e.reviewer} ${e.reviewedOn} | ${es?'versión':'version'}=${e.documentVersion||(es?'no indicada':'not declared')} | sha256=${e.documentSha256||(es?'no indicada':'not declared')} | ${es?'vigencia':'expiry'}=${e.validUntil||(es?'sin fecha':'none')} | ${es?'revocación':'revoked'}=${e.revokedOn||(es?'no':'no')} | ${es?'fragmento':'excerpt'}=${e.excerptUsed||(es?'no facilitado':'not supplied')} | ${es?'limitaciones':'limitations'}=${e.limitations}`),
     '',es?'## 04 Traducir':'## 04 Translate',
-    `Audience: ${audienceNames[a][es?0:1]}`,
+    `${es?'Audiencia':'Audience'}: ${audienceNames[a][es?0:1]}`,
     strategicNarrativeText(data,chosen,a,locale),
     '',es?'### Conclusiones estratégicas ampliadas':'### Extended strategic conclusions',
     ...strategicInsights(data,chosen,a,locale).flatMap(item=>['', '#### '+item.title,item.body]),
