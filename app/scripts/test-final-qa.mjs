@@ -1,7 +1,7 @@
 import { chromium } from 'playwright-core';
 
 const baseUrl = process.env.QA_URL ?? 'http://127.0.0.1:4174';
-const browser = await chromium.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', headless: true, args: ['--disable-extensions', '--no-first-run'] });
+const browser = await chromium.launch({ executablePath: process.env.CHROME_BIN || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', headless: true, args: ['--disable-extensions', '--no-first-run'] });
 const errors = [];
 const checks = [];
 const routes = ['investigate', 'challenge', 'validate', 'translate'];
