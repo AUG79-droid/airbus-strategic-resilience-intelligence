@@ -2,6 +2,7 @@ import { comparisons, evidenceObserved, type Audience, type OptionComparison, ty
 import { analyzeRoutes } from './supplyGraph';
 import { assessMissionBridge } from './missionBridge';
 import { evaluateDiscountedFinance } from './discountedCashFlows';
+import { boundedEnvironmentalDifference } from './environmentBasis';
 
 /**
  * Dynamic strategic analysis for Translate. Uses the same calculated scenario
@@ -280,6 +281,25 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
     envPieces.push(es
       ?`La variable «${esLabel}» pasa de ${fmt(v.baseline!,locale)} a ${fmt(v.candidate!,locale)} ${u}; ${outcomePhrase(v.delta!,locale,u)}.`
       :`The “${enLabel}” measure moves from ${fmt(v.baseline!,locale)} to ${fmt(v.candidate!,locale)} ${u}; it ${outcomePhrase(v.delta!,locale,u)}.`);
+    // An observed point-estimate reduction is not proof that the sign holds
+    // within declared inventory uncertainty. No confidence level is implied.
+    const bound=boundedEnvironmentalDifference(v.baseline!,v.candidate!,
+      data.environmentalBasis?.find(x=>x.optionId===data.options[0].id),
+      data.environmentalBasis?.find(x=>x.optionId===c.option.id));
+    if(bound.status==='unassessed'){
+      envPieces.push(es
+        ?`La incertidumbre de «${esLabel}» no está cuantificada en ambos escenarios: su reducción no puede afirmarse frente a los márgenes de error.`
+        :`Uncertainty for “${enLabel}” is not quantified in both scenarios: its reduction cannot be asserted against error margins.`);
+    }else{
+      const verdict=bound.status==='reductionUnderBounds'
+        ?(es?'reducción mantenida en los márgenes declarados':'reduction remains under declared margins')
+        :bound.status==='increaseUnderBounds'
+          ?(es?'aumento mantenido en los márgenes declarados':'increase remains under declared margins')
+          :(es?'los rangos se solapan; el signo del cambio no queda demostrado':'ranges overlap; the sign of change is not established');
+      envPieces.push(es
+        ?`Rango determinista de diferencia (alternativa menos referencia): ${fmt(bound.minDelta!,locale)} a ${fmt(bound.maxDelta!,locale)} ${u}; ${verdict}. NO es intervalo de confianza ni beneficio validado.`
+        :`Deterministic difference range (option minus baseline): ${fmt(bound.minDelta!,locale)} to ${fmt(bound.maxDelta!,locale)} ${u}; ${verdict}. NOT a confidence interval or validated environmental benefit.`);
+    }
   }
   if(!envPieces.length)envPieces.push(es
     ?'Aún no hay datos ambientales comparables entre alternativas.'
