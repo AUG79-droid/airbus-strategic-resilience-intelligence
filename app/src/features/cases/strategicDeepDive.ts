@@ -347,8 +347,22 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   const sensitive=active.filter(row=>row.robustness==='sensitive').length;
   const equivalent=active.filter(row=>row.robustness==='equivalent').length;
   let readiness=es
-    ?`${reviewed} de ${active.length} indicadores tienen fuentes marcadas como revisadas. Hemos variado cada parámetro aplicable un ±${fmt(data.robustnessPercent,locale)} %, uno por uno, recalculando los resultados. En ${stable} indicadores se mantiene la dirección de la comparación, en ${sensitive} cambia y en ${equivalent} las alternativas son equivalentes con los datos actuales. Esta prueba no evalúa cambios simultáneos.`
-    :`${reviewed} of ${active.length} indicators have records marked as reviewed. We varied each applicable input by ±${fmt(data.robustnessPercent,locale)} %, one at a time, and recalculated the results. In ${stable} indicators the comparison direction held, in ${sensitive} it changed, and in ${equivalent} the options were equivalent at current inputs. This test does not cover simultaneous changes.`;
+    ?`${reviewed} de ${active.length} indicadores tienen fuentes marcadas como revisadas. Hemos variado cada parámetro aplicable un ±${fmt(data.robustnessPercent,locale)} %, uno por uno, recalculando los resultados. En ${stable} indicadores se mantiene la dirección de la comparación, en ${sensitive} cambia y en ${equivalent} las alternativas son equivalentes con los datos actuales. La prueba individual no evalúa cambios simultáneos.`
+    :`${reviewed} of ${active.length} indicators have records marked as reviewed. We varied each applicable input by ±${fmt(data.robustnessPercent,locale)} %, one at a time, and recalculated the results. In ${stable} indicators the comparison direction held, in ${sensitive} it changed, and in ${equivalent} the options were equivalent at current inputs. The one-at-a-time test does not cover simultaneous changes.`;
+  const coordinated=active.filter(row=>!!row.coordinatedStress).map(row=>row.coordinatedStress!);
+  if(coordinated.length){
+    const valid=coordinated.reduce((sum,item)=>sum+item.validScenarios,0);
+    const attempted=coordinated.reduce((sum,item)=>sum+item.attemptedScenarios,0);
+    readiness+=es
+      ?` Además hemos recalculado cambios de varios parámetros a la vez mediante cuatro escenarios extremos por indicador: ${valid} de ${attempted} combinaciones fueron matemáticamente válidas. Son pruebas deterministas de estrés, NO intervalos de confianza ni distribuciones calibradas.`
+      :` We also recalculated multiple inputs together using four extreme scenarios per indicator: ${valid} of ${attempted} combinations were mathematically valid. These are deterministic stress tests, NOT confidence intervals or calibrated distributions.`;
+    const attainment=c.rows.find(row=>row.metric.id==='deadlineAttainment')?.coordinatedStress;
+    if(attainment){
+      readiness+=es
+        ?` Para cumplimiento del plazo, el rango de DIFERENCIA entre alternativas bajo estas pruebas es de ${fmt(attainment.minDelta,locale)} a ${fmt(attainment.maxDelta,locale)} puntos porcentuales.`
+        :` For deadline attainment, the stress-tested DIFFERENCE between options ranges from ${fmt(attainment.minDelta,locale)} to ${fmt(attainment.maxDelta,locale)} percentage points.`;
+    }
+  }
   readiness+=data.hypothetical
     ?(es
       ?' En este ejemplo, esas fuentes, revisiones y condiciones son simuladas: el caso didáctico está completo, pero no existe verificación externa ni beneficio operativo certificado.'
