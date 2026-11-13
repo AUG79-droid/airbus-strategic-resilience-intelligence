@@ -2854,3 +2854,30 @@ button {
   .translator-metric > span { min-height: 0; margin-bottom: 8px; }
   .export-review__panel > header > strong { max-width: none; }
 }
+
+
+/* Mobile: show all four workflow stages without hidden horizontal tabs. */
+@media (max-width: 680px) {
+  .workspace-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+    overflow-x: visible;
+    border-bottom: 0;
+  }
+  .workspace-tabs button,
+  .workspace-tabs button:first-child {
+    min-width: 0;
+    padding: 11px 10px;
+    font-size: 14px;
+    line-height: 1.35;
+    white-space: normal;
+    border: 1px solid var(--line-strong);
+    border-bottom: 3px solid transparent;
+    text-align: center;
+  }
+  .workspace-tabs button.is-active {
+    border-bottom-color: var(--coral);
+    background: var(--paper);
+  }
+}
