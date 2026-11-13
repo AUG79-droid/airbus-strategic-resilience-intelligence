@@ -14,6 +14,7 @@ import { EnvironmentalMethod } from './EnvironmentalMethod';
 import { MissionBridgeReview } from './MissionBridgeReview';
 import { DiscountedFinance } from './DiscountedFinance';
 import { evaluateDiscountedFinance, emptyFinancePlan } from './discountedCashFlows';
+import { boundedEnvironmentalDifference } from './environmentBasis';
 import { pdfSafeText } from './pdfSafeText';
 import { sha256EvidenceBlob } from './documentProof';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
@@ -105,7 +106,13 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
       return [displayOptionName(option,locale)+': '+JSON.stringify(Object.fromEntries(Object.entries(calc).filter(([k])=>k!=='assumptions')))];
     }),
     '',es?'## Comparabilidad ambiental declarada':'## Declared environmental comparability',
-    ...data.environmentalBasis.map(x=>`- ${x.optionId}: functionalUnit=${x.functionalUnit}; period=${x.period}; boundary=${x.boundary}; method=${x.inventoryMethod}; allocation=${x.allocationRule}; factorVersion=${x.factorSourceVersion}; evidence=${x.evidenceId||'unlinked'}`),
+    ...data.environmentalBasis.map(x=>`- ${x.optionId}: functionalUnit=${x.functionalUnit}; period=${x.period}; boundary=${x.boundary}; method=${x.inventoryMethod}; allocation=${x.allocationRule}; factorVersion=${x.factorSourceVersion}; uncertaintyPercent=${x.relativeUncertaintyPercent??'N/A'}; evidence=${x.evidenceId||'unlinked'}`),
+    ...chosen.rows.filter(row=>row.metric.category==='environment'&&row.baseline!==null&&row.candidate!==null).map(row=>{
+      const bound=boundedEnvironmentalDifference(row.baseline!,row.candidate!,
+        data.environmentalBasis.find(x=>x.optionId===data.options[0].id),
+        data.environmentalBasis.find(x=>x.optionId===chosen.option.id));
+      return `- ${row.metric.id}: ${es?'incertidumbre de la diferencia':'difference uncertainty'}=${bound.status}; Δrange=[${bound.minDelta??'N/A'},${bound.maxDelta??'N/A'}]; ${es?'NO es un intervalo de confianza':'NOT a confidence interval'}`;
+    }),
     '',es?'## Flujos de caja descontados adicionales (opcional)':'## Additional discounted cash flows (optional)',
     `${es?'Tasa anual de descuento declarada':'User-declared annual discount rate'}: ${data.discountedFinance.annualDiscountPercent??'N/A'}%`,
     `${es?'Escalación anual declarada para euros constantes':'Declared annual escalation for constant-price EUR'}: ${data.discountedFinance.annualEscalationPercent??'N/A'}%`,
