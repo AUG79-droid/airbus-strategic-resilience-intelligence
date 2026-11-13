@@ -39,6 +39,24 @@ jobs:
         id: build
         working-directory: app
         run: npm run build
+      - name: Run browser journeys and export checks
+        id: e2e
+        working-directory: app
+        run: |
+          export CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN" || { echo "Chrome not available on runner"; exit 1; }
+          npm run preview -- --port 4174 > /tmp/asri-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+          READY=0
+          for attempt in {1..40}; do
+            if curl -fsS "http://127.0.0.1:4174/airbus-strategic-resilience-intelligence/" >/dev/null; then READY=1; break; fi
+            sleep 1
+          done
+          if [ "$READY" != "1" ]; then cat /tmp/asri-preview.log; exit 1; fi
+          npm run test:final-qa
+          npm run test:translator-ui
+          npm run test:export-ui
       - name: Report granular quality status on commit
         if: always()
         env:
@@ -46,10 +64,11 @@ jobs:
           INSTALL: ${{ steps.install.outcome }}
           TESTS: ${{ steps.tests.outcome }}
           BUILD: ${{ steps.build.outcome }}
+          E2E: ${{ steps.e2e.outcome }}
         run: |
-          if [ "$INSTALL" = "success" ] && [ "$TESTS" = "success" ] && [ "$BUILD" = "success" ]; then state=success; else state=failure; fi
+          if [ "$INSTALL" = "success" ] && [ "$TESTS" = "success" ] && [ "$BUILD" = "success" ] && [ "$E2E" = "success" ]; then state=success; else state=failure; fi
           gh api -X POST "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
             -f state="$state" \
             -f context="asri/case-studio-quality" \
-            -f description="Install: $INSTALL; tests: $TESTS; build: $BUILD" \
+            -f description="Install: $INSTALL; tests: $TESTS; build: $BUILD; e2e: $E2E" \
             -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
