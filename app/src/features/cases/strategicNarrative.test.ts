@@ -13,9 +13,9 @@ describe('Strategic resilience translation',()=>{
     expect(x.quantifiedFinding).toContain('92');
     expect(x.quantifiedFinding).toContain('49,3');
     expect(x.quantifiedFinding).toContain('días');
-    expect(x.decisionQuestion).toMatch(/capacidad/);
+    expect(x.decisionQuestion).toContain('¿qué aporta esta alternativa');
     expect(x.operationalMeaning).not.toMatch(/disponibilidad de la flota aumentó/);
-    expect(x.operationalMeaning).toMatch(/No significa disponer de otro proveedor/);
+    expect(x.operationalMeaning).toContain('sin depender únicamente');
   });
   it('does not conflate repair-only with the combined supplier option',()=>{
     const c=fromPreset('ecodesign','es');
@@ -23,7 +23,7 @@ describe('Strategic resilience translation',()=>{
     const repairMessage=strategicMessage(c,repair,'defenceCustomer','es');
     const combinedMessage=strategicMessage(c,combined,'defenceCustomer','es');
     expect(repairMessage.operationalMeaning).not.toMatch(/otra de aprovisionamiento/);
-    expect(combinedMessage.operationalMeaning).toMatch(/otra de aprovisionamiento/);
+    expect(combinedMessage.operationalMeaning).toContain('proveedor alternativo');
     expect(combinedMessage.quantifiedFinding).not.toBe(repairMessage.quantifiedFinding);
   });
   it('changes Programme arguments dynamically when cost and timing change',()=>{
@@ -43,7 +43,7 @@ describe('Strategic resilience translation',()=>{
     const audiences=['defenceCustomer','engineering','programmeManager','executiveLeadership'] as const;
     const outputs=audiences.map(a=>strategicNarrativeText(c,comparison,a,'es'));
     expect(new Set(outputs).size).toBe(4);
-    expect(outputs.every(x=>x.includes('Decisión para'))).toBe(true);
+    expect(outputs.every(x=>x.includes('Pregunta para')||x.includes('Pregunta del cliente'))).toBe(true);
     expect(outputs.every(x=>!x.includes('7 indicadores mejores'))).toBe(true);
     expect(outputs[1]).toMatch(/reparabilidad|reparación/);
     expect(outputs[2]).toMatch(/coste|plazo/);
@@ -55,7 +55,7 @@ describe('Strategic resilience translation',()=>{
     expect(x.headline).toContain('Operational resilience');
     expect(x.quantifiedFinding).toContain('141.3');
     expect(x.quantifiedFinding).toContain('49.3');
-    expect(x.decisionQuestion).toContain('Customer decision');
+    expect(x.decisionQuestion).toContain('Customer question');
   });
   it('does not invent recovery improvement when an input is unknown',()=>{
     const c=fromPreset('ecodesign','es');
@@ -151,13 +151,13 @@ describe('Strategic resilience translation',()=>{
     const c=fromPreset('ecodesign','es');
     const comp=comparisons(c)[0];
     const a=strategicDecisionAnswer(c,comp,'defenceCustomer','es');
-    expect(a).toContain('Sí, parcialmente');
+    expect(a).toContain('49,3 días menos');
     expect(a).toContain('141,3');
     expect(a).toContain('92');
     expect(a).toContain('0 %');
     expect(a).toContain('64,8 %');
-    expect(a).toMatch(/capacidad|flota/);
-    expect(a).toContain('simulado');
+    expect(a).toMatch(/recuperación|suministro/);
+    expect(a).not.toMatch(/simulado|capacidad operativa acreditada|disponibilidad de flota/);
     const report=strategicNarrativeText(c,comp,'defenceCustomer','es');
     expect(report).toContain('Respuesta del análisis: ');
     expect(report).toContain(a);
@@ -167,14 +167,14 @@ describe('Strategic resilience translation',()=>{
     const [repair,combined]=comparisons(c);
     const a=strategicDecisionAnswer(c,repair,'defenceCustomer','en');
     const b=strategicDecisionAnswer(c,combined,'defenceCustomer','en');
-    expect(a).toContain('Partly yes');
+    expect(a).toContain('49.3 fewer days');
     expect(a).toContain('141.3');
     expect(a).toContain('64.8%'.replace('%',' %'));
     expect(a).not.toBe(b);
     for(const audience of ['defenceCustomer','engineering','programmeManager','executiveLeadership'] as const){
       const result=strategicDecisionAnswer(c,repair,audience,'en');
       expect(result.length).toBeGreaterThan(100);
-      expect(result).toContain('scenario');
+      expect(result).not.toMatch(/This is a simulated scenario conclusion|Partly yes/);
       expect(strategicNarrativeText(c,repair,audience,'en')).toContain('Model-based answer: '+result);
     }
   });
@@ -196,13 +196,13 @@ describe('Strategic resilience translation',()=>{
     c.options[1].parameterValues.baseRecovery.value=250;
     const answer=strategicDecisionAnswer(c,comparisons(c)[0],'defenceCustomer','es');
     expect(answer).not.toContain('Sí, parcialmente');
-    expect(answer).toContain('aumenta');
+    expect(answer).toContain('más en recuperar');
   });
   it('leaves an explicit answer when a newly created case has no results',()=>{
     const c=createCase('general','es');
     const cmp=comparisons(c)[0];
     const answer=strategicDecisionAnswer(c,cmp,'defenceCustomer','es');
-    expect(answer).toContain('Todavía no se puede responder con datos');
+    expect(answer).toContain('Todavía no hay datos suficientes');
     expect(answer).not.toContain('141,3');
   });
   it('updates the answer after editing a custom case and avoids inherited Eurodrone claims',()=>{
