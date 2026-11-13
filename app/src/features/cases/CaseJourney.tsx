@@ -394,8 +394,8 @@ export function CaseJourney({locale,view,data,setData}:Props){
     {view==='translate' && <div className="cy-stage">
       <section className="cy-panel">
         <h3>{t('Traductor estratégico del caso','Case strategic translator')}</h3>
-        <p>{t('De la iniciativa de sostenibilidad a su consecuencia operativa: qué vulnerabilidad cambia, cómo lo muestran los indicadores y qué decisión puede tomar cada audiencia. Cambia la alternativa o los datos para actualizar el mensaje.',
-          'From the sustainability initiative to its operational consequence: which vulnerability changes, what the indicators show, and what each audience can decide. Change the option or inputs to update the message.')}</p>
+        <p>{t('ASRI explica qué mejora cada alternativa, qué riesgos mantiene y qué decisiones permite tomar. Cambia la alternativa o la audiencia para ver cómo cambian las conclusiones.',
+          'ASRI explains what each option improves, what risks remain and which decisions it supports. Change the option or audience to see the conclusions update.')}</p>
         <div className="cy-choices">
           <label className="cy-field"><span>{t('Alternativa analizada','Alternative')}</span><select value={active?.option.id??''} onChange={e=>setSelectedOption(e.target.value)}>
             {results.map(c=><option key={c.option.id} value={c.option.id}>{displayOptionName(c.option,locale)}</option>)}</select></label>
@@ -414,7 +414,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
             <h3 id="cy-strategic-heading">{strategic.headline}</h3>
             <p className="cy-strategic-meaning">{strategic.operationalMeaning}</p>
             <div className="cy-strategic-finding">
-              <strong>{t('Qué demuestra la comparación del escenario','What the scenario comparison shows')}</strong>
+              <strong>{t('Qué cambia con esta alternativa','What changes with this option')}</strong>
               <p>{strategic.quantifiedFinding}</p>
             </div>
             <p className="cy-strategic-sustainability">{strategic.sustainabilityLink}</p>
@@ -425,17 +425,12 @@ export function CaseJourney({locale,view,data,setData}:Props){
                 <p>{strategicDecisionAnswer(data,active,selectedAudience,locale)}</p>
               </div>
             </div>
-            <p className="cy-strategic-assumption">{data.hypothetical
-              ?t('Interpretación del ejercicio, basada en condiciones y evidencias simuladas. No es un resultado real del programa ni acredita disponibilidad de flota.',
-                'Exercise interpretation from simulated inputs and review. Not a real programme outcome or proof of fleet availability.')
-              :t('Interpretación condicionada al alcance, las hipótesis y las evidencias revisadas; requiere aceptación técnica.',
-                'Interpretation depends on scope, assumptions and reviewed sources; technical acceptance is still required.')}</p>
           </section>}
           <section className="cy-deep-dive" aria-label={t('Conclusiones estratégicas ampliadas','Extended strategic conclusions')}>
             <div className="cy-deep-dive__intro">
               <h3>{t('Conclusiones estratégicas ampliadas','Extended strategic conclusions')}</h3>
-              <p>{t('Siete lecturas adicionales del mismo escenario: vulnerabilidades, riesgos, economía, factores ambientales, alternativas, evidencia y decisión. Se actualizan al cambiar datos o audiencia.',
-                'Seven deeper insights from the same scenario: vulnerabilities, risk, economics, environmental impact, options, evidence and decision. All update with the inputs and audience.')}</p>
+              <p>{t('Análisis de los principales cambios: plazos, riesgos, costes, medio ambiente y opciones de decisión. Se actualiza al cambiar los datos o la audiencia.',
+                'Explore what changes in timing, risks, costs, environmental impact and decisions. The analysis updates when you change the inputs or audience.')}</p>
             </div>
             <div className="cy-deep-dive__grid">{deepDive.map(insight=>
               <article key={insight.id} className={'cy-deep-dive__item cy-deep-dive__item--'+insight.id}>
