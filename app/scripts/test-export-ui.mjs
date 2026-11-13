@@ -39,6 +39,28 @@ if (pdfBytes.subarray(0, 5).toString() !== '%PDF-' || pdfBytes.length < 8_000) t
 
 await page.getByRole('button', { name: 'ES', exact: true }).click();
 await page.getByText('Revisar y exportar').waitFor();
+
+// Regression for the separate Case Studio report: scientific Unicode must
+// embed a real local font and emit a parseable multi-page PDF.
+await page.locator('.case-mode-switch button').nth(1).click();
+await page.locator('.cy-preset-grid button').first().click();
+await page.locator('.workflow-button').nth(3).click();
+await page.getByRole('heading', { name: /Traducir: valor para cada audiencia/ }).waitFor();
+const [studioDownload] = await Promise.all([
+  page.waitForEvent('download'),
+  page.getByRole('button', { name: 'Informe PDF' }).click()
+]);
+const studioPdfPath=path.join(pdfDirectory,'case-studio-unicode-qa.pdf');
+await studioDownload.saveAs(studioPdfPath);
+const studioBytes=await readFile(studioPdfPath);
+if(studioBytes.subarray(0,5).toString()!=='%PDF-'||studioBytes.length<8_000)
+  throw new Error('Case Studio Unicode PDF is missing or invalid.');
+const { PDFDocument, PDFDict, PDFName }=await import('pdf-lib');
+const studioDoc=await PDFDocument.load(studioBytes);
+const unicodeMap=studioDoc.context.enumerateIndirectObjects().some(([,o])=>
+  o instanceof PDFDict&&o.has(PDFName.of('ToUnicode')));
+if(studioDoc.getPageCount()<1||!unicodeMap)
+  throw new Error('Case Studio PDF is missing embedded Unicode font mapping.');
 if (errors.length) throw new Error(`Browser errors:\n${errors.join('\n')}`);
 await browser.close();
-console.log(JSON.stringify({ baseUrl, checks: ['Review gate blocks premature export', 'JSON is reproducible and retains evidence states', 'PDF download is valid', 'Export controls localise to Spanish'], jsonPath, pdfPath, pdfBytes: pdfBytes.length }, null, 2));
+console.log(JSON.stringify({ baseUrl, checks: ['Review gate blocks premature export', 'JSON is reproducible and retains evidence states', 'PDF download is valid', 'Export controls localise to Spanish', 'Case Studio PDF embeds licensed Unicode font with a ToUnicode mapping'], jsonPath, pdfPath, pdfBytes: pdfBytes.length, studioPdfPath, studioPdfBytes: studioBytes.length }, null, 2));
