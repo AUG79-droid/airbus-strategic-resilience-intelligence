@@ -23,13 +23,11 @@ export function compareEnvironmentalBasis(baseline?:EnvironmentalBasis,candidate
   if(!baseline||!candidate)return {status:'missing',issues:['Environmental metadata required for baseline and alternative']};
   const missing=mandatory.filter(k=>!norm(baseline[k])||!norm(candidate[k]));
   if(missing.length)return {status:'missing',issues:missing.map(k=>k+': missing for baseline or alternative')};
-  const comparable=['functionalUnit','period','boundary','inventoryMethod','allocationRule'] as const;
+  const comparable=['functionalUnit','period','boundary','inventoryMethod','allocationRule','factorSourceVersion'] as const;
   const mismatches=comparable.filter(k=>norm(baseline[k])!==norm(candidate[k]));
   if(mismatches.length)return {status:'incompatible',issues:mismatches.map(k=>k+': not the same across alternatives')};
   return {status:'declaredComparable',issues:[
-    'Matching user-declared metadata only: source integrity, emission factors, allocation and uncertainty require expert review.',
-    ...(norm(baseline.factorSourceVersion)!==norm(candidate.factorSourceVersion)
-      ?['Different factor/inventory versions must be reconciled before claiming a quantified environmental benefit.']:[])
+    'Matching user-declared metadata only: source integrity, emission factors, allocation and uncertainty require expert review.'
   ]};
 }
 export function validateEnvironmentalBasis(value:unknown,ids:string[]):EnvironmentalBasis[]{
