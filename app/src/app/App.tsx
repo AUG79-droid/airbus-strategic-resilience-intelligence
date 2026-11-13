@@ -213,7 +213,7 @@ export function App() {
               ))}
             </nav>
 
-            <div className="workspace-view" key={`${locale}-${view}-${caseMode}`}>
+            <div className="workspace-view" key={`${view}-${caseMode}`}>
               {caseMode === 'custom' ? (
                 <>
                   <CaseJourney locale={locale} view={view} data={customCase} setData={setCustomCase} />
