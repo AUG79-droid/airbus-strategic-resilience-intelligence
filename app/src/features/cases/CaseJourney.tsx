@@ -10,7 +10,7 @@ import { fromPreset, presetTitle, type PresetKey } from './presets';
 import { UniversalControls } from './UniversalControls';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
-import { calculateUniversal, parameterUnit } from './universal';
+import { calculateUniversal, parameterUnit, UNIVERSAL_PARAMETERS } from './universal';
 import './CaseJourney.css';
 
 type Props = {
@@ -83,7 +83,9 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     '',es?'## 02 Cuestionar':'## 02 Challenge',
     `${es?'Referencia':'Baseline'}: ${displayOptionName(data.options[0],locale)}`,`${es?'Alternativa':'Alternative'}: ${displayOptionName(chosen.option,locale)}`,
     `${es?'Resultado':'Verdict'}: ${describeVerdict(chosen,locale)}`,
-    ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | evidence: ${r.evidenceReady?'reviewed':'pending'}`),
+    ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | evidence: ${r.evidenceReady?'reviewed':'pending'}${r.sensitivityRange
+      ?` | OAT Δ range: [${present(r.sensitivityRange.minDelta,locale)}, ${present(r.sensitivityRange.maxDelta,locale)}]${r.sensitivityRange.switchingParameter?` | switching input: ${r.sensitivityRange.switchingParameter}=${present(r.sensitivityRange.switchingValue??null,locale)}`:''}`
+      :''}`),
     `${es?'Prueba de variación individual de parámetros':'One-at-a-time input test'}: ±${data.robustnessPercent} %. ${es?'Cada entrada se modifica por separado; no es un intervalo de confianza.':'Each input is changed separately; not a confidence interval.'}`,
     '',es?'## Controles y aplicabilidad':'## Universal controls and applicability',
     ...Object.entries(data.parameters).map(([id,state])=>'- '+id+': '+state.applicability+'; '+state.reason),
@@ -323,6 +325,15 @@ export function CaseJourney({locale,view,data,setData}:Props){
             <small>{row.robustness==='stable'?t('Conclusión estable ante variaciones individuales','Stable under individual input changes'):
               row.robustness==='sensitive'?t('La conclusión cambia con alguna variación','The result changes under some variation'):
               row.robustness==='equivalent'?t('Alternativas equivalentes con los valores actuales','Equivalent with the current inputs'):t('No se ha podido evaluar la variación','Local variation not evaluated')}</small>
+            {row.sensitivityRange&&<small>
+              {t('Rango de diferencia bajo cambios individuales','Difference range under one-at-a-time changes')}: 
+              {present(row.sensitivityRange.minDelta,locale)} – {present(row.sensitivityRange.maxDelta,locale)} {parameterUnit(row.metric.unit,data.kind,locale)}.
+              {row.sensitivityRange.switchingParameter&&<>
+                {' · '}{t('Puede cambiar al modificar','Can switch when changing')}{' '}
+                {UNIVERSAL_PARAMETERS.find(p=>p.id===row.sensitivityRange?.switchingParameter)?.label[locale]??row.sensitivityRange.switchingParameter}
+                {' '}({t('valor de prueba','test value')} {present(row.sensitivityRange.switchingValue??null,locale)})
+              </>}
+            </small>}
           </li>)}</ul>
           <p className="cy-help">{t('Referencia:','Baseline:')} {displayOptionName(data.options[0],locale)}. {t('Hipótesis de modelo, no beneficio validado.','Model assumption, not a validated benefit.')}</p>
         </article>)}</div>
