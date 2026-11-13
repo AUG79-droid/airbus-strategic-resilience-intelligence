@@ -58,7 +58,7 @@ describe('Extended strategic translator',()=>{
     expect(message[3].body).toMatch(/5.?000/);
     expect(message[3].body).toMatch(/7.?000/);
     expect(message[3].body).toContain('aumenta');
-    expect(message[3].body).toContain('impactos incluidos en el caso');
+    expect(message[3].body).toContain('impactos ambientales incluidos en el caso');
   });
   it('distinguishes the selected alternative from the other candidate, changing when switched',()=>{
     const c=fromPreset('saf','es');
