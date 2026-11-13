@@ -320,7 +320,8 @@ export function comparisons(caseData: StrategicCase):OptionComparison[] {
 export function validateCaseImport(value: unknown): StrategicCase {
   if (!value || typeof value!=='object') throw new Error('Invalid case JSON.');
   const x=value as Partial<StrategicCase>;
-  if(x.version!==1 || !Object.keys(MODEL_TEMPLATES).includes(String(x.kind)) ||
+  if(x.version!==1 || typeof x.id!=='string'|| !/^[a-zA-Z0-9_-]{1,100}$/.test(x.id) ||
+    !Object.keys(MODEL_TEMPLATES).includes(String(x.kind)) ||
     typeof x.title!=='string' || !Array.isArray(x.metrics) || !Array.isArray(x.options) ||
     !Array.isArray(x.evidence) || !x.gates || x.options.length!==3 ||
     x.metrics.length<1 || x.metrics.length>8 || x.evidence.length>150) throw new Error('Unsupported case structure.');
@@ -331,32 +332,51 @@ export function validateCaseImport(value: unknown): StrategicCase {
     if(!m || typeof m.id!=='string'||!/^[a-zA-Z0-9_-]{1,40}$/.test(m.id)||ids.has(m.id)||
       typeof m.label!=='string'||m.label.length>150||typeof m.unit!=='string'||m.unit.length>40||
       !['higher','lower'].includes(m.direction)|| !['resilience','environment','cost','operational'].includes(m.category) ||
-      (m.min!==undefined && !Number.isFinite(m.min))||(m.max!==undefined && !Number.isFinite(m.max))) throw new Error('Invalid indicator definition');
+      (m.min!==undefined && !Number.isFinite(m.min))||(m.max!==undefined && !Number.isFinite(m.max))||
+      (m.min!==undefined&&m.max!==undefined&&m.min>m.max)) throw new Error('Invalid indicator definition');
     ids.add(m.id);
   }
   const optionIds=new Set<string>();
   for(const opt of x.options){
-    if(!opt || typeof opt.id!=='string'||optionIds.has(opt.id)||typeof opt.name!=='string'||
-      opt.name.length>200||typeof opt.explanation!=='string'||!opt.measures||typeof opt.measures!=='object') throw new Error('Invalid alternative');
+    if(!opt || typeof opt.id!=='string'|| !/^[a-zA-Z0-9_-]{1,100}$/.test(opt.id) ||
+      optionIds.has(opt.id)||typeof opt.name!=='string'||
+      opt.name.length>200||typeof opt.explanation!=='string'||opt.explanation.length>4000||
+      !opt.measures||typeof opt.measures!=='object'||Array.isArray(opt.measures)) throw new Error('Invalid alternative');
     optionIds.add(opt.id);
     for(const m of x.metrics){
       const measure=opt.measures[m.id];
-      if(!measure || (measure.value!==null && (typeof measure.value!=='number'||!Number.isFinite(measure.value))) ||
+      if(!measure || (measure.value!==null && (typeof measure.value!=='number'||!Number.isFinite(measure.value)||
+        (m.min!==undefined&&measure.value<m.min)||(m.max!==undefined&&measure.value>m.max))) ||
         typeof measure.evidenceId!=='string'||measure.evidenceId.length>100) throw new Error('Invalid measure '+m.id);
     }
   }
   if(!['baseline'].includes(x.options[0].id))throw new Error('Invalid reference alternative');
-  if(x.evidence.some(e=>!e||typeof e.id!=='string'||typeof e.title!=='string'||typeof e.reference!=='string'||
-      typeof e.owner!=='string'||typeof e.reviewer!=='string'||typeof e.reviewedOn!=='string'||
-      typeof e.limitations!=='string'||!['pending','reviewed','rejected'].includes(e.status)||
-      !['observed','estimate','method'].includes(e.nature))) throw new Error('Invalid evidence register');
+    const evidenceIds=new Set<string>();
+  if(x.evidence.some(e=>{
+    if(!e||typeof e.id!=='string'|| !/^[a-zA-Z0-9_-]{1,100}$/.test(e.id) ||
+      evidenceIds.has(e.id) ||typeof e.title!=='string'||e.title.length>500||
+      typeof e.reference!=='string'||e.reference.length>2000||
+      typeof e.owner!=='string'||e.owner.length>250||
+      typeof e.reviewer!=='string'||e.reviewer.length>250||
+      typeof e.reviewedOn!=='string'||e.reviewedOn.length>20||
+      typeof e.limitations!=='string'||e.limitations.length>4000||
+      !['pending','reviewed','rejected'].includes(e.status)||
+      !['observed','estimate','method'].includes(e.nature))return true;
+    evidenceIds.add(e.id);
+    if(e.reviewedOn){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(e.reviewedOn))return true;
+      const d=new Date(e.reviewedOn);
+      if(Number.isNaN(d.getTime())||d.toISOString().slice(0,10)!==e.reviewedOn)return true;
+    }
+    return false;
+  })) throw new Error('Invalid evidence register');
   if(typeof x.robustnessPercent!=='number'||!Number.isFinite(x.robustnessPercent)||
     x.robustnessPercent<0||x.robustnessPercent>100||typeof x.hypothetical!=='boolean') throw new Error('Invalid sensitivity settings');
   if(['comparableBoundary','technicalEligibility','measurementMethod','independentReview'].some(k=>typeof x.gates?.[k as keyof ReviewGates]!=='boolean'))throw new Error('Invalid review gates');
   // Upgrade saved cases from the original four-KPI builder safely.
   const upgraded=structuredClone(x as StrategicCase);
   upgraded.parameters??=defaultParameterStates(upgraded.kind);
-  if(typeof upgraded.parameters!=='object'||Array.isArray(upgraded.parameters))throw new Error('Invalid applicability catalogue');
+  if(!upgraded.parameters||typeof upgraded.parameters!=='object'||Array.isArray(upgraded.parameters))throw new Error('Invalid applicability catalogue');
   for(const item of UNIVERSAL_PARAMETERS){
     const p=upgraded.parameters[item.id];
     if(!p||!['applies','notApplicable','unknown'].includes(p.applicability)||
@@ -364,11 +384,12 @@ export function validateCaseImport(value: unknown): StrategicCase {
   }
   for(const option of upgraded.options){
     option.parameterValues??=emptyParameterValues();
-    if(!option.parameterValues||typeof option.parameterValues!=='object')throw new Error('Invalid parameter values');
+    if(!option.parameterValues||typeof option.parameterValues!=='object'||Array.isArray(option.parameterValues))throw new Error('Invalid parameter values');
     for(const p of UNIVERSAL_PARAMETERS){
       const m=option.parameterValues[p.id];
       if(!m||typeof m.evidenceId!=='string'||m.evidenceId.length>100||
-        (m.value!==null&&(typeof m.value!=='number'||!Number.isFinite(m.value))))
+        (m.value!==null&&(typeof m.value!=='number'||!Number.isFinite(m.value)||
+          m.value<(p.minimum??-Infinity)||m.value>(p.maximum??Infinity))))
         throw new Error('Invalid parameter '+p.id);
     }
   }
