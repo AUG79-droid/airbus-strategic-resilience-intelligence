@@ -18,6 +18,10 @@ const n=(x:number,locale:Locale,digits=1)=>
   new Intl.NumberFormat(locale,{maximumFractionDigits:digits}).format(x);
 const asPercent=(x:number,locale:Locale)=>n(x,locale,1)+' %';
 const measure=(c:OptionComparison,id:string)=>{
+  // A physical inventory difference is not a sustainability benefit when
+  // functional units, periods or factor datasets cannot be compared.
+  if(['materialKg','wasteKg','ghgKg'].includes(id)&&
+    c.environmentCheck.status!=='declaredComparable')return undefined;
   const row=c.rows.find(x=>x.metric.id===id);
   return row && row.issue===undefined && row.baseline!==null && row.candidate!==null
     && row.delta!==null ?row:undefined;
