@@ -13,7 +13,7 @@ import { DependencyRoutes } from './DependencyRoutes';
 import { EnvironmentalMethod } from './EnvironmentalMethod';
 import { MissionBridgeReview } from './MissionBridgeReview';
 import { DiscountedFinance } from './DiscountedFinance';
-import { evaluateDiscountedFinance } from './discountedCashFlows';
+import { evaluateDiscountedFinance, emptyFinancePlan } from './discountedCashFlows';
 import { pdfSafeText } from './pdfSafeText';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
@@ -207,7 +207,16 @@ export function CaseJourney({locale,view,data,setData}:Props){
   }));
   const removeEvidence=(id:string)=>setData(current=>({
     ...current,evidence:current.evidence.filter(e=>e.id!==id),
-    options:current.options.map(o=>({...o,measures:Object.fromEntries(Object.entries(o.measures).map(([k,v])=>[k,v.evidenceId===id?{...v,evidenceId:''}:v]))}))
+    options:current.options.map(o=>({
+      ...o,
+      measures:Object.fromEntries(Object.entries(o.measures).map(([k,v])=>[k,v.evidenceId===id?{...v,evidenceId:''}:v])),
+      parameterValues:Object.fromEntries(Object.entries(o.parameterValues).map(([k,v])=>[k,v.evidenceId===id?{...v,evidenceId:''}:v]))
+    })),
+    dependencyRoutes:current.dependencyRoutes.map(r=>r.evidenceId===id?{...r,evidenceId:''}:r),
+    environmentalBasis:current.environmentalBasis.map(e=>e.evidenceId===id?{...e,evidenceId:''}:e),
+    missionBridges:current.missionBridges.map(m=>m.evidenceId===id?{...m,evidenceId:''}:m),
+    discountedFinance:{...current.discountedFinance,
+      flows:current.discountedFinance.flows.map(f=>f.evidenceId===id?{...f,evidenceId:''}:f)}
   }));
   const addEvidence=()=>{
     setData(current=>({...current,evidence:[...current.evidence,{
@@ -222,7 +231,9 @@ export function CaseJourney({locale,view,data,setData}:Props){
     ...current,
     id:'CASE-'+Date.now().toString(36),hypothetical:false,programme:'',owner:'',
     gates:{comparableBoundary:false,technicalEligibility:false,measurementMethod:false,independentReview:false},
-    evidence:[],options:current.options.map(o=>({
+    evidence:[],dependencyRoutes:[],environmentalBasis:[],missionBridges:[],
+    discountedFinance:emptyFinancePlan(),
+    options:current.options.map(o=>({
       ...o,
       measures:Object.fromEntries(current.metrics.map(m=>[m.id,{value:null,evidenceId:''}])),
       parameterValues:Object.fromEntries(Object.keys(o.parameterValues).map(id=>[id,{value:null,evidenceId:''}]))
