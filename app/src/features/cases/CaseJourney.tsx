@@ -120,14 +120,14 @@ async function downloadReportPdf(text:string, filename:string):Promise<void>{
     .replace(/[“”]/g,'"').replace(/[‘’]/g,"'")
     .replace(/…/g,'...').replace(/≤/g,'<=').replace(/≥/g,'>=')
     .replace(/[₀-₉]/g,ch=>String('₀₁₂₃₄₅₆₇₈₉'.indexOf(ch)))
-    .replace(/[^\\x20-\\x7e\\u00a0-\\u00ff\\u20ac]/g,'?');
+    .replace(/[^\x20-\x7e\u00a0-\u00ff\u20ac]/g,'?');
   const maxWidth=A4[0]-76;
-  for(const raw of text.split('\\n')){
+  for(const raw of text.split('\n')){
     const bold=raw.startsWith('#')||raw.startsWith('NOTICE:')||raw.startsWith('AVISO:');
     const size=raw.startsWith('# ')?16:raw.startsWith('## ')?12:10;
     const face=bold?fontBold:font;
-    const actual=bold?raw.replace(/^#+\\s*/,''):raw;
-    const words=clean(actual).split(/\\s+/).filter(Boolean);
+    const actual=bold?raw.replace(/^#+\s*/,''):raw;
+    const words=clean(actual).split(/\s+/).filter(Boolean);
     const pieces:string[]=[];
     let line='';
     for(const word of words){
