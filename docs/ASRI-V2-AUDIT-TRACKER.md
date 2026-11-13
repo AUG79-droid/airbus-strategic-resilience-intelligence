@@ -1,52 +1,53 @@
-# ASRI 2.0 — audit remediation register
+# ASRI 2.0 — Registro de seguimiento de la auditoría externa
 
-**Scope:** external audit dated 2026-11-13, issues ASRI-001–ASRI-024.
-**Protection:** development changes occur only on `asri-v2-audit-remediation`; the public `main` demo remains unchanged.
-**Status vocabulary:** FIXED = code change verified in tests; PARTIAL = a control improves the issue but does not satisfy the complete audit recommendation; OPEN = substantial work still needed; NEEDS AIRBUS = cannot establish real-world validity from fictional data or public code.
+**Fecha de referencia:** 13/11/2026. **Alcance:** hallazgos ASRI-001 a ASRI-024.
+**Rama de trabajo:** `asri-v2-audit-remediation` (PR #1, borrador). **Versión pública `main`: intacta.**
 
-| Audit ID | Status | Remediation / remaining acceptance condition |
+## Criterio de cierre
+
+- **FIXED:** se ha corregido un defecto verificable, con pruebas, en la versión correspondiente.
+- **PARTIAL:** el prototipo incorpora una mejora real, pero faltan mecanismos de mayor alcance o validaciones de terceros.
+- **NEEDS AIRBUS:** requieren identidad, permisos, datos operativos, validación metodológica o una aprobación que la aplicación no puede concederse a sí misma.
+- **Ningún test con datos sintéticos** demuestra beneficios operativos reales ni certificación ambiental.
+
+| Hallazgo | Estado | Trabajo realizado / condición que sigue pendiente |
 |---|---|---|
-| 001 — two mathematical engines | OPEN | Unify model semantics or clearly label domain-specific validity; demonstrate equivalent inputs give equivalent outcomes. Existing DEMO-60 and Case Studio are separate. |
-| 002 — independent additive hazards | PARTIAL | v2 adds optional explicit joint failure/disruption likelihood for Case Studio; Fréchet limits, four probability branches and old-file migration tested. Add non-additive delays, distributions, queues, capacity and risk correlations beyond two binary events. |
-| 003 — unmodeled routes and common causes | PARTIAL | Translate no longer claims an alternative supplier is independent without verification. Implement a graph of suppliers, routes, assets, capacities and shared upstream hazards and show its impact on outcomes. |
-| 004 — incorrect sensitivity | PARTIAL | One-at-a-time parameter perturbation already replaces the old delta-margin heuristic. Add coordinated variation, switch points, output bands and baseline calibration. |
-| 005 — contradictory Engineering text | FIXED | Text avoids calling a deterioration an improvement. Regression coverage needed for all case families. |
-| 006 — user-declared evidence review | PARTIAL | Different named owner/reviewer required; still no authentication or approved external verification. |
-| 007 — unchecked methodology approvals | OPEN / NEEDS AIRBUS | Implement authenticated roles and role separation using an approved internal identity system; current checkmarks remain declarations. |
-| 008 — non-comparable environment inventories | OPEN / NEEDS AIRBUS | Require functional units, shared boundaries, versioned sources/factors, allocation rules and uncertainty before asserting comparable benefits. |
-| 009 — component versus mission impact | OPEN / NEEDS AIRBUS | Model component → system → asset → mission bridges explicitly, with no automated readiness inference. |
-| 010 — vulnerable development Vite | FIXED | Vite pinned to patched 8.3.8, lockfile consistent. |
-| 011 — malformed JSON import | FIXED / PARTIAL | IDs, bounds, dates and core shapes validated; formal discriminated schema and migration tests across versions still recommended. |
-| 012 — language switch resets selection | FIXED | Workspace no longer remounts solely on locale changes. |
-| 013 — broken Unicode in PDF | PARTIAL | Meaningful symbol replacements and font-width wrapping added; full Unicode requires embedded font and visual PDF regression. |
-| 014 — Markdown whitespace loss | FIXED | Report blank lines preserved in Markdown. |
-| 015 — missing CI E2E | PARTIAL | Browser journeys, translator and PDF/JSON export now run in quality workflow; add all remaining guided/evidence/lab checks. |
-| 016 — inconsistent manifests | FIXED | Package and lockfile now both 0.6.0-phase-6. |
-| 017 — economics too simple | OPEN | Extend to time-valued losses, contractual terms, discounting, capacity constraints, conditional cost and simulation bands. |
-| 018 — falsely precise uncertainty | OPEN | Add credible ranges and scenario bands; do not portray fictional point estimates as calibrated forecasts. |
-| 019 — localization/numeration | PARTIAL | Translate step number and selected English/Spanish strings corrected; comprehensive audit still needed. |
-| 020 — English grammar | FIXED | Singular days and subject/verb agreement corrected. |
-| 021 — mobile hidden tabs | FIXED | All four steps available in two-column small-screen tabs. |
-| 022 — lost unsaved drafts | PARTIAL | Browser leave warning added; approved autosave, recovery and revision history not implemented. |
-| 023 — exposed maps | FIXED | Production source maps disabled. |
-| 024 — unverifiable document integrity | PARTIAL / NEEDS AIRBUS | Exported custom-case JSON now includes a SHA-256 checksum; import rejects modified archives and flags legacy files as unverified. This detects tampering or accidental edits but **is not a cryptographic signature, authenticated audit history or validation of evidence**. Approved evidence storage and signed reviews still require Airbus. |
+| 001 · Motores matemáticos separados | PARTIAL | DEMO-60 y Case Studio comparten ahora el motor de probabilidades conjuntas; proveniencia y ámbitos explícitos en interfaz. Siguen existiendo modelos de tiempo, coste y decisiones con semánticas distintas; **no debe compararse directamente una cifra de un modo con otra del segundo**. Pendiente armonización de dominio y validación entre modelos. |
+| 002 · Independencia/correlación de riesgos | PARTIAL | Probabilidad conjunta explícita, cuatro ramas y límites de Fréchet; riesgos dependientes afectan al cumplimiento de plazos. El tiempo esperado sigue siendo aditivo bajo hipótesis simplificadas, sin colas ni fallos de modo común modelados en detalle. |
+| 003 · Proveedores y fallos comunes | PARTIAL | Editor opcional de rutas por alternativa, nodos compartidos, potenciales puntos únicos de fallo y capacidad nominal declarada; no suma capacidades compartidas. **No infiere independencia por contar proveedores** ni cambia automáticamente los tiempos de recuperación. Falta calibrar redes, capacidades y rutas reales. |
+| 004 · Sensibilidad | PARTIAL | Recalcula alteraciones individuales, muestra rangos de diferencia, entrada que invierte la conclusión y valores de prueba; ya no presenta un margen heurístico como estadística. Falta incertidumbre conjunta y validación probabilística. |
+| 005 · Texto de Ingeniería contradictorio | FIXED | Descripción neutral incluso cuando un resultado empeora. |
+| 006 · Revisión declarada por el usuario | PARTIAL | Se exige nombre de propietario y revisor diferentes y fuentes trazables; **no existe verificación de identidad** ni aprobación de fuentes externas. |
+| 007 · Gates sin autenticación | NEEDS AIRBUS | Las casillas siguen siendo declaraciones, no autorizaciones. La integración con identidad corporativa, roles y firma/aprobación de cambios requiere infraestructura aprobada y responsables designados. |
+| 008 · Inventarios ambientales incomparables | PARTIAL | Ficha de unidad funcional, periodo, límites, método, asignación y versión de factores por alternativa; gate de comparabilidad declarada y bloqueo de mensajes numéricos de beneficio si difieren. Falta ACV revisado, factores trazables, representatividad e incertidumbre. |
+| 009 · Pieza frente a misión | PARTIAL | Cadena opcional componente → subsistema → plataforma → función de misión con evidencia y disponibilidad observada **introducida por separado**. Se prohíbe inferir disponibilidad de flota a partir de recuperación de una pieza. Falta modelo real de sistema y validación operativa. |
+| 010 · Vite afectado | FIXED | Versión parcheada Vite 8.3.8 con `package-lock.json` sincronizado. |
+| 011 · Importación JSON | PARTIAL | Estructura, fechas, IDs, rangos, rutas, inventario, enlaces de misión y checksum SHA-256 revisados. Archivos anteriores siguen siendo compatibles. Pendiente esquema formal de migración a una versión mayor. |
+| 012 · Cambio de idioma reiniciaba selección | FIXED | No se remonta el workspace solo por cambiar EN/ES. |
+| 013 · Unicode PDF | PARTIAL | Sustitución semántica de caracteres no WinAnsi, salto de línea y ajuste por ancho real del texto. Sigue pendiente tipografía Unicode embebida y comprobación visual de todos los glifos. |
+| 014 · Saltos de línea Markdown | FIXED | Informe Markdown conserva párrafos vacíos. |
+| 015 · Cobertura E2E CI | PARTIAL | Calidad incluye tests unitarios, compilación, responsive, traducción, laboratorio, evidencias, recorrido guiado, informes PDF/JSON, riesgos conjuntos y almacenamiento opcional. La cobertura de todos los caminos y accesibilidad sigue ampliable. |
+| 016 · Versión manifiestos | FIXED | Versiones en `package.json` y `package-lock.json` coherentes. |
+| 017 · Economía simplificada | PARTIAL | Nuevo coste incremental por unidad de tiempo de interrupción, vinculado al tiempo esperado y con advertencia de doble contabilización; no afecta a ejemplos previos si no se activa. Falta descuento, escenarios contractuales avanzados y costes de disrupción de programa. |
+| 018 · Precisión incierta | PARTIAL | Diferencias en rangos de sensibilidad **deterministas**, nunca percentiles o bandas de confianza; fuentes ficticias visibles. No existen distribuciones calibradas ni intervalos de confianza reales. |
+| 019 · Idiomas y numeración | PARTIAL | Etapa Translate corregida, documentación, etiquetas y condiciones del informe revisadas. Falta comprobación manual integral de toda la aplicación. |
+| 020 · Gramática inglesa | FIXED | Concordancia singular/plural de días y sujeto/verbo. |
+| 021 · Navegación móvil oculta | FIXED | Cuatro etapas visibles en tarjetas móviles, sin scroll horizontal oculto. |
+| 022 · Borradores sin guardar | PARTIAL | Aviso al abandonar casos reales con cambios. **Solo para ejemplos ficticios**, guardado local opcional con consentimiento y eliminación al desactivarlo. Los datos reales se exportan a archivo; no se guardan en navegador ni nube. |
+| 023 · Sourcemaps públicos | FIXED | Desactivados en producción. |
+| 024 · Integridad de archivos y firmas | PARTIAL / NEEDS AIRBUS | JSON de caso con huella SHA-256 e importación que detecta alteraciones; el archivo anterior sin huella se identifica. No es firma digital, no autentica autores ni certifica fuentes. Para historial firmado se necesita infraestructura aprobada. |
 
-## Current v2 changes and tests
+## Pruebas de aceptación del prototipo
 
-- Optional **jointFailureShock** probability per strategy, explicitly marked not-applicable by default (independence is an assumption, not a fact).
-- Exactly four joint probability branches calculated; impossible overlaps rejected instead of clamped.
-- Deadline attainment reflects an entered joint risk. **Expected recovery and cost remain additive marginal-event estimates:** the improved dependency handling does *not* certify these other outputs.
-- Parameter catalogue expanded from 19 to 20, across all case types.
-- Existing version-1 JSON files are migrated in-memory to include the new optional field, with independence as a documented legacy assumption.
-- User-facing input fields show admissible overlap bounds by scenario.
-- Strategic text no longer implies a second supplier is independent without route verification.
-- Unit tests cover independence, correlation, mutually exclusive events, invalid probabilities, exported case migration.
-- Run `npm test`, `npm run build` and the GitHub browser/export quality workflow before merging.
+- `npm test`: baterías unitarias y regresión.
+- `npm run build`: tipado TypeScript y producción.
+- CI: recorrido responsive y bilingüe, comparativas, revisión de evidencias, exportaciones PDF/JSON, pruebas de riesgos dependientes y recuperación de borrador hipotético.
+- Garantía de despliegue: los cambios de esta rama no se mezclan automáticamente con el sitio publicado.
 
-## Release and verification gates
+## Conclusiones metodológicas
 
-**Educational prototype release:** all unit, typecheck/build and browser/export checks pass; synthetic labels and limitations retained; Spanish/English texts reviewed.
-
-**Operational-model release:** additionally requires all high-severity methodological issues closed and proof of calibration, validated boundaries, realistic route assumptions, constraints and independent reproducibility.
-
-**Airbus operational approval:** separate decision by appropriate internal authorities; cannot be supplied by Codex, ChatGPT, synthetic data or automated tests.
+1. **La aplicación es todavía un prototipo de análisis condicional**, no un sistema predictivo calibrado.
+2. **DEMO-60 y Case Studio tienen límites de modelo diferentes** y no pueden intercambiar sus cifras sin una armonización del dominio.
+3. **Los ejemplos didácticos siguen siendo ficticios**, y las verificaciones simuladas no representan firmas de Airbus.
+4. Solo Airbus puede aceptar datos, permisos, aprobaciones y afirmaciones reales ante clientes.
+5. El fin de la programación NO implica cierre de todos los 24 hallazgos como verificaciones operacionales.
