@@ -250,7 +250,7 @@ const COMPUTED_INDICATORS:{
     sourceIds:['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock']},
   {id:'expectedCost',label:'Coste esperado / Expected cost',unit:'€',direction:'lower',category:'cost',
     sourceIds:['baseCost','logisticsCost','investmentCost','shockProbability','shockSurcharge','technicalSuccess','failureCost',
-      'reservationFee','cancellationProbability','cancellationFee']},
+      'reservationFee','cancellationProbability','cancellationFee','downtimeRate']},
   {id:'materialKg',label:'Material virgen / Virgin material',unit:'kg',direction:'lower',category:'environment',sourceIds:['materialKg']},
   {id:'wasteKg',label:'Residuos / Waste',unit:'kg',direction:'lower',category:'environment',sourceIds:['wasteKg']},
   {id:'ghgKg',label:'GEI parciales / Bounded GHG',unit:'kg CO₂e',direction:'lower',category:'environment',sourceIds:['ghgKg']},
@@ -354,12 +354,16 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
     }
     const delta=a.value!-b.value!;
     const improvement=definition.direction==='lower'?-delta:delta;
+    const sourceIds=definition.id==='expectedCost'&&
+      caseData.parameters.downtimeRate?.applicability==='applies'
+      ?[...definition.sourceIds,'baseRecovery','supplyLead','failureDelay','shockDelay']
+      :definition.sourceIds;
     const sensitivity=localInputSensitivity(caseData,baseline,candidate,key,
-      definition.sourceIds,b.value!,a.value!,definition.direction);
-    const evidenceReady=parameterEvidence(caseData,baseline,definition.sourceIds,'reviewed')&&
-      parameterEvidence(caseData,candidate,definition.sourceIds,'reviewed');
-    const observedEvidence=parameterEvidence(caseData,baseline,definition.sourceIds,'observed')&&
-      parameterEvidence(caseData,candidate,definition.sourceIds,'observed');
+      sourceIds,b.value!,a.value!,definition.direction);
+    const evidenceReady=parameterEvidence(caseData,baseline,sourceIds,'reviewed')&&
+      parameterEvidence(caseData,candidate,sourceIds,'reviewed');
+    const observedEvidence=parameterEvidence(caseData,baseline,sourceIds,'observed')&&
+      parameterEvidence(caseData,candidate,sourceIds,'observed');
     if(!evidenceReady)missing.push(definition.label+': missing traceable review for baseline and alternative');
     return {metric,baseline:b.value,candidate:a.value,delta,
       percentChange:b.value===0?null:delta/Math.abs(b.value!)*100,improvement,
@@ -458,6 +462,12 @@ export function validateCaseImport(value: unknown): StrategicCase {
       reason:'Legacy model: technical failure and external shock assumed independent / Modelo anterior: independencia supuesta.'
     };
   }
+  if(!upgraded.parameters.downtimeRate){
+    upgraded.parameters.downtimeRate={
+      applicability:'notApplicable',
+      reason:'Legacy model: the monetary value of interruption time was not estimated / El coste de indisponibilidad no se incluía.'
+    };
+  }
   for(const item of UNIVERSAL_PARAMETERS){
     const p=upgraded.parameters[item.id];
     if(!p||!['applies','notApplicable','unknown'].includes(p.applicability)||
@@ -467,6 +477,7 @@ export function validateCaseImport(value: unknown): StrategicCase {
     option.parameterValues??=emptyParameterValues();
     if(!option.parameterValues||typeof option.parameterValues!=='object'||Array.isArray(option.parameterValues))throw new Error('Invalid parameter values');
     option.parameterValues.jointFailureShock??={value:null,evidenceId:''};
+    option.parameterValues.downtimeRate??={value:null,evidenceId:''};
     for(const p of UNIVERSAL_PARAMETERS){
       const m=option.parameterValues[p.id];
       if(!m||typeof m.evidenceId!=='string'||m.evidenceId.length>100||
