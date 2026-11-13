@@ -248,10 +248,10 @@ describe('Create your own strategic case', () => {
     expect(comparisons(c)[0].verdict).toBe('tradeoff');
   });
 
-  it.each(['general','ecodesign','climate','saf','wildfire'] as const)('provides the same 20 parameters for %s',kind=>{
+  it.each(['general','ecodesign','climate','saf','wildfire'] as const)('provides the same 21 parameters for %s',kind=>{
     const c=kind==='general'?createCase(kind):fromPreset(kind);
-    expect(Object.keys(c.parameters)).toHaveLength(20);
-    expect(c.options.every(o=>Object.keys(o.parameterValues).length===20)).toBe(true);
+    expect(Object.keys(c.parameters)).toHaveLength(21);
+    expect(c.options.every(o=>Object.keys(o.parameterValues).length===21)).toBe(true);
   });
   it('does not treat no-aplica values as numeric zero or demand their evidence',()=>{
     const c=fromPreset('ecodesign','es');
