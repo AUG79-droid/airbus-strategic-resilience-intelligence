@@ -72,13 +72,13 @@ if (await page.locator('[role="tabpanel"]:visible').count() !== 1) throw new Err
 await page.getByTestId('trace-TRACE-STRATEGY').locator('summary').click();
 await page.getByTestId('trace-TRACE-STRATEGY').getByText(/MODEL-repairFirst-TIME/).waitFor();
 await page.getByTestId('trace-TRACE-STRATEGY').getByRole('button', { name: /Inspect evidence/ }).click();
-await page.getByRole('heading', { name: 'Evidence & claim control' }).waitFor();
+await page.getByRole('heading', { name: 'What supports our decision?' }).waitFor();
 if (await page.getByTestId('evidence-focus').inputValue() !== 'strategy:repairFirst') throw new Error('Translator trace did not preserve repair-first evidence focus.');
 checks.push('Statement trace opens exact calculations and linked evidence');
 
-await page.getByRole('button', { name: /^02 Challenge$/ }).click();
+await page.locator('.workflow-button').nth(1).click();
 await page.getByTestId('preset-select').selectOption('repairWorsens');
-await page.getByRole('button', { name: /^04 Translate$/ }).click();
+await page.locator('.workflow-button').nth(3).click();
 await page.getByText('Unfavourable result', { exact: true }).waitFor();
 await page.getByTestId('translator-summary').getByText(/Repair first weakens/).waitFor();
 await page.getByTestId('translator-summary').getByText(/Do not promote Repair first/).waitFor();
