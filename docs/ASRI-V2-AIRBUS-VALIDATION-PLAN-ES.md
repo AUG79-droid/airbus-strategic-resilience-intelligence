@@ -106,7 +106,20 @@ Los valores no disponibles permanecen como **desconocidos**: no asignar cero ni 
 
 A José Coll se le puede mostrar ya la **narrativa**: «ASRI traduce una decisión de sostenibilidad en su impacto potencial sobre continuidad operativa, costes, dependencias y riesgos, con distintos mensajes según la audiencia. La demostración prueba el flujo de análisis; la validación de beneficios reales se plantea como piloto multidisciplinar». **No afirmar** que Airbus ha aprobado la metodología, que los resultados ficticios son realidades operativas o que ya existe un sistema predictivo calibrado.
 
-## 7. Pendientes de programación independientes de Airbus
+## 7. Aplicación futura a los cuatro casos didácticos
+
+Estos paquetes **no son necesarios para comenzar el piloto In-Service único**; precisan aprobaciones y datos diferentes antes de presentarse como casos reales. La versión didáctica continúa con supuestos ficticios.
+
+| Caso | Datos reales imprescindibles para analizarlo | Quién debería validar qué |
+|---|---|---|
+| **Eurodrone · Ecodiseño y materiales críticos** | Lista de materiales y masas por unidad funcional, criticidad/sustituibilidad y trazabilidad de suministro, capacidad de reparación y vida útil técnicamente autorizada, inventario de impactos por referencia/alternativa, factores y límites de ACV, costes y plazos comparables | **Engineering/Materials** viabilidad y vida útil; **Supply Chain** dependencias; **Environment/LCA** metodología y factores; **Programme** límites y coste |
+| **Adaptación climática** | Riesgo climático/hazard pertinente, exposición del activo o actividad, incidentes y pérdida de servicio observados, umbral de fallo, intervención de adaptación, coste/efectividad y escenarios temporales con incertidumbre | **Operations/Facilities + Engineering** exposición y continuidad; **Risk Management** escenarios; **Finance** costes; **Programme** aceptación del umbral |
+| **SAF · Soberanía de combustible** | Combustible autorizado para plataforma/motores y condiciones de uso, mezcla/calidad, disponibilidad por punto de suministro, rutas alternativas, retrasos y precios, infraestructura y comparabilidad de emisiones de ciclo de vida | **Engineering/Airworthiness** compatibilidad; **Fuel Procurement/Logistics** continuidad y trazabilidad; **Environment/LCA** emisiones; **Programme/Finance** coste y restricciones |
+| **Incendios forestales** | Misión y criterio de alerta definidos, cobertura y conectividad, tiempos detección→alerta→respuesta, falsos positivos/negativos, disponibilidad de medios, condiciones operativas, resultados de ejercicios y costes por misión comparable | **Systems Engineering + Operations/Operator** desempeño y misión; **Programme** criterios; **Reliability/Data Analytics** evaluación; **Quality** fuente y validación |
+
+**Regla común:** definir una referencia y al menos una alternativa realmente comparables; una mejora ambiental calculada no demuestra por sí sola continuidad operativa, capacidad industrial, disponibilidad de misión ni beneficio financiero. No usar datos de plataforma, operación, proveedor o programa identificables fuera de los sistemas y permisos autorizados.
+
+## 8. Pendientes de programación independientes de Airbus
 
 Aunque se obtuvieran todos los datos y autorizaciones, **estos desarrollos/revisiones siguen siendo trabajo del equipo técnico**:
 
