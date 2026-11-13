@@ -179,7 +179,7 @@ describe('Create your own strategic case', () => {
   });
   it('rejects imported cases with missing IDs, inconsistent numeric bounds or out-of-range inputs', () => {
     const c=fromPreset('ecodesign');
-    const missingId=structuredClone(c) as typeof c & {id?:string};
+    const missingId=structuredClone(c) as unknown as {id?:string};
     delete missingId.id;
     expect(()=>validateCaseImport(missingId)).toThrow(/Unsupported case structure/);
     const bounds=structuredClone(c);
