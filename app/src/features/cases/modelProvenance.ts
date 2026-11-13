@@ -4,10 +4,12 @@
  * timing, physical outcomes, contract states and KPI boundaries differ.
  * Outputs from different modes are NOT directly interchangeable.
  */
+import { APP_VERSION } from '../../version';
+
 export const MODEL_PROVENANCE={
   demo:{
     id:'asri-demo60-branch-engine',
-    version:'0.6.0-phase-6',
+    version:APP_VERSION,
     title:{es:'DEMO-60: decisión de mantenimiento de un componente',
       en:'DEMO-60: single-component maintenance decision'},
     scope:{es:'Tres vías discretas: sustituir, reparar primero y paralela; costes y plazos por ramas de decisión.',
