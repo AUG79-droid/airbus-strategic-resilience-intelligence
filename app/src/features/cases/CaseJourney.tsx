@@ -84,7 +84,7 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     `${es?'Referencia':'Baseline'}: ${displayOptionName(data.options[0],locale)}`,`${es?'Alternativa':'Alternative'}: ${displayOptionName(chosen.option,locale)}`,
     `${es?'Resultado':'Verdict'}: ${describeVerdict(chosen,locale)}`,
     ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | evidence: ${r.evidenceReady?'reviewed':'pending'}`),
-    `${es?'Variación de parámetros para la prueba local':'Local input-variation check'}: ±${data.robustnessPercent} %. ${es?'No es un intervalo estadístico de confianza.':'Not a statistical confidence interval.'}`,
+    `${es?'Prueba de variación individual de parámetros':'One-at-a-time input test'}: ±${data.robustnessPercent} %. ${es?'Cada entrada se modifica por separado; no es un intervalo de confianza.':'Each input is changed separately; not a confidence interval.'}`,
     '',es?'## Controles y aplicabilidad':'## Universal controls and applicability',
     ...Object.entries(data.parameters).map(([id,state])=>'- '+id+': '+state.applicability+'; '+state.reason),
     ...data.options.flatMap(option=>{
@@ -287,11 +287,11 @@ export function CaseJourney({locale,view,data,setData}:Props){
         <h3>{t('Comparación de las alternativas','Comparison of alternatives')}</h3>
         <p>{t('Los indicadores se calculan con los controles anteriores. Los que no aplican se excluyen, y los desconocidos bloquean las conclusiones afectadas. No hay un ganador automático si existen compromisos.',
           'Metrics are calculated from the controls above. Not-applicable inputs are excluded; unknown inputs block affected conclusions. Trade-offs do not produce an automatic winner.')}</p>
-        <label className="cy-field cy-width-short"><span>{t('Margen de sensibilidad supuesto (%)','Assumed sensitivity margin (%)')}</span>
+        <label className="cy-field cy-width-short"><span>{t('Variación de parámetros para la prueba (%)','Input variation for local test (%)')}</span>
           <input type="number" min="0" max="100" value={data.robustnessPercent}
             onChange={e=>{const n=Number(e.target.value);if(Number.isFinite(n))setField('robustnessPercent',Math.min(100,Math.max(0,n)));}}/></label>
-        <p className="cy-help">{t('Este margen sirve para comprobar si pequeñas variaciones de los valores podrían cambiar la interpretación. No equivale a una predicción estadística calibrada.',
-          'This margin tests whether input changes could alter interpretation; it is not a statistically calibrated prediction.')}</p>
+        <p className="cy-help">{t('ASRI cambia cada parámetro aplicable un ± porcentaje, uno por uno, y recalcula si la conclusión favorable o desfavorable se mantiene. No es un intervalo de confianza ni analiza cambios simultáneos.',
+          'ASRI changes applicable inputs one at a time by ± the selected percentage and recalculates whether the favourable or unfavourable result holds. It is not a confidence interval or a simultaneous-risk test.')}</p>
         <div className="cy-results">{results.map(c=><article key={c.option.id}>
           <h4>{displayOptionName(c.option,locale)}</h4><strong>{describeVerdict(c,locale)}</strong>
           <ul>{c.rows.filter(row=>row.issue!=='excluded').map(row=><li key={row.metric.id}>
@@ -300,8 +300,9 @@ export function CaseJourney({locale,view,data,setData}:Props){
               `${row.delta>0?'+':''}${present(row.delta,locale)} ${parameterUnit(row.metric.unit,data.kind,locale)}`}</b>
             {row.delta!==null&&<small>{present(row.baseline,locale)} → {present(row.candidate,locale)} {parameterUnit(row.metric.unit,data.kind,locale)}
               {row.percentChange===null?'':` · ${row.percentChange>0?'+':''}${present(row.percentChange,locale)}%`}</small>}
-            <small>{row.robustness==='stable'?t('Diferencia mayor que el margen supuesto','Difference exceeds assumed margin'):
-              row.robustness==='sensitive'?t('Resultado sensible a las condiciones','Sensitive to assumptions'):t('Sin resultado concluyente','No conclusive result')}</small>
+            <small>{row.robustness==='stable'?t('Conclusión estable ante variaciones individuales','Stable under individual input changes'):
+              row.robustness==='sensitive'?t('La conclusión cambia con alguna variación','The result changes under some variation'):
+              row.robustness==='equivalent'?t('Alternativas equivalentes con los valores actuales','Equivalent with the current inputs'):t('No se ha podido evaluar la variación','Local variation not evaluated')}</small>
           </li>)}</ul>
           <p className="cy-help">{t('Referencia:','Baseline:')} {displayOptionName(data.options[0],locale)}. {t('Hipótesis de modelo, no beneficio validado.','Model assumption, not a validated benefit.')}</p>
         </article>)}</div>
