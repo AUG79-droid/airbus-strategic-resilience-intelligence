@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calculateUniversal, jointRiskBranches } from './universal';
+import { buildRiskTable } from '../../domain/model/probability';
 import { createCase, validateCaseImport } from './model';
 import { fromPreset } from './presets';
 
@@ -17,6 +18,33 @@ describe('ASRI v2 joint-risk probability', () => {
     expect(exclusive.map(x=>x.probability)).toEqual([0,.5,.5,0]);
   });
 
+  it('shares probability semantics with DEMO-60 for independent and dependent risks',()=>{
+    for(const pSuccess of [20,50,90])for(const pShock of [10,60,95]){
+      const independence=jointRiskBranches(pSuccess,pShock);
+      const common=buildRiskTable({
+        repairFeasibilityProbability:pSuccess/100,
+        supplierShockProbability:pShock/100,
+        dependence:{mode:'independent'}
+      });
+      for(const branch of independence){
+        const matched=common.states.find(x=>x.repairFeasible===branch.technicalSuccess&&x.supplierShock===branch.shock);
+        expect(branch.probability).toBeCloseTo(matched!.probability);
+      }
+      const jointFailure=Math.min(100-pSuccess,pShock)/2;
+      const minOverlap=Math.max(0,pShock-pSuccess);
+      const pJoint=Math.max(jointFailure,minOverlap);
+      const dependent=jointRiskBranches(pSuccess,pShock,pJoint);
+      const expected=buildRiskTable({
+        repairFeasibilityProbability:pSuccess/100,
+        supplierShockProbability:pShock/100,
+        dependence:{mode:'joint',repairFeasibleAndShockProbability:(pShock-pJoint)/100}
+      });
+      for(const branch of dependent){
+        const matched=expected.states.find(x=>x.repairFeasible===branch.technicalSuccess&&x.supplierShock===branch.shock);
+        expect(branch.probability).toBeCloseTo(matched!.probability);
+      }
+    }
+  });
   it('rejects impossible joint probabilities under Fréchet limits', () => {
     expect(()=>jointRiskBranches(50,50,51)).toThrow(/Fréchet/);
     expect(()=>jointRiskBranches(10,70,0)).toThrow(/Fréchet/);
