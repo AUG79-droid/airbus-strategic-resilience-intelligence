@@ -14,6 +14,7 @@ import { EnvironmentalMethod } from './EnvironmentalMethod';
 import { MissionBridgeReview } from './MissionBridgeReview';
 import { DiscountedFinance } from './DiscountedFinance';
 import { evaluateDiscountedFinance } from './discountedCashFlows';
+import { pdfSafeText } from './pdfSafeText';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
 import { calculateUniversal, parameterUnit, UNIVERSAL_PARAMETERS } from './universal';
@@ -142,14 +143,9 @@ async function downloadReportPdf(text:string, filename:string):Promise<void>{
   const fontBold=await doc.embedFont(StandardFonts.HelveticaBold);
   const A4:[number,number]=[595.28,841.89];
   let page=doc.addPage(A4),y=A4[1]-42;
-  // The built-in PDF font supports WinAnsi. Preserve report meaning for
-  // non-WinAnsi symbols instead of silently dropping them (CO₂e -> CO2e).
-  const clean=(value:string)=>value
-    .replace(/→/g,' -> ').replace(/[–—−]/g,' - ')
-    .replace(/[“”]/g,'"').replace(/[‘’]/g,"'")
-    .replace(/…/g,'...').replace(/≤/g,'<=').replace(/≥/g,'>=')
-    .replace(/[₀-₉]/g,ch=>String('₀₁₂₃₄₅₆₇₈₉'.indexOf(ch)))
-    .replace(/[^\x20-\x7e\u00a0-\u00ff\u20ac]/g,'?');
+  // Standard PDF font has no full Unicode: explicitly preserve technical
+  // notation, or display a U+codepoint marker instead of silent data loss.
+  const clean=pdfSafeText;
   const maxWidth=A4[0]-76;
   for(const raw of text.split('\n')){
     const bold=raw.startsWith('#')||raw.startsWith('NOTICE:')||raw.startsWith('AVISO:');
