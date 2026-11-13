@@ -113,24 +113,44 @@ async function downloadReportPdf(text:string, filename:string):Promise<void>{
   const fontBold=await doc.embedFont(StandardFonts.HelveticaBold);
   const A4:[number,number]=[595.28,841.89];
   let page=doc.addPage(A4),y=A4[1]-42;
-  const clean=(s:string)=>s.replace(/[^\x20-\x7e\u00a0-\u00ff]/g, ' ');
-  for(const raw of text.split('\n')){
+  // The built-in PDF font supports WinAnsi. Preserve report meaning for
+  // non-WinAnsi symbols instead of silently dropping them (CO₂e -> CO2e).
+  const clean=(value:string)=>value
+    .replace(/→/g,' -> ').replace(/[–—−]/g,' - ')
+    .replace(/[“”]/g,'"').replace(/[‘’]/g,"'")
+    .replace(/…/g,'...').replace(/≤/g,'<=').replace(/≥/g,'>=')
+    .replace(/[₀-₉]/g,ch=>String('₀₁₂₃₄₅₆₇₈₉'.indexOf(ch)))
+    .replace(/[^\\x20-\\x7e\\u00a0-\\u00ff\\u20ac]/g,'?');
+  const maxWidth=A4[0]-76;
+  for(const raw of text.split('\\n')){
     const bold=raw.startsWith('#')||raw.startsWith('NOTICE:')||raw.startsWith('AVISO:');
     const size=raw.startsWith('# ')?16:raw.startsWith('## ')?12:10;
-    const actual=(bold?raw.replace(/^#+\s*/,''):raw);
-    const words=clean(actual).split(/\s+/);
-    const lineMax=bold?82:100;
+    const face=bold?fontBold:font;
+    const actual=bold?raw.replace(/^#+\\s*/,''):raw;
+    const words=clean(actual).split(/\\s+/).filter(Boolean);
     const pieces:string[]=[];
     let line='';
     for(const word of words){
-      if((line+' '+word).length>lineMax && line){pieces.push(line);line='';}
-      line+=(line?' ':'')+word;
+      const candidate=line?line+' '+word:word;
+      if(face.widthOfTextAtSize(candidate,size)<=maxWidth){line=candidate;continue;}
+      if(line){pieces.push(line);line='';}
+      let rest=word;
+      while(rest&&face.widthOfTextAtSize(rest,size)>maxWidth){
+        let part='';
+        for(const ch of rest){
+          if(part&&face.widthOfTextAtSize(part+ch,size)>maxWidth)break;
+          part+=ch;
+        }
+        pieces.push(part);
+        rest=rest.slice(part.length);
+      }
+      line=rest;
     }
     if(line)pieces.push(line);
-    if(!pieces.length)pieces.push('');
+    if(pieces.length===0)pieces.push('');
     for(const part of pieces){
       if(y<47){page=doc.addPage(A4);y=A4[1]-42;}
-      page.drawText(part,{x:38,y,size,font:bold?fontBold:font,color:rgb(.13,.19,.17)});
+      if(part)page.drawText(part,{x:38,y,size,font:face,color:rgb(.13,.19,.17)});
       y-=size+5;
     }
     y-=raw.startsWith('#')?9:3;
