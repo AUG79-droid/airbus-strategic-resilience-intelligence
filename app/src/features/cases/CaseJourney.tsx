@@ -93,7 +93,9 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
     `${es?'Resultado':'Verdict'}: ${describeVerdict(chosen,locale)}`,
     ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | ${es?'evidencia':'evidence'}: ${r.evidenceReady?(es?'revisada (declarada)':'reviewed (declared)'):(es?'pendiente':'pending')}${r.sensitivityRange
       ?` | ${es?'rango Δ univariable':'OAT Δ range'}: [${present(r.sensitivityRange.minDelta,locale)}, ${present(r.sensitivityRange.maxDelta,locale)}]${r.sensitivityRange.switchingParameter?` | ${es?'umbral aproximado de cambio':'approx switch threshold'}: ${r.sensitivityRange.switchingParameter}=${present(r.sensitivityRange.switchingValue??null,locale)}`:''}`
-      :''}${r.coordinatedStress?` | ${es?'rango Δ simultáneo':'coordinated Δ range'} [${present(r.coordinatedStress.minDelta,locale)}, ${present(r.coordinatedStress.maxDelta,locale)}] (${r.coordinatedStress.validScenarios}/4 ${es?'válidos':'valid'})`:''}`),
+      :''}${r.coordinatedStress?(r.coordinatedStress.coverage==='none'
+        ?` | ${es?'SIN RANGO de estrés':'NO stress range'} (0/4 ${es?'válidos':'valid'})`
+        :` | ${es?'rango Δ simultáneo':'coordinated Δ range'} [${present(r.coordinatedStress.minDelta,locale)}, ${present(r.coordinatedStress.maxDelta,locale)}] (${r.coordinatedStress.validScenarios}/4 ${es?'válidos':'valid'})${r.coordinatedStress.coverage==='partial'?(es?' · COBERTURA INCOMPLETA, no es una cota de riesgo':' · INCOMPLETE COVERAGE, not a risk bound'):''}`):''}`),
     `${es?'Prueba de variación individual de parámetros':'One-at-a-time input test'}: ±${data.robustnessPercent} %. ${es?'Cada entrada se modifica por separado; no es un intervalo de confianza.':'Each input is changed separately; not a confidence interval.'}`,
     `${es?'Prueba de escenarios simultáneos':'Coordinated stress test'}: 4 ${es?'combinaciones extremas de entradas de referencia y alternativa':'extreme reference/option input combinations'}, ±${data.robustnessPercent} %. ${es?'Rango determinista, no probabilidad ni intervalo de confianza.':'Deterministic bound, not a probability or confidence interval.'}`,
     '',es?'## Controles y aplicabilidad':'## Universal controls and applicability',
@@ -388,10 +390,15 @@ export function CaseJourney({locale,view,data,setData}:Props){
             {row.coordinatedStress&&<small>
               {t('Prueba simultánea de entradas (4 combinaciones extremas, NO un intervalo estadístico)',
                  'Coordinated input stress (4 extreme combinations, NOT a statistical interval)')}: 
-              {present(row.coordinatedStress.minDelta,locale)} – {present(row.coordinatedStress.maxDelta,locale)}
-              {' '}{parameterUnit(row.metric.unit,data.kind,locale)} · 
-              {row.coordinatedStress.validScenarios}/{row.coordinatedStress.attemptedScenarios}{' '}
+              {row.coordinatedStress.coverage==='none'
+                ?t('SIN RANGO: ninguna combinación extrema válida.','NO RANGE: no mathematically valid extreme combinations.')
+                :<>{present(row.coordinatedStress.minDelta,locale)} – {present(row.coordinatedStress.maxDelta,locale)}
+                  {' '}{parameterUnit(row.metric.unit,data.kind,locale)}</>}
+              {' · '}{row.coordinatedStress.validScenarios}/{row.coordinatedStress.attemptedScenarios}{' '}
               {t('escenarios matemáticamente válidos','mathematically valid scenarios')}
+              {row.coordinatedStress.coverage==='partial'&&
+                <> · {t('COBERTURA INCOMPLETA: no es una cota de riesgo.',
+                       'INCOMPLETE COVERAGE: not a risk bound.')}</>}
             </small>}
           </li>)}</ul>
           <p className="cy-help">{t('Referencia:','Baseline:')} {displayOptionName(data.options[0],locale)}. {t('Hipótesis de modelo, no beneficio validado.','Model assumption, not a validated benefit.')}</p>
