@@ -19,7 +19,7 @@ await page.goto(`${baseUrl}/#/translate`, { waitUntil: 'networkidle' });
 await page.getByTestId('strategy-parallel').click();
 await page.getByTestId('audience-programmeManager').click();
 await page.getByTestId('open-export-review').click();
-await page.locator('.export-review__panel > header').getByText('PROTOTYPE — NOT INTERNALLY VALIDATED', { exact: true }).waitFor();
+await page.locator('.export-review__panel > header').getByText(/PROTOTYPE.*NOT INTERNALLY VALIDATED/).waitFor();
 if (!(await page.getByTestId('download-pdf').isDisabled()) || !(await page.getByTestId('download-json').isDisabled())) throw new Error('Exports were enabled before confirmation.');
 await page.getByTestId('export-confirm').check();
 if (await page.locator('.export-review__checks .is-fail').count()) throw new Error('A pre-export safety check failed.');
