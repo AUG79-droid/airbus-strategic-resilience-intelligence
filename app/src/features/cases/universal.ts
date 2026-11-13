@@ -1,3 +1,5 @@
+import { buildRiskTable } from '../../domain/model/probability';
+
 /**
  * Shared parameter catalogue for ALL custom case families.
  * The same 19 fields always exist, in identical sections and order.
@@ -121,20 +123,22 @@ export function jointRiskBranches(successPercent:number,shockPercent:number,
   if(!valid(successPercent)||!valid(shockPercent)||
     (bothFailureShockPercent!==null&&bothFailureShockPercent!==undefined&&!valid(bothFailureShockPercent)))
     throw new RangeError('Probabilities must be between 0 and 100 percent');
-  const fail=1-successPercent/100;
-  const shock=shockPercent/100;
-  const both=bothFailureShockPercent===null||bothFailureShockPercent===undefined
-    ? fail*shock : bothFailureShockPercent/100;
-  const lower=Math.max(0,fail+shock-1);
-  const upper=Math.min(fail,shock);
-  if(both<lower-1e-10||both>upper+1e-10)
-    throw new RangeError('Joint probability violates Fréchet bounds');
-  const probability=(value:number)=>Math.max(0,Math.min(1,value));
+  const independence=bothFailureShockPercent===null||bothFailureShockPercent===undefined;
+  // Reuse the SAME validated joint risk engine as DEMO-60.
+  // DEMO-60 defines overlap P(technical success ∩ shock); Case Studio inputs
+  // P(technical FAILURE ∩ shock), so convert by complement.
+  const risk=buildRiskTable({
+    repairFeasibilityProbability:successPercent/100,
+    supplierShockProbability:shockPercent/100,
+    dependence:independence?{mode:'independent'}:
+      {mode:'joint',repairFeasibleAndShockProbability:
+        (shockPercent-bothFailureShockPercent)/100}
+  });
   return [
-    {technicalSuccess:true,shock:false,probability:probability(1-fail-shock+both)},
-    {technicalSuccess:true,shock:true,probability:probability(shock-both)},
-    {technicalSuccess:false,shock:false,probability:probability(fail-both)},
-    {technicalSuccess:false,shock:true,probability:probability(both)}
+    {technicalSuccess:true,shock:false,probability:risk.states.find(x=>x.repairFeasible&&!x.supplierShock)?.probability??0},
+    {technicalSuccess:true,shock:true,probability:risk.states.find(x=>x.repairFeasible&&x.supplierShock)?.probability??0},
+    {technicalSuccess:false,shock:false,probability:risk.states.find(x=>!x.repairFeasible&&!x.supplierShock)?.probability??0},
+    {technicalSuccess:false,shock:true,probability:risk.states.find(x=>!x.repairFeasible&&x.supplierShock)?.probability??0}
   ];
 }
 
