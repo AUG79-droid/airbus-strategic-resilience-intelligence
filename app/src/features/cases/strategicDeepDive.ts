@@ -250,7 +250,7 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
     ?'Aún no hay datos ambientales comparables entre alternativas.'
     :'Environmental impacts cannot yet be compared between options.');
   else if(c.environmentCheck.status==='declaredComparable')envPieces.push(es
-    ?'Las magnitudes son comparables según los metadatos introducidos por el usuario, pero todavía requieren verificación de factores, trazabilidad, incertidumbre y metodología. No constituyen un ACV validado.'
+    ?'Estos datos corresponden a los impactos ambientales incluidos en el caso, no a todos los impactos posibles. Las magnitudes son comparables según los metadatos declarados, pero todavía requieren verificación de factores, trazabilidad, incertidumbre y metodología. No constituyen un ACV validado.'
     :'Figures are comparable under user-declared metadata, but factor sources, traceability, uncertainty and methodology still require independent verification. This is not a validated LCA.');
   insights.push({id:'environment',title:es?'4. Impactos ambientales':'4. Environmental impact',body:envPieces.join(' ')});
 
