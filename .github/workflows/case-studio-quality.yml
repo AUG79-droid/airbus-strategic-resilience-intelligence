@@ -1,7 +1,7 @@
 name: ASRI Case Studio Quality Gate
 on:
   push:
-    branches: [main]
+    branches: [main, asri-v2-audit-remediation]
     paths:
       - 'app/**'
       - '.github/workflows/case-studio-quality.yml'
