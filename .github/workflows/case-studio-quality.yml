@@ -57,6 +57,9 @@ jobs:
           npm run test:final-qa
           npm run test:translator-ui
           npm run test:export-ui
+          npm run test:lab-ui
+          npm run test:evidence-ui
+          npm run test:guided-ui
           node scripts/test-joint-risk-ui.mjs
       - name: Report granular quality status on commit
         if: always()
