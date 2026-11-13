@@ -182,9 +182,19 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   if(!riskPieces.length)riskPieces.push(es
     ?'Todavía faltan probabilidades y retrasos comparables para saber cómo cambian los riesgos.'
     :'Comparable likelihoods and delays are still needed to assess changes in risk.');
-  if((shock||success)&&(failure||shockDelay))riskPieces.push(es
-    ?'El cálculo trata el fallo técnico y la interrupción externa como dos riesgos separados.'
-    :'The calculation treats technical failure and external disruption as separate risks.');
+  if((shock||success)&&(failure||shockDelay)){
+    const joint=data.parameters.jointFailureShock?.applicability==='applies';
+    const jointValues=joint?input(data,c,'jointFailureShock'):undefined;
+    riskPieces.push(joint
+      ?(jointValues
+        ?(es
+          ?`El cálculo emplea la probabilidad conjunta declarada de fallo técnico e interrupción: ${fmt(jointValues.b,locale)} % en la referencia y ${fmt(jointValues.v,locale)} % en la alternativa. La independencia, capacidad y causalidad siguen pendientes de verificación externa.`
+          :`The model uses the declared joint technical-failure/disruption probability: ${fmt(jointValues.b,locale)}% for the baseline and ${fmt(jointValues.v,locale)}% for the option. Independence, capacity and causality remain unverified.`)
+        :(es?'Se ha activado el riesgo conjunto, pero falta un valor aplicable y no podemos valorar su efecto.':
+          'Joint-event modelling is enabled, but an input is missing; its effect cannot be assessed.'))
+      :(es?'El cumplimiento del plazo supone independencia entre fallo técnico e interrupción externa. Es una hipótesis del modelo, no una independencia demostrada.':
+        'Deadline attainment assumes technical failure and external disruption are independent. This is a model assumption, not demonstrated independence.'));
+  }
   insights.push({id:'risk',title:es?'2. Cómo cambian los riesgos':'2. How the risks change',body:riskPieces.join(' ')});
 
   // Explicit economic trade-off, including a ratio only when higher cost buys faster recovery.
@@ -193,7 +203,7 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   if(cost){
     economic+=es
       ?` El coste esperado pasa de ${fmt(cost.baseline!,locale,0)} € a ${fmt(cost.candidate!,locale,0)} €: ${outcomePhrase(cost.delta!,locale,'€')}.`
-      :` Expected cost moves from €${fmt(cost.baseline!,locale,0)} to €${fmt(cost.candidate!,locale,0)}: it ${outcomePhrase(cost.delta!,locale,'€')}.`;
+      :` Expected cost moves from €${fmt(cost.baseline!,locale,0)} to €${fmt(cost.candidate!,locale,0)}: ${cost.delta===0?'it is unchanged':`it ${outcomePhrase(cost.delta!,locale,'€')}`}.`;
   }
   if(recovery&&cost){
     if(recovery.delta!<0&&cost.delta!<0)economic+=es
