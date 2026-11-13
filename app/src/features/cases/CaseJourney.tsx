@@ -438,15 +438,12 @@ export function CaseJourney({locale,view,data,setData}:Props){
                 <p>{insight.body}</p>
               </article>)}</div>
           </section>
-          <h4>{exerciseComplete(active)
-            ?t('Evaluación del ejercicio: completada','Exercise assessment: complete')
-            :t('Qué falta antes de comunicar un beneficio','What is still required before communicating a benefit')}</h4>
-          {exerciseComplete(active)
-            ?<p>{t('El caso didáctico ya incluye sus datos, referencias ficticias, responsables, revisión metodológica simulada y narrativa para cada audiencia. No faltan apartados para completar esta práctica. Para comunicar resultados reales será necesario sustituir las fuentes simuladas por documentación auténtica y obtener las autorizaciones correspondientes.',
-              'This learning case includes its inputs, fictional references, assigned teams, simulated methodology checks and audience-specific narratives. Nothing is missing from the exercise itself. Communicating real results would require replacing simulated sources with authentic evidence and obtaining the necessary approvals.')}</p>
-            :<ul>{active.missing.length?active.missing.map((m,i)=><li key={i}>{m}</li>):
-              <li>{t('Revisión experta de causalidad, aceptación operativa y aprobación de la comunicación; el prototipo no sustituye ese proceso.',
-                'Expert review of causality, operational acceptance and approval of claims; the prototype does not replace this process.')}</li>}</ul>}
+          {!exerciseComplete(active)&&<>
+            <h4>{t('Qué información falta para completar la evaluación','What information is still needed to complete the assessment')}</h4>
+            <ul>{active.missing.length?active.missing.map((m,i)=><li key={i}>{m}</li>):
+              <li>{t('Falta la revisión técnica y operativa de las conclusiones.',
+                'The conclusions still need technical and operational review.')}</li>}</ul>
+          </>}
         </div>}
       </section>
       <section className="cy-panel">
