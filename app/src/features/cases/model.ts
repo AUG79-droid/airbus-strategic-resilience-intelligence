@@ -440,12 +440,20 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
   );
   if(hasEnvironmentalRows&&environmentCheck.status!=='declaredComparable')
     missing.push('Environmental inventory boundary/method not comparable: '+environmentCheck.issues.join(', '));
+  const environmentalMethodObserved=!hasEnvironmentalRows||
+    [baseline.id,candidate.id].every(id=>{
+      const method=caseData.environmentalBasis?.find(x=>x.optionId===id);
+      return !!method?.evidenceId&&evidenceObserved(caseData,{value:0,evidenceId:method.evidenceId});
+    });
+  if(hasEnvironmentalRows&&!caseData.hypothetical&&!environmentalMethodObserved)
+    missing.push('Environmental methodology metadata require independently traceable observed evidence for baseline and alternative (user-declared only).');
   const reviewedData=active.length>0&&active.every(r=>r.evidenceReady);
   const observedData=active.length>0&&active.every(r=>r.observedEvidence);
   return {option:candidate,rows,verdict,gatesReady,reviewedData,observedData,
     canDescribeAsMeasured:!caseData.hypothetical&&caseDefined&&reviewedData&&observedData&&
       gatesReady&&!incomplete&&missingReasons.length===0&&
-      (!hasEnvironmentalRows||environmentCheck.status==='declaredComparable'),missing,environmentCheck};
+      (!hasEnvironmentalRows||(environmentCheck.status==='declaredComparable'&&environmentalMethodObserved)),
+      missing,environmentCheck};
 }
 
 export function comparisons(caseData: StrategicCase):OptionComparison[] {
