@@ -50,6 +50,8 @@ export interface ReviewGates {
 }
 export interface StrategicCase {
   version: 1;
+  /** Import schema revision; legacy cases without this field use revision 1. */
+  caseSchemaVersion?:2;
   id: string;
   kind: CaseKind;
   title: string;
@@ -223,7 +225,7 @@ function makeOptions(metrics: MetricDefinition[], locale:'en'|'es'): Option[] {
 export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): StrategicCase {
   const metrics = MODEL_TEMPLATES[kind].metrics.map((m,i)=>({...m,label:locale==='es'?MODEL_TEMPLATES_ES[kind].labels[i]:m.label}));
   return {
-    version:1, id: 'CASE-'+Date.now().toString(36), kind, title:'',
+    version:1, caseSchemaVersion:2, id: 'CASE-'+Date.now().toString(36), kind, title:'',
     programme:'', decision:'', initiative:'', vulnerability:'', mechanism:'',
     boundary:'', timeHorizon:'', owner:'', metrics,
     parameters:defaultParameterStates(kind,locale),
@@ -465,7 +467,7 @@ export function comparisons(caseData: StrategicCase):OptionComparison[] {
 export function validateCaseImport(value: unknown): StrategicCase {
   if (!value || typeof value!=='object') throw new Error('Invalid case JSON.');
   const x=value as Partial<StrategicCase>;
-  if(x.version!==1 || typeof x.id!=='string'|| !/^[a-zA-Z0-9_-]{1,100}$/.test(x.id) ||
+  if(x.version!==1 || (x.caseSchemaVersion!==undefined&&x.caseSchemaVersion!==2) || typeof x.id!=='string'|| !/^[a-zA-Z0-9_-]{1,100}$/.test(x.id) ||
     !Object.keys(MODEL_TEMPLATES).includes(String(x.kind)) ||
     typeof x.title!=='string' || !Array.isArray(x.metrics) || !Array.isArray(x.options) ||
     !Array.isArray(x.evidence) || !x.gates || x.options.length!==3 ||
@@ -495,7 +497,8 @@ export function validateCaseImport(value: unknown): StrategicCase {
         typeof measure.evidenceId!=='string'||measure.evidenceId.length>100) throw new Error('Invalid measure '+m.id);
     }
   }
-  if(!['baseline'].includes(x.options[0].id))throw new Error('Invalid reference alternative');
+  if(x.options[0].id!=='baseline'||x.options[1].id!=='option-a'||x.options[2].id!=='option-b')
+    throw new Error('Invalid scenario IDs or order: baseline, option-a, option-b expected');
     const evidenceIds=new Set<string>();
   if(x.evidence.some(e=>{
     if(!e||typeof e.id!=='string'|| !/^[a-zA-Z0-9_-]{1,100}$/.test(e.id) ||
@@ -520,6 +523,7 @@ export function validateCaseImport(value: unknown): StrategicCase {
   if(['comparableBoundary','technicalEligibility','measurementMethod','independentReview'].some(k=>typeof x.gates?.[k as keyof ReviewGates]!=='boolean'))throw new Error('Invalid review gates');
   // Upgrade saved cases from the original four-KPI builder safely.
   const upgraded=structuredClone(x as StrategicCase);
+  upgraded.caseSchemaVersion=2;
   upgraded.dependencyRoutes=validateRoutes(upgraded.dependencyRoutes,upgraded.options.map(o=>o.id));
   upgraded.environmentalBasis=validateEnvironmentalBasis(upgraded.environmentalBasis,upgraded.options.map(o=>o.id));
   upgraded.missionBridges=validateMissionBridges(upgraded.missionBridges,upgraded.options.map(o=>o.id));
@@ -566,5 +570,19 @@ export function validateCaseImport(value: unknown): StrategicCase {
         throw new Error('Invalid parameter '+p.id);
     }
   }
+  // Evidence references must identify a real entry in this file. A dangling
+  // ID is not traceability and must never silently pass the import gate.
+  const references=[
+    ...upgraded.options.flatMap(opt=>[
+      ...Object.values(opt.measures).map(m=>m.evidenceId),
+      ...Object.values(opt.parameterValues).map(m=>m.evidenceId)
+    ]),
+    ...upgraded.dependencyRoutes.map(x=>x.evidenceId),
+    ...upgraded.environmentalBasis.map(x=>x.evidenceId),
+    ...upgraded.missionBridges.map(x=>x.evidenceId),
+    ...upgraded.discountedFinance.flows.map(x=>x.evidenceId)
+  ];
+  const unresolved=[...new Set(references.filter(id=>id.length>0&&!evidenceIds.has(id)))];
+  if(unresolved.length)throw new Error('Unresolved evidence references: '+unresolved.slice(0,12).join(', '));
   return upgraded;
 }
