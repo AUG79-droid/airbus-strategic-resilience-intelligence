@@ -76,7 +76,7 @@ function metricTitle(label:string,locale:Locale){
 function describeVerdict(c:OptionComparison,locale:Locale){
   return verdicts[c.verdict][locale==='es'?0:1];
 }
-function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale:Locale):string{
+export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale:Locale):string{
   const es=locale==='es';
   const lines=[
     '# ASRI — '+(data.title||(es?'Caso estratégico sin título':'Untitled strategic case')),
