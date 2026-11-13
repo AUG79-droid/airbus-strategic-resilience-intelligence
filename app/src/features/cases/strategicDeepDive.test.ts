@@ -39,7 +39,8 @@ describe('Extended strategic translator',()=>{
     expect(insights[1].body).toContain('28 %');
     expect(insights[1].body).toContain('75 %');
     expect(insights[1].body).toContain('90 %');
-    expect(insights[1].body).toContain('dos riesgos separados');
+    expect(insights[1].body).toContain('supone independencia');
+    expect(insights[1].body).toContain('no una independencia demostrada');
     expect(insights[5].body).toContain('simuladas');
   });
   it('states trade-offs only when computed: savings with faster recovery or premium per time unit',()=>{
