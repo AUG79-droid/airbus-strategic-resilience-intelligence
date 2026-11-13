@@ -314,7 +314,7 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
   const better=recovery&&recovery.delta!<0;
   const mechanism=isEco
     ?(combo
-      ?(es?'El escenario propone reparación y suministro alternativo como dos posibles vías. Antes de atribuir resiliencia, debe comprobarse que sean independientes, viables y con capacidad suficiente.':
+      ?(es?'El escenario propone reparación y un proveedor alternativo como dos posibles vías. Antes de atribuir resiliencia, debe comprobarse que sean independientes, viables y con capacidad suficiente.':
         'The scenario proposes repair and alternative supply as two possible routes. Independence, eligibility and capacity must be verified before claiming a resilience benefit.')
       :(es?'Una reparación cualificada permite recuperar el componente sin depender únicamente de recibir uno nuevo.':
         'Qualified repair offers another way to recover the component without relying only on a new delivery.'))
