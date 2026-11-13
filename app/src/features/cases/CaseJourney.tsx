@@ -18,6 +18,7 @@ import { evaluateDiscountedFinance, emptyFinancePlan } from './discountedCashFlo
 import { boundedEnvironmentalDifference } from './environmentBasis';
 import { evaluateWorkshopCapacity } from './workshopCapacity';
 import { pdfSafeText } from './pdfSafeText';
+import {localizeResultStatus,localizeCaseDiagnostic} from './reportI18n';
 import { sha256EvidenceBlob } from './documentProof';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
@@ -94,7 +95,7 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
     '',es?'## 02 Cuestionar':'## 02 Challenge',
     `${es?'Referencia':'Baseline'}: ${displayOptionName(data.options[0],locale)}`,`${es?'Alternativa':'Alternative'}: ${displayOptionName(chosen.option,locale)}`,
     `${es?'Resultado':'Verdict'}: ${describeVerdict(chosen,locale)}`,
-    ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | ${es?'evidencia':'evidence'}: ${r.evidenceReady?(es?'revisada (declarada)':'reviewed (declared)'):(es?'pendiente':'pending')}${r.sensitivityRange
+    ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${localizeResultStatus(r.robustness,locale)} | ${es?'evidencia':'evidence'}: ${r.evidenceReady?(es?'revisada (declarada)':'reviewed (declared)'):(es?'pendiente':'pending')}${r.sensitivityRange
       ?` | ${es?'rango Δ univariable':'OAT Δ range'}: [${present(r.sensitivityRange.minDelta,locale)}, ${present(r.sensitivityRange.maxDelta,locale)}] (${r.sensitivityRange.validScenarios}/${r.sensitivityRange.attemptedScenarios} ${es?'recalculados válidos':'valid recalculations'})${r.sensitivityRange.invalidScenarios>0?(es?' · COBERTURA INCOMPLETA':' · INCOMPLETE COVERAGE'):''}${r.sensitivityRange.switchingParameter?` | ${es?'umbral aproximado de cambio':'approx switch threshold'}: ${r.sensitivityRange.switchingParameter}=${present(r.sensitivityRange.switchingValue??null,locale)}`:''}`
       :''}${r.coordinatedStress?(r.coordinatedStress.coverage==='none'
         ?` | ${es?'SIN RANGO de estrés':'NO stress range'} (0/4 ${es?'válidos':'valid'})`
@@ -102,7 +103,7 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
     `${es?'Prueba de variación individual de parámetros':'One-at-a-time input test'}: ±${data.robustnessPercent} %. ${es?'Cada entrada se modifica por separado; no es un intervalo de confianza.':'Each input is changed separately; not a confidence interval.'}`,
     `${es?'Prueba de escenarios simultáneos':'Coordinated stress test'}: 4 ${es?'combinaciones extremas de entradas de referencia y alternativa':'extreme reference/option input combinations'}, ±${data.robustnessPercent} %. ${es?'Rango determinista, no probabilidad ni intervalo de confianza.':'Deterministic bound, not a probability or confidence interval.'}`,
     '',es?'## Controles y aplicabilidad':'## Universal controls and applicability',
-    ...Object.entries(data.parameters).map(([id,state])=>'- '+id+': '+state.applicability+'; '+state.reason),
+    ...Object.entries(data.parameters).map(([id,state])=>'- '+id+': '+localizeResultStatus(state.applicability,locale)+'; '+state.reason),
     ...data.options.flatMap(option=>{
       const calc=calculateUniversal(data,option);
       return [displayOptionName(option,locale)+': '+JSON.stringify(Object.fromEntries(Object.entries(calc).filter(([k])=>k!=='assumptions')))];
@@ -128,7 +129,7 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
     `${es?'Un importe nominal futuro NO recibe escalación adicional; uno de euros constantes exige tasa explícita. No hay validación financiera ni contractual':'A future nominal amount is NOT escalated again; constant-price EUR requires an explicit escalation rate. Financial and contractual validation remains outstanding'}.`,
     '',es?'## Relación entre componente y misión':'## Component-to-mission evidence bridge',
     ...(data.missionBridges.length
-      ?data.missionBridges.map(link=>`- ${link.optionId}: ${link.componentOrService} > ${link.subsystem} > ${link.platform} > ${link.missionFunction}; dependency=${link.dependencyType}; USER-DECLARED mission availability=${link.observedMissionAvailabilityPercent??'not measured'}%; metricDefinition=${link.availabilityDefinition||'not defined'}; observationPeriod=${link.observationPeriod||'not declared'}; evidence=${link.evidenceId||'none'}`)
+      ?data.missionBridges.map(link=>`- ${link.optionId}: ${link.componentOrService} > ${link.subsystem} > ${link.platform} > ${link.missionFunction}; dependency=${link.dependencyType}; ${es?'disponibilidad de misión DECLARADA':'USER-DECLARED mission availability'}=${link.observedMissionAvailabilityPercent??(es?'no medida':'not measured')}%; metricDefinition=${link.availabilityDefinition||'not defined'}; observationPeriod=${link.observationPeriod||'not declared'}; evidence=${link.evidenceId||'none'}`)
       :[es?'Sin evaluación de disponibilidad de misión. No se infiere a partir de la recuperación del componente.':'Mission availability not assessed. Never inferred from component recovery.']),
     '',es?'## Capacidad de taller y cola FIFO (ilustrativa)':'## Repair-workshop capacity and FIFO queue (illustrative)',
     ...data.workshopCapacity.map(x=>{
@@ -138,14 +139,14 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
     `${es?'NO suma al tiempo medio de recuperación y no representa capacidad validada ni una cola predictiva':'NOT added to mean recovery time; not validated capacity or a predictive queue'}.`,
     '',es?'## Dependencias de rutas':'## Supply and repair dependencies',
     ...(data.dependencyRoutes.length
-      ?data.dependencyRoutes.map(route=>`- ${route.optionId} / ${route.label}: ${route.qualified?'qualified (user-declared)':'unqualified'}; nodes=[${route.dependencies.join(', ')}]; declaredCapacity=${route.capacityPercent??'not specified'}%; evidence=${route.evidenceId||'unlinked'}`)
+      ?data.dependencyRoutes.map(route=>`- ${route.optionId} / ${route.label}: ${route.qualified?(es?'cualificada (declarada)':'qualified (user-declared)'):(es?'no cualificada':'unqualified')}; nodes=[${route.dependencies.join(', ')}]; declaredCapacity=${route.capacityPercent??'not specified'}%; evidence=${route.evidenceId||'unlinked'}`)
       :[es?'Dependencias no evaluadas; la independencia no está acreditada.':'Dependencies not assessed; independence not demonstrated.']),
     '',es?'## 03 Comprobar':'## 03 Check',
     `${es?'Controles de revisión declarados':'User-declared review gates'}: ${JSON.stringify(data.gates)}`,
     `${es?'Trazabilidad documental':'Evidence trace'}: ${chosen.reviewedData?(es?'todas las entradas asociadas a registros revisados (declarados)':'all inputs linked to user-declared reviewed records'):(es?'incompleta':'incomplete')}`,
     `${es?'Mediciones observadas':'Observed measurements'}: ${chosen.observedData?(es?'asociadas a todos los valores comparados':'linked for all compared values'):(es?'no confirmadas':'not confirmed')}`,
-    ...chosen.missing.map(m=>'- '+m),
-    ...data.evidence.map(e=>`- ${e.id}: ${e.title} | ${e.status} / ${e.nature} | ${e.reference} | ${e.owner} | ${e.reviewer} ${e.reviewedOn} | ${es?'versión':'version'}=${e.documentVersion||(es?'no indicada':'not declared')} | sha256=${e.documentSha256||(es?'no indicada':'not declared')} | ${es?'vigencia':'expiry'}=${e.validUntil||(es?'sin fecha':'none')} | ${es?'revocación':'revoked'}=${e.revokedOn||(es?'no':'no')} | ${es?'fragmento':'excerpt'}=${e.excerptUsed||(es?'no facilitado':'not supplied')} | ${es?'limitaciones':'limitations'}=${e.limitations}`),
+    ...chosen.missing.map(m=>'- '+localizeCaseDiagnostic(m,locale)),
+    ...data.evidence.map(e=>`- ${e.id}: ${e.title} | ${localizeResultStatus(e.status,locale)} / ${localizeResultStatus(e.nature,locale)} | ${e.reference} | ${e.owner} | ${e.reviewer} ${e.reviewedOn} | ${es?'versión':'version'}=${e.documentVersion||(es?'no indicada':'not declared')} | sha256=${e.documentSha256||(es?'no indicada':'not declared')} | ${es?'vigencia':'expiry'}=${e.validUntil||(es?'sin fecha':'none')} | ${es?'revocación':'revoked'}=${e.revokedOn||(es?'no':'no')} | ${es?'fragmento':'excerpt'}=${e.excerptUsed||(es?'no facilitado':'not supplied')} | ${es?'limitaciones':'limitations'}=${e.limitations}`),
     '',es?'## 04 Traducir':'## 04 Translate',
     `${es?'Audiencia':'Audience'}: ${audienceNames[a][es?0:1]}`,
     strategicNarrativeText(data,chosen,a,locale),
