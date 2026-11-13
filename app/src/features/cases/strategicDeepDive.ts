@@ -1,4 +1,6 @@
-import { comparisons, type Audience, type OptionComparison, type StrategicCase } from './model';
+import { comparisons, evidenceObserved, type Audience, type OptionComparison, type StrategicCase } from './model';
+import { analyzeRoutes } from './supplyGraph';
+import { assessMissionBridge } from './missionBridge';
 
 /**
  * Dynamic strategic analysis for Translate. Uses the same calculated scenario
@@ -194,6 +196,25 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
           'Joint-event modelling is enabled, but an input is missing; its effect cannot be assessed.'))
       :(es?'El cumplimiento del plazo supone independencia entre fallo técnico e interrupción externa. Es una hipótesis del modelo, no una independencia demostrada.':
         'Deadline attainment assumes technical failure and external disruption are independent. This is a model assumption, not demonstrated independence.'));
+  }
+  const graph=analyzeRoutes(data.dependencyRoutes??[],c.option.id);
+  if(graph.qualifiedRoutes>0){
+    if(graph.singlePointsOfFailure.length)riskPieces.push(es
+      ?`Las rutas cualificadas comparten un posible punto único de fallo: ${graph.singlePointsOfFailure.join(', ')}. Dos proveedores no bastan para demostrar independencia real.`
+      :`Qualified paths share a possible single point of failure: ${graph.singlePointsOfFailure.join(', ')}. Separate suppliers do not prove real independence.`);
+    else riskPieces.push(es
+      ?`Se han declarado ${graph.qualifiedRoutes} rutas cualificadas, con ${graph.independentPairs} pares sin dependencias comunes documentadas. La independencia y capacidad efectiva siguen SIN demostrar.`
+      :`${graph.qualifiedRoutes} qualified paths are declared, with ${graph.independentPairs} pairs lacking documented shared nodes. Real independence and capacity remain UNPROVEN.`);
+  }
+  const observedIds=data.evidence.filter(x=>evidenceObserved(data,{value:0,evidenceId:x.id})).map(x=>x.id);
+  const bridge=assessMissionBridge(data.missionBridges?.find(x=>x.optionId===c.option.id),observedIds);
+  if(data.missionBridges?.some(x=>x.optionId===c.option.id)){
+    riskPieces.push(bridge.status==='userDeclaredObservation'
+      ?(es
+        ?`El usuario ha declarado una observación separada del ${fmt(bridge.availabilityPercent!,locale)} % de disponibilidad de misión con una fuente marcada como observada. NO demuestra relación causal con la reparación ni supone aprobación de Airbus.`
+        :`A separate mission-availability observation of ${fmt(bridge.availabilityPercent!,locale)}% is user-declared with an observed source. This does NOT establish causality from component repair or Airbus approval.`)
+      :(es?'La relación entre recuperación de componente y disponibilidad de misión no está demostrada. No se infiere disponibilidad de flota.'
+        :'The link from component restoration to mission availability is not demonstrated. Fleet availability is not inferred.'));
   }
   insights.push({id:'risk',title:es?'2. Cómo cambian los riesgos':'2. How the risks change',body:riskPieces.join(' ')});
 
