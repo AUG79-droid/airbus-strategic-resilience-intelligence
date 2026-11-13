@@ -15,6 +15,7 @@ import { MissionBridgeReview } from './MissionBridgeReview';
 import { DiscountedFinance } from './DiscountedFinance';
 import { evaluateDiscountedFinance, emptyFinancePlan } from './discountedCashFlows';
 import { pdfSafeText } from './pdfSafeText';
+import { sha256EvidenceBlob } from './documentProof';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
 import { calculateUniversal, parameterUnit, UNIVERSAL_PARAMETERS } from './universal';
@@ -126,7 +127,7 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     `Evidence trace: ${chosen.reviewedData?'all inputs linked to reviewed records':'incomplete'}`,
     `Observed measurements: ${chosen.observedData?'linked for all compared values':'not confirmed'}`,
     ...chosen.missing.map(m=>'- '+m),
-    ...data.evidence.map(e=>`- ${e.id}: ${e.title} | ${e.status} / ${e.nature} | ${e.reference} | ${e.owner} | ${e.reviewer} ${e.reviewedOn} | ${e.limitations}`),
+    ...data.evidence.map(e=>`- ${e.id}: ${e.title} | ${e.status} / ${e.nature} | ${e.reference} | ${e.owner} | ${e.reviewer} ${e.reviewedOn} | version=${e.documentVersion||'not declared'} | sha256=${e.documentSha256||'not declared'} | expiry=${e.validUntil||'none'} | revoked=${e.revokedOn||'no'} | excerpt=${e.excerptUsed||'not supplied'} | limitations=${e.limitations}`),
     '',es?'## 04 Traducir':'## 04 Translate',
     `Audience: ${audienceNames[a][es?0:1]}`,
     strategicNarrativeText(data,chosen,a,locale),
@@ -241,7 +242,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
   }));
   const importCase=async(file?:File)=>{
     if(!file)return;
-    if(file.size>300_000){setMessage(t('Archivo demasiado grande (máximo 300 KB).','File too large (300 KB max).'));return;}
+    if(file.size>2_000_000){setMessage(t('Archivo demasiado grande (máximo 2 MB).','File too large (2 MB max).'));return;}
     try{
       const {data,verifiedIntegrity}=await importCaseEnvelope(await file.text());
       setData(data);setSelectedOption('option-a');
@@ -440,6 +441,34 @@ export function CaseJourney({locale,view,data,setData}:Props){
               <input value={item.reviewer} onChange={e=>patchEvidence(item.id,{reviewer:e.target.value})}/></label>
             <label className="cy-field"><span>{t('Fecha de revisión','Review date')}</span>
               <input type="date" value={item.reviewedOn} onChange={e=>patchEvidence(item.id,{reviewedOn:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('Versión o revisión exacta del documento','Exact source document version / revision')}</span>
+              <input maxLength={120} value={item.documentVersion??''} onChange={e=>patchEvidence(item.id,{documentVersion:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('Fecha de caducidad (si aplica)','Evidence validity date (if applicable)')}</span>
+              <input type="date" value={item.validUntil??''} onChange={e=>patchEvidence(item.id,{validUntil:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('Fecha de revocación (si aplica)','Revocation date (if applicable)')}</span>
+              <input type="date" value={item.revokedOn??''} onChange={e=>patchEvidence(item.id,{revokedOn:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('Fragmento exacto que sustenta el dato','Exact supporting source excerpt')}</span>
+              <textarea rows={2} maxLength={4000} value={item.excerptUsed??''}
+                onChange={e=>patchEvidence(item.id,{excerptUsed:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('SHA-256 del archivo fuente (sin subir documento)','Source file SHA-256 (document NOT uploaded)')}</span>
+              <input spellCheck={false} maxLength={64} value={item.documentSha256??''}
+                onChange={e=>patchEvidence(item.id,{documentSha256:e.target.value.toLowerCase()})}
+                placeholder="64 hexadecimal digits"/>
+              <small>{t('Compara versiones de bytes. No autentica revisiones ni constituye firma.',
+                'Checks file byte identity. It does not authenticate approvals or signatures.')}</small>
+            </label>
+            <label className="cy-field"><span>{t('Calcular SHA-256 en el navegador; el archivo NO se envía','Compute SHA-256 in browser; file is NOT sent')}</span>
+              <input type="file" onChange={async e=>{
+                const source=e.target.files?.[0];
+                if(!source)return;
+                try{
+                  const digest=await sha256EvidenceBlob(source);
+                  patchEvidence(item.id,{documentSha256:digest});
+                  setMessage(t('Huella calculada localmente. El archivo no se ha subido.',
+                    'Checksum calculated locally. The file was not uploaded.'));
+                }catch(err){setMessage(t('No se pudo calcular la huella: ','Checksum failed: ')+String(err));}
+                finally{e.target.value='';}
+              }}/></label>
             <label className="cy-field"><span>{t('Naturaleza del dato','Evidence nature')}</span>
               <select value={item.nature} onChange={e=>patchEvidence(item.id,{nature:e.target.value as EvidenceItem['nature']})}>
                 <option value="estimate">{t('Estimación / hipótesis','Estimate / assumption')}</option>
