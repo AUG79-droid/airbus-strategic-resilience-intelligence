@@ -199,6 +199,8 @@ describe('Create your own strategic case', () => {
       reviewedOn:'2026-11-10',status:'reviewed',nature:'observed',limitations:'Bounded observation'};
     c.evidence=[record];
     expect(evidenceReviewed(c,{value:1,evidenceId:'E1'})).toBe(false);
+    c.evidence[0].reviewer='Programme';
+    expect(evidenceReviewed(c,{value:1,evidenceId:'E1'})).toBe(false);
     c.evidence[0].reviewer='Approved assessor';
     expect(evidenceReviewed(c,{value:1,evidenceId:'E1'})).toBe(true);
     c.evidence[0].status='rejected';
