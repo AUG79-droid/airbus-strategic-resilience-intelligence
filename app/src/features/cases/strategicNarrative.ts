@@ -378,7 +378,134 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
       :'Leadership decision: which repair or sourcing capabilities merit investment to reduce vulnerability, and what evidence would justify it?'
   };
 }
+
+/**
+ * Explicit answer to the question asked in the strategic translator.
+ * Based on the currently selected alternative, not a static example.
+ * A modelled recovery gain is NOT proof of fleet readiness, technical
+ * authorisation, mission continuity or commercial acceptance.
+ */
+export function strategicDecisionAnswer(
+  data:StrategicCase,c:OptionComparison,audience:Audience,locale:Locale
+):string {
+  const es=locale==='es';
+  const recovery=measure(c,'expectedRecovery');
+  const deadline=measure(c,'deadlineAttainment');
+  const cost=measure(c,'expectedCost');
+  const unit=data.kind==='climate'?(es?'horas':'hours'):
+    data.kind==='wildfire'?(es?'minutos':'minutes'):(es?'días':'days');
+  const exercise=data.hypothetical
+    ?(es?' Es una conclusión del escenario simulado, no una capacidad operativa acreditada.':
+      ' This is a simulated scenario conclusion, not a verified operational capability.')
+    :(es?' La decisión operativa requiere validación técnica y aceptación de los datos utilizados.':
+      ' Operational use requires technical validation and acceptance of the underlying data.');
+  if(!recovery&&!deadline){
+    return es
+      ?'Todavía no se puede responder con datos: faltan resultados comparables de recuperación y cumplimiento del plazo. Deben completarse las condiciones y sus evidencias antes de valorar la decisión.'
+      :'The current data cannot answer this yet: comparable recovery and deadline outcomes are missing. Complete the relevant inputs and evidence before assessing the decision.';
+  }
+  const improvement=recovery&&recovery.delta!< -1e-8;
+  const worse=recovery&&recovery.delta!>1e-8;
+  const higherDeadline=deadline&&deadline.delta!>1e-8;
+  const lowerDeadline=deadline&&deadline.delta!< -1e-8;
+  const changes=[
+    recovery
+      ?(es
+        ?`el tiempo estimado de recuperación ${improvement?'disminuye':worse?'aumenta':'se mantiene'} de ${n(recovery.baseline!,locale)} a ${n(recovery.candidate!,locale)} ${unit}`
+        :`modelled recovery time ${improvement?'falls':worse?'rises':'remains unchanged'} from ${n(recovery.baseline!,locale)} to ${n(recovery.candidate!,locale)} ${unit}`)
+      :'',
+    deadline
+      ?(es
+        ?`la probabilidad calculada de cumplir el plazo ${higherDeadline?'mejora':lowerDeadline?'empeora':'se mantiene'} del ${asPercent(deadline.baseline!,locale)} al ${asPercent(deadline.candidate!,locale)}`
+        :`modelled deadline attainment ${higherDeadline?'improves':lowerDeadline?'worsens':'remains unchanged'} from ${asPercent(deadline.baseline!,locale)} to ${asPercent(deadline.candidate!,locale)}`)
+      :''
+  ].filter(Boolean).join(es?' y ':' and ');
+  const costChange=cost
+    ?(es
+      ?` El coste esperado ${cost.delta!<0?'disminuye':cost.delta!>0?'aumenta':'se mantiene'} ${n(Math.abs(cost.delta!),locale,0)} € frente a la referencia.`
+      :` Expected cost ${cost.delta!<0?'decreases':cost.delta!>0?'increases':'remains unchanged'} by €${n(Math.abs(cost.delta!),locale,0)} against baseline.`)
+    :'';
+  if(audience==='defenceCustomer'){
+    const prefix=improvement&&higherDeadline
+      ?(es?'Sí, parcialmente: en este escenario ':'Partly yes: in this scenario ')
+      :improvement||higherDeadline
+        ?(es?'El escenario muestra una mejora parcial: ':'The scenario shows a partial improvement: ')
+        :worse||lowerDeadline
+          ?(es?'No se demuestra una mejora de recuperación: ':'The scenario does not show improved recovery: ')
+          :(es?'No se demuestra una mejora operativa clara: ':'No clear operational improvement is demonstrated: ');
+    const boundary=data.kind==='ecodesign'
+      ?(es?' Esto indica una recuperación potencialmente más rápida del componente, pero no demuestra por sí solo que se mantengan los requisitos de capacidad ni la disponibilidad de flota.':
+        ' This suggests potentially faster component restoration, but does not itself establish that capability requirements or fleet availability are maintained.')
+      :data.kind==='saf'
+        ?(es?' Estas cifras modelan la continuidad de abastecimiento, pero no demuestran disponibilidad real de combustible autorizado ni la continuidad de la misión.':
+          ' These numbers model supply continuity, but do not establish access to approved fuel or mission continuity.')
+        :data.kind==='climate'
+          ?(es?' La reducción de recuperación modelizada no demuestra por sí sola continuidad operativa real durante calor extremo.':
+            ' Modelled recovery improvement alone does not prove actual operational continuity during extreme heat.')
+          :data.kind==='wildfire'
+            ?(es?' La recuperación de la coordinación no equivale a haber probado tiempos de alerta o eficacia de extinción.':
+              ' Restoring coordination does not demonstrate alert-detection times or firefighting effectiveness.')
+            :(es?' La mejora calculada no acredita por sí sola que el servicio mantenga sus requisitos operativos.':
+              ' The calculated improvement does not itself establish that service requirements are met.');
+    return prefix+changes+'.'+boundary+exercise;
+  }
+  if(audience==='engineering'){
+    const checks={
+      ecodesign:es?'ensayos de reparación, equivalencia funcional, trazabilidad del material, seguridad y autorización del cambio':
+        'repair tests, functional equivalence, material traceability, safety and change authorisation',
+      climate:es?'ensayos térmicos, límites ambientales, seguridad y aceptación técnica del equipo protegido':
+        'thermal tests, environmental operating limits, safety and technical acceptance of protected equipment',
+      saf:es?'calidad y mezcla de combustible, compatibilidad de plataforma y motor, trazabilidad y aprobaciones aplicables':
+        'fuel quality and blending, platform and engine compatibility, traceability and applicable authorisations',
+      wildfire:es?'latencia y falsas alertas, conectividad redundante, interoperabilidad y seguridad de datos':
+        'latency and false alarms, redundant links, interoperability and data security',
+      general:es?'ensayos específicos, límites funcionales, seguridad, método y criterios de aceptación':
+        'case-specific testing, functional limits, safety, measurement method and acceptance criteria'
+    }[data.kind];
+    return es
+      ?`La respuesta técnica es condicional: para utilizar «${c.option.name}» deben verificarse ${checks}. El cálculo muestra que ${changes}, pero no sustituye esa cualificación.${exercise}`
+      :`The technical answer is conditional: using “${c.option.name}” requires verification of ${checks}. The model shows that ${changes}, but does not replace technical qualification.${exercise}`;
+  }
+  if(audience==='programmeManager'){
+    const tradeoff=recovery&&cost
+      ?(improvement&&cost.delta!<0
+        ?(es?' Combina una recuperación más rápida con un coste esperado inferior en este escenario.':
+          ' It combines faster recovery with lower expected cost in this scenario.')
+        :improvement&&cost.delta!>0
+          ?(es?' La mayor rapidez exige asumir un sobrecoste y comprobar si está justificado por los compromisos del programa.':
+            ' Faster recovery comes at a premium that must be justified against programme commitments.')
+          :worse&&cost.delta!<0
+            ?(es?' El ahorro implica recuperar más tarde; la decisión depende de la importancia del plazo.':
+              ' Cost savings involve slower recovery, so the decision depends on how critical the deadline is.')
+            :(es?' No hay una ventaja simultánea demostrada en plazo y coste.':
+              ' No simultaneous time-and-cost advantage is demonstrated.'))
+      :'';
+    return es
+      ?`Con las hipótesis introducidas, ${changes}.${costChange}${tradeoff} El programa debe contrastarlo con los compromisos y el plazo objetivo antes de escoger una estrategia.${exercise}`
+      :`Under the entered assumptions, ${changes}.${costChange}${tradeoff} Programme Management must compare this with its commitments and target deadline before selecting a strategy.${exercise}`;
+  }
+  const mechanism=data.kind==='ecodesign'
+    ?(c.option.id==='option-b'
+      ?(es?'desarrollar reparación y una vía alternativa de abastecimiento':
+        'developing repair alongside an alternative sourcing route')
+      :(es?'desarrollar una capacidad de reparación cualificada':
+        'developing a qualified repair capability'))
+    :(data.mechanism.trim()||(es?'desarrollar la alternativa estudiada':
+      'developing the proposed alternative'));
+  const recommendation=improvement&&(!cost||cost.delta!<=0)
+    ?(es?'Los resultados justifican estudiar prioritariamente la alternativa, no aprobar automáticamente una inversión.':
+      'The results justify prioritising further assessment of the option, not automatically approving investment.')
+    :improvement&&cost&&cost.delta!>0
+      ?(es?'Existe una posible mejora de recuperación con sobrecoste: la inversión depende del valor de ese tiempo ganado.':
+        'There is a potential recovery gain with a cost premium; investment depends on the value of the time saved.')
+      :(es?'Los resultados actuales no justifican por sí solos priorizar esta inversión frente a otras opciones.':
+        'The current outcomes alone do not justify prioritising this investment over other options.');
+  return es
+    ?`La opción estratégica a evaluar es ${mechanism}. Según el modelo, ${changes}.${costChange} ${recommendation} Harían falta umbrales de riesgo, coste y aceptación técnica para decidir.${exercise}`
+    :`The strategic capability to assess is ${mechanism}. The model shows that ${changes}.${costChange} ${recommendation} Risk, cost and technical acceptance thresholds are needed before deciding.${exercise}`;
+}
+
 export function strategicNarrativeText(data:StrategicCase,c:OptionComparison,audience:Audience,locale:Locale):string{
   const x=strategicMessage(data,c,audience,locale);
-  return [x.headline,x.operationalMeaning,x.quantifiedFinding,x.sustainabilityLink,x.decisionQuestion].join('\n\n');
+  return [x.headline,x.operationalMeaning,x.quantifiedFinding,x.sustainabilityLink,x.decisionQuestion, (locale==='es'?'Respuesta del análisis: ':'Model-based answer: ')+strategicDecisionAnswer(data,c,audience,locale)].join('\n\n');
 }
