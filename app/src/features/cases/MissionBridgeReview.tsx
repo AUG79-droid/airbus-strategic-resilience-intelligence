@@ -15,7 +15,7 @@ export function MissionBridgeReview({locale,data,setData}:Props){
         ...entry,[key]:value
       }]};
     });
-  const fields:[keyof MissionBridge,string,string][]=[
+  const fields:[keyof Omit<MissionBridge,'optionId'>,string,string][]=[
     ['componentOrService','Componente o servicio','Component or service'],
     ['subsystem','Subsistema que depende de él','Dependent subsystem'],
     ['platform','Plataforma o activo','Platform or asset'],
