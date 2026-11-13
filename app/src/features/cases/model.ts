@@ -86,6 +86,8 @@ export interface IndicatorComparison {
     minDelta:number;maxDelta:number;
     switchingParameter?:string;switchingAlternative?:string;switchingValue?:number;
   };
+  /** Four coordinated ± input-stress scenarios; not statistical confidence bounds. */
+  coordinatedStress?: {minDelta:number;maxDelta:number;validScenarios:number;attemptedScenarios:number};
   evidenceReady: boolean;
   observedEvidence: boolean;
   issue?: 'excluded' | 'missing';
@@ -330,6 +332,43 @@ function localInputSensitivity(
   return {status:switchingParameter?'sensitive':'stable',range};
 }
 
+/** Bounded deterministic stress, *not* simulation percentiles.
+ * For each input, vary by the configured percentage in the same
+ * direction. Evaluate four combinations of reference/alternative
+ * upward/downward changes; record valid outcomes only. Important:
+ * neither scenario probabilities nor model confidence are estimated.
+ */
+function coordinatedInputStress(
+  data:StrategicCase,base:Option,candidate:Option,
+  key:typeof OUTPUT_KEYS[number],sourceIds:string[],
+  baselineValue:number,candidateValue:number
+):IndicatorComparison['coordinatedStress'] {
+  if(data.robustnessPercent<=0)return undefined;
+  const change=(option:Option,sign:-1|1):Option=>{
+    const values={...option.parameterValues};
+    for(const id of sourceIds){
+      if(data.parameters[id]?.applicability!=='applies')continue;
+      const present=option.parameterValues[id]?.value;
+      const def=UNIVERSAL_PARAMETERS.find(p=>p.id===id);
+      if(typeof present!=='number'||!Number.isFinite(present)||!def)continue;
+      const step=Math.max(Math.abs(present),1)*data.robustnessPercent/100;
+      const updated=Math.max(def.minimum??-Infinity,Math.min(def.maximum??Infinity,present+sign*step));
+      values[id]={...values[id],value:updated};
+    }
+    return {...option,parameterValues:values};
+  };
+  const result=[candidateValue-baselineValue];
+  let validScenarios=0;
+  for(const baselineSign of [-1,1] as const)for(const optionSign of [-1,1] as const){
+    const x=calculateUniversal(data,change(base,baselineSign))[key];
+    const y=calculateUniversal(data,change(candidate,optionSign))[key];
+    if(x.state!=='calculated'||y.state!=='calculated'||x.value===null||y.value===null)continue;
+    result.push(y.value-x.value);
+    validScenarios++;
+  }
+  return {minDelta:Math.min(...result),maxDelta:Math.max(...result),validScenarios,attemptedScenarios:4};
+}
+
 function parameterEvidence(caseData:StrategicCase,option:Option,ids:string[],kind:'reviewed'|'observed'):boolean{
   return ids.filter(id=>caseData.parameters[id]?.applicability==='applies').every(id=>{
     const measure=option.parameterValues[id];
@@ -368,6 +407,8 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
       :definition.sourceIds;
     const sensitivity=localInputSensitivity(caseData,baseline,candidate,key,
       sourceIds,b.value!,a.value!,definition.direction);
+    const coordinatedStress=coordinatedInputStress(caseData,baseline,candidate,
+      key,sourceIds,b.value!,a.value!);
     const evidenceReady=parameterEvidence(caseData,baseline,sourceIds,'reviewed')&&
       parameterEvidence(caseData,candidate,sourceIds,'reviewed');
     const observedEvidence=parameterEvidence(caseData,baseline,sourceIds,'observed')&&
@@ -375,7 +416,8 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
     if(!evidenceReady)missing.push(definition.label+': missing traceable review for baseline and alternative');
     return {metric,baseline:b.value,candidate:a.value,delta,
       percentChange:b.value===0?null:delta/Math.abs(b.value!)*100,improvement,
-      robustness:sensitivity.status,sensitivityRange:sensitivity.range,evidenceReady,observedEvidence};
+      robustness:sensitivity.status,sensitivityRange:sensitivity.range,coordinatedStress,
+      evidenceReady,observedEvidence};
   });
   const active=rows.filter(r=>r.issue!=='excluded');
   const incomplete=active.length===0||active.some(r=>r.improvement===null);
