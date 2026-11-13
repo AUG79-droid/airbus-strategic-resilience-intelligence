@@ -508,8 +508,8 @@ export function strategicDecisionAnswer(
         'technical requirements, testing and acceptance criteria for the case'
     }[data.kind];
     return es
-      ?`Ingeniería debe comprobar ${checks}. ${measureText} Así sabremos si la mejora calculada puede aplicarse sin comprometer el funcionamiento del sistema.`
-      :`Engineering needs to check ${checks}. ${measureText} This will show whether the modelled improvement can be used without compromising system operation.`;
+      ?`Ingeniería debe comprobar ${checks}. ${measureText} Con estas pruebas podremos comprobar si la alternativa es viable y segura, independientemente de que el resultado sea mejor o peor.`
+      :`Engineering needs to check ${checks}. ${measureText} These checks will establish whether the option is technically feasible and safe, whether the result improves or worsens.`;
   }
   if(audience==='programmeManager'){
     const decision=recoveryState==='better'&&costState==='better'
