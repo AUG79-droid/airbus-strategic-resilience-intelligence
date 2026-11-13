@@ -40,6 +40,9 @@ export const UNIVERSAL_PARAMETERS:ParameterDefinition[]=[
     'Probabilidad de que se materialice un retraso ajeno a la vía técnica.','Likelihood of an independent external delay.',0,100),
   def('shockDelay','risk','Retraso adicional de disrupción','Additional disruption delay','time',
     'Aplicable conjuntamente con probabilidad de disrupción.','Must be assessed together with disruption probability.'),
+  def('jointFailureShock','risk','Fallo técnico y disrupción simultáneos','Technical failure AND disruption together','%',
+    'Probabilidad CONJUNTA de los dos eventos: no es la probabilidad condicional. Activa este parámetro solo si hay evidencia sobre dependencia; debe respetar los límites matemáticos. Si no aplica se supone independencia de forma explícita.',
+    'JOINT likelihood of BOTH events, not a conditional probability. Enable only with dependency evidence; must satisfy mathematical bounds. Otherwise independence is explicitly assumed.',0,100),
   def('baseCost','economic','Coste de la alternativa','Base option cost','€',
     'Coste directo comparable por unidad funcional.','Comparable direct cost per functional unit.'),
   def('logisticsCost','economic','Costes logísticos','Logistics costs','€',
@@ -98,6 +101,40 @@ export function displayUnit(unit:string,locale:'es'|'en'):string{
 export function parameterUnit(unit:string,kind:string,locale:'es'|'en'):string{
   return unit==='time'?timeUnit(kind,locale):displayUnit(unit,locale);
 }
+export interface JointRiskBranch {
+  technicalSuccess:boolean;
+  shock:boolean;
+  probability:number;
+}
+/**
+ * Joint risk distribution for technical failure F and disruption S.
+ * With no explicit P(F∩S), independence is a visible modelling assumption.
+ * Reject impossible overlapping probabilities (Fréchet bounds), rather than
+ * silently clamping an invalid scenario.
+ */
+export function jointRiskBranches(successPercent:number,shockPercent:number,
+  bothFailureShockPercent?:number|null):JointRiskBranch[]{
+  const valid=(n:number)=>Number.isFinite(n)&&n>=0&&n<=100;
+  if(!valid(successPercent)||!valid(shockPercent)||
+    (bothFailureShockPercent!==null&&bothFailureShockPercent!==undefined&&!valid(bothFailureShockPercent)))
+    throw new RangeError('Probabilities must be between 0 and 100 percent');
+  const fail=1-successPercent/100;
+  const shock=shockPercent/100;
+  const both=bothFailureShockPercent===null||bothFailureShockPercent===undefined
+    ? fail*shock : bothFailureShockPercent/100;
+  const lower=Math.max(0,fail+shock-1);
+  const upper=Math.min(fail,shock);
+  if(both<lower-1e-10||both>upper+1e-10)
+    throw new RangeError('Joint probability violates Fréchet bounds');
+  const probability=(value:number)=>Math.max(0,Math.min(1,value));
+  return [
+    {technicalSuccess:true,shock:false,probability:probability(1-fail-shock+both)},
+    {technicalSuccess:true,shock:true,probability:probability(shock-both)},
+    {technicalSuccess:false,shock:false,probability:probability(fail-both)},
+    {technicalSuccess:false,shock:true,probability:probability(both)}
+  ];
+}
+
 export type DerivedState='calculated'|'excluded'|'missing'|'invalid';
 export interface DerivedValue {state:DerivedState;value:number|null;formula:string;missing:string[];}
 export interface CalculatedOption {
@@ -163,19 +200,24 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
     }
   ));
   const deadline=invalidPair(join(
-    ['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay'],
-    'Σ P(technical branch)*P(disruption branch)*I(completion<=target), assuming independence',
+    ['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock'],
+    'Σ joint-risk branch probability × I(completion<=target); independence only when joint probability is N/A',
     v=>{
       const base=v('baseRecovery'),target=v('recoveryTarget');
       if(base===null||target===null)return NaN;
       const start=Math.max(base,v('supplyLead')??0);
-      const pt=(v('technicalSuccess')??100)/100;
-      const ps=(v('shockProbability')??0)/100;
+      // Joint overlap requires both underlying risks to be defined.
+      const overlap=v('jointFailureShock');
+      if(overlap!==null&&(v('technicalSuccess')===null||v('shockProbability')===null))return NaN;
+      let branches:JointRiskBranch[];
+      try {
+        branches=jointRiskBranches(v('technicalSuccess')??100,v('shockProbability')??0,overlap);
+      } catch { return NaN; }
       let output=0;
-      for(const technical of [true,false])for(const shock of [false,true]){
-        const probability=(technical?pt:1-pt)*(shock?ps:1-ps);
-        const time=start+(technical?0:(v('failureDelay')??0))+(shock?(v('shockDelay')??0):0);
-        if(time<=target)output+=probability;
+      for(const branch of branches){
+        const time=start+(branch.technicalSuccess?0:(v('failureDelay')??0))+
+          (branch.shock?(v('shockDelay')??0):0);
+        if(time<=target)output+=branch.probability;
       }
       return output*100;
     }
@@ -199,7 +241,10 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
     material:get('materialKg'),waste:get('wasteKg'),
     ghg:get('ghgKg'),lifeExtension:get('lifeExtension'),
     assumptions:[
-      'Risk events are modelled as independent; verify this before using the result.',
+      states.jointFailureShock?.applicability==='applies'
+        ? 'An explicit joint technical-failure/disruption probability is supplied; it must satisfy Fréchet limits and be supported by evidence.'
+        : 'Technical failure and external disruption are assumed independent for deadline probability; this is not a demonstrated property of the scenario.',
+      'Expected time and economic cost use additive marginal-event terms; correlations alone do not change these means under this simplifying assumption.',
       'Calculated outcomes are conditional scenarios, not calibrated predictions.',
       ...reasons
     ]
