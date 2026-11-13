@@ -230,6 +230,10 @@ describe('Create your own strategic case', () => {
       }
     }
     let result=compareOption(c,c.options[1]);
+    expect(result.canDescribeAsMeasured).toBe(false); // Missing source for environmental methodology.
+    c.environmentalBasis[0].evidenceId='BASE';
+    c.environmentalBasis[1].evidenceId='ALT';
+    result=compareOption(c,c.options[1]);
     expect(result.canDescribeAsMeasured).toBe(true);
     c.evidence[1].nature='estimate';
     result=compareOption(c,c.options[1]);
