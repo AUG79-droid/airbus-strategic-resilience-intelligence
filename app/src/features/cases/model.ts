@@ -325,7 +325,26 @@ function localInputSensitivity(
           (Math.abs(signed)<1e-9||Math.sign(signed)!==referenceSign)){
           switchingParameter=id;
           switchingAlternative=option.id;
-          switchingValue=changedValue;
+          // Bisect the first sign reversal along this one input to return an
+          // approximate DECISION THRESHOLD, not merely the stress endpoint.
+          let sameSide=present,oppositeSide=changedValue;
+          for(let iteration=0;iteration<26;iteration++){
+            const midpoint=(sameSide+oppositeSide)/2;
+            if(midpoint===sameSide||midpoint===oppositeSide)break;
+            const probeOption:Option={...option,parameterValues:{
+              ...option.parameterValues,
+              [id]:{...option.parameterValues[id],value:midpoint}
+            }};
+            const trial=calculateUniversal(caseData,probeOption)[outputKey];
+            if(trial.state!=='calculated'||trial.value===null)break;
+            const x=option===baseline?trial.value:baseValue;
+            const y=option===candidate?trial.value:candidateValue;
+            const signedTrial=(direction==='lower'?1:-1)*(x-y);
+            if(Math.abs(signedTrial)<1e-9||Math.sign(signedTrial)!==referenceSign)
+              oppositeSide=midpoint;
+            else sameSide=midpoint;
+          }
+          switchingValue=oppositeSide;
         }
       }
     }
