@@ -1,4 +1,5 @@
 import { calculateUniversal, defaultParameterStates, emptyParameterValues, UNIVERSAL_PARAMETERS, type DerivedValue, type ParamMap, type ParamValues } from './universal';
+import { validateRoutes, type DependencyRoute } from './supplyGraph';
 // Independent custom-case model. This is a transparent comparative calculator, not
 // a predictive aerospace certification, LCA, mission-availability or emissions model.
 export type CaseKind = 'general' | 'ecodesign' | 'climate' | 'saf' | 'wildfire';
@@ -64,6 +65,8 @@ export interface StrategicCase {
   gates: ReviewGates;
   robustnessPercent: number;
   hypothetical: boolean;
+  /** Optional topology assessment, never a validated recovery or readiness factor. */
+  dependencyRoutes: DependencyRoute[];
 }
 
 export interface IndicatorComparison {
@@ -216,7 +219,7 @@ export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): S
     boundary:'', timeHorizon:'', owner:'', metrics,
     parameters:defaultParameterStates(kind,locale),
     options:makeOptions(metrics,locale), evidence:[], gates:emptyGates(),
-    robustnessPercent:10, hypothetical:false
+    robustnessPercent:10, hypothetical:false, dependencyRoutes:[]
   };
 }
 
@@ -452,6 +455,7 @@ export function validateCaseImport(value: unknown): StrategicCase {
   if(['comparableBoundary','technicalEligibility','measurementMethod','independentReview'].some(k=>typeof x.gates?.[k as keyof ReviewGates]!=='boolean'))throw new Error('Invalid review gates');
   // Upgrade saved cases from the original four-KPI builder safely.
   const upgraded=structuredClone(x as StrategicCase);
+  upgraded.dependencyRoutes=validateRoutes(upgraded.dependencyRoutes,upgraded.options.map(o=>o.id));
   upgraded.parameters??=defaultParameterStates(upgraded.kind);
   if(!upgraded.parameters||typeof upgraded.parameters!=='object'||Array.isArray(upgraded.parameters))throw new Error('Invalid applicability catalogue');
   // Version-1 JSON files predate the optional joint-event field.
