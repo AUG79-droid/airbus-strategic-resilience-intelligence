@@ -223,7 +223,9 @@ export function validNumber(value: number | null, def: MetricDefinition): boolea
 export function evidenceReviewed(caseData: StrategicCase, measure: Measure): boolean {
   const record = caseData.evidence.find(x=>x.id===measure.evidenceId);
   return !!record && record.status === 'reviewed' && !!record.reference.trim() &&
-    !!record.owner.trim() && !!record.reviewer.trim() && /^\d{4}-\d{2}-\d{2}$/.test(record.reviewedOn) &&
+    !!record.owner.trim() && !!record.reviewer.trim() &&
+    record.owner.trim().toLowerCase()!==record.reviewer.trim().toLowerCase() &&
+    /^\d{4}-\d{2}-\d{2}$/.test(record.reviewedOn) &&
     !!record.title.trim();
 }
 
