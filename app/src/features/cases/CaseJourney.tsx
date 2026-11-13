@@ -76,15 +76,15 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     es?'RESULTADOS: modelización comparativa, no beneficios validados.':'RESULTS: comparative modelling, not validated benefits.',
     data.hypothetical?(es?'DATOS: 100 % HIPOTÉTICOS.':'DATA: 100% HYPOTHETICAL.'):'',
     '',es?'## 01 Investigar':'## 01 Investigate',
-    `Programme: ${data.programme}`,`Decision: ${data.decision}`,
-    `Initiative: ${data.initiative}`,`Vulnerability: ${data.vulnerability}`,
-    `Mechanism: ${data.mechanism}`,`Scope: ${data.boundary}`,
-    `Horizon: ${data.timeHorizon}`,`Owner: ${data.owner}`,
+    `${es?'Programa':'Programme'}: ${data.programme}`,`${es?'Decisión':'Decision'}: ${data.decision}`,
+    `${es?'Iniciativa':'Initiative'}: ${data.initiative}`,`${es?'Vulnerabilidad':'Vulnerability'}: ${data.vulnerability}`,
+    `${es?'Mecanismo':'Mechanism'}: ${data.mechanism}`,`${es?'Alcance':'Scope'}: ${data.boundary}`,
+    `${es?'Horizonte':'Horizon'}: ${data.timeHorizon}`,`${es?'Responsable':'Owner'}: ${data.owner}`,
     '',es?'## 02 Cuestionar':'## 02 Challenge',
-    `Baseline: ${displayOptionName(data.options[0],locale)}`,`Alternative: ${displayOptionName(chosen.option,locale)}`,
-    `Verdict: ${describeVerdict(chosen,locale)}`,
+    `${es?'Referencia':'Baseline'}: ${displayOptionName(data.options[0],locale)}`,`${es?'Alternativa':'Alternative'}: ${displayOptionName(chosen.option,locale)}`,
+    `${es?'Resultado':'Verdict'}: ${describeVerdict(chosen,locale)}`,
     ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | evidence: ${r.evidenceReady?'reviewed':'pending'}`),
-    `Sensitivity: ±${data.robustnessPercent}% user-selected input variation; NOT a statistical confidence interval.`,
+    `${es?'Variación de parámetros para la prueba local':'Local input-variation check'}: ±${data.robustnessPercent} %. ${es?'No es un intervalo estadístico de confianza.':'Not a statistical confidence interval.'}`,
     '',es?'## Controles y aplicabilidad':'## Universal controls and applicability',
     ...Object.entries(data.parameters).map(([id,state])=>'- '+id+': '+state.applicability+'; '+state.reason),
     ...data.options.flatMap(option=>{
@@ -104,7 +104,7 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     ...strategicInsights(data,chosen,a,locale).flatMap(item=>['', '#### '+item.title,item.body]),
     '',es?'LÍMITE: ningún cálculo es una prueba de causalidad o aprobación técnica.':'BOUNDARY: calculations do not establish causality or technical approval.',
   ];
-  return lines.filter((x)=>x!=='').join('\n');
+  return lines.join('\n');
 }
 async function downloadReportPdf(text:string, filename:string):Promise<void>{
   const { PDFDocument, StandardFonts, rgb }=await import('pdf-lib');
