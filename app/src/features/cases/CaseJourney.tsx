@@ -8,7 +8,7 @@ import {
 } from './model';
 import { fromPreset, presetTitle, type PresetKey } from './presets';
 import { UniversalControls } from './UniversalControls';
-import { strategicMessage, strategicNarrativeText } from './strategicNarrative';
+import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
 import { calculateUniversal, parameterUnit } from './universal';
 import './CaseJourney.css';
@@ -418,7 +418,13 @@ export function CaseJourney({locale,view,data,setData}:Props){
               <p>{strategic.quantifiedFinding}</p>
             </div>
             <p className="cy-strategic-sustainability">{strategic.sustainabilityLink}</p>
-            <p className="cy-strategic-decision">{strategic.decisionQuestion}</p>
+            <div className="cy-strategic-decision">
+              <p className="cy-strategic-question">{strategic.decisionQuestion}</p>
+              <div className="cy-strategic-answer">
+                <strong>{t('Respuesta del análisis','Model-based answer')}</strong>
+                <p>{strategicDecisionAnswer(data,active,selectedAudience,locale)}</p>
+              </div>
+            </div>
             <p className="cy-strategic-assumption">{data.hypothetical
               ?t('Interpretación del ejercicio, basada en condiciones y evidencias simuladas. No es un resultado real del programa ni acredita disponibilidad de flota.',
                 'Exercise interpretation from simulated inputs and review. Not a real programme outcome or proof of fleet availability.')
