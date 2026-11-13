@@ -349,6 +349,10 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   let readiness=es
     ?`${reviewed} de ${active.length} indicadores tienen fuentes marcadas como revisadas. Hemos variado cada parámetro aplicable un ±${fmt(data.robustnessPercent,locale)} %, uno por uno, recalculando los resultados. En ${stable} indicadores se mantiene la dirección de la comparación, en ${sensitive} cambia y en ${equivalent} las alternativas son equivalentes con los datos actuales. La prueba individual no evalúa cambios simultáneos.`
     :`${reviewed} of ${active.length} indicators have records marked as reviewed. We varied each applicable input by ±${fmt(data.robustnessPercent,locale)} %, one at a time, and recalculated the results. In ${stable} indicators the comparison direction held, in ${sensitive} it changed, and in ${equivalent} the options were equivalent at current inputs. The one-at-a-time test does not cover simultaneous changes.`;
+  const incompleteLocal=active.filter(row=>(row.sensitivityRange?.invalidScenarios??0)>0);
+  if(incompleteLocal.length)readiness+=es
+    ?` ATENCIÓN: ${incompleteLocal.length} indicadores tienen variaciones individuales matemáticamente inválidas. No puede afirmarse estabilidad ante todo el intervalo de variación.`
+    :` CAUTION: ${incompleteLocal.length} indicators contain mathematically invalid one-at-a-time perturbations. Stability across the full range cannot be claimed.`;
   const coordinated=active.filter(row=>!!row.coordinatedStress).map(row=>row.coordinatedStress!);
   if(coordinated.length){
     const valid=coordinated.reduce((sum,item)=>sum+item.validScenarios,0);

@@ -92,7 +92,7 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
     `${es?'Referencia':'Baseline'}: ${displayOptionName(data.options[0],locale)}`,`${es?'Alternativa':'Alternative'}: ${displayOptionName(chosen.option,locale)}`,
     `${es?'Resultado':'Verdict'}: ${describeVerdict(chosen,locale)}`,
     ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | ${es?'evidencia':'evidence'}: ${r.evidenceReady?(es?'revisada (declarada)':'reviewed (declared)'):(es?'pendiente':'pending')}${r.sensitivityRange
-      ?` | ${es?'rango Δ univariable':'OAT Δ range'}: [${present(r.sensitivityRange.minDelta,locale)}, ${present(r.sensitivityRange.maxDelta,locale)}]${r.sensitivityRange.switchingParameter?` | ${es?'umbral aproximado de cambio':'approx switch threshold'}: ${r.sensitivityRange.switchingParameter}=${present(r.sensitivityRange.switchingValue??null,locale)}`:''}`
+      ?` | ${es?'rango Δ univariable':'OAT Δ range'}: [${present(r.sensitivityRange.minDelta,locale)}, ${present(r.sensitivityRange.maxDelta,locale)}] (${r.sensitivityRange.validScenarios}/${r.sensitivityRange.attemptedScenarios} ${es?'recalculados válidos':'valid recalculations'})${r.sensitivityRange.invalidScenarios>0?(es?' · COBERTURA INCOMPLETA':' · INCOMPLETE COVERAGE'):''}${r.sensitivityRange.switchingParameter?` | ${es?'umbral aproximado de cambio':'approx switch threshold'}: ${r.sensitivityRange.switchingParameter}=${present(r.sensitivityRange.switchingValue??null,locale)}`:''}`
       :''}${r.coordinatedStress?(r.coordinatedStress.coverage==='none'
         ?` | ${es?'SIN RANGO de estrés':'NO stress range'} (0/4 ${es?'válidos':'valid'})`
         :` | ${es?'rango Δ simultáneo':'coordinated Δ range'} [${present(r.coordinatedStress.minDelta,locale)}, ${present(r.coordinatedStress.maxDelta,locale)}] (${r.coordinatedStress.validScenarios}/4 ${es?'válidos':'valid'})${r.coordinatedStress.coverage==='partial'?(es?' · COBERTURA INCOMPLETA, no es una cota de riesgo':' · INCOMPLETE COVERAGE, not a risk bound'):''}`):''}`),
@@ -381,6 +381,8 @@ export function CaseJourney({locale,view,data,setData}:Props){
             {row.sensitivityRange&&<small>
               {t('Rango de diferencia bajo cambios individuales','Difference range under one-at-a-time changes')}: 
               {present(row.sensitivityRange.minDelta,locale)} – {present(row.sensitivityRange.maxDelta,locale)} {parameterUnit(row.metric.unit,data.kind,locale)}.
+              {' '}{row.sensitivityRange.validScenarios}/{row.sensitivityRange.attemptedScenarios} {t('recalculos válidos','valid recalculations')}.
+              {row.sensitivityRange.invalidScenarios>0&&<> <strong>{t('Cobertura incompleta: no puede afirmarse estabilidad.','Incomplete coverage: stability cannot be claimed.')}</strong></>}
               {row.sensitivityRange.switchingParameter&&<>
                 {' · '}{t('Puede cambiar al modificar','Can switch when changing')}{' '}
                 {UNIVERSAL_PARAMETERS.find(p=>p.id===row.sensitivityRange?.switchingParameter)?.label[locale]??row.sensitivityRange.switchingParameter}

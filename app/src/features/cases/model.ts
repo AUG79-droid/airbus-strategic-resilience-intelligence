@@ -94,6 +94,7 @@ export interface IndicatorComparison {
   /** Raw delta range under isolated input changes, NOT a confidence interval. */
   sensitivityRange?: {
     minDelta:number;maxDelta:number;
+    attemptedScenarios:number;validScenarios:number;invalidScenarios:number;
     switchingParameter?:string;switchingAlternative?:string;switchingValue?:number;
   };
   /** Four coordinated ± input-stress scenarios; not statistical confidence bounds. */
@@ -303,7 +304,7 @@ function localInputSensitivity(
   const referenceSign=Math.sign(original);
   const startDelta=candidateValue-baseValue;
   let minDelta=startDelta,maxDelta=startDelta;
-  let tested=0;
+  let tested=0,attempted=0,invalid=0;
   let switchingParameter:string|undefined,switchingAlternative:string|undefined,switchingValue:number|undefined;
   for(const id of sourceIds){
     if(caseData.parameters[id]?.applicability!=='applies')continue;
@@ -317,6 +318,7 @@ function localInputSensitivity(
         const changedValue=Math.max(definition.minimum??-Infinity,
           Math.min(definition.maximum??Infinity,present+directionStep*step));
         if(changedValue===present)continue;
+        attempted++;
         const changed:Option={...option,parameterValues:{
           ...option.parameterValues,
           [id]:{...option.parameterValues[id],value:changedValue}
@@ -324,7 +326,7 @@ function localInputSensitivity(
         const output=calculateUniversal(caseData,changed)[outputKey];
         // Invalid perturbed states (e.g. a joint probability outside Fréchet
         // limits) are not counted as simulated outcomes or proof of stability.
-        if(output.state!=='calculated'||output.value===null)continue;
+        if(output.state!=='calculated'||output.value===null){invalid++;continue;}
         const nextBaseline=option===baseline?output.value:baseValue;
         const nextCandidate=option===candidate?output.value:candidateValue;
         const delta=nextCandidate-nextBaseline;
@@ -360,10 +362,15 @@ function localInputSensitivity(
       }
     }
   }
-  if(!tested)return {status:Math.abs(original)<1e-9?'equivalent':'insufficient'};
-  const range={minDelta,maxDelta,switchingParameter,switchingAlternative,switchingValue};
+  if(!attempted)return {status:'insufficient'};
+  const range={minDelta,maxDelta,attemptedScenarios:attempted,validScenarios:tested,invalidScenarios:invalid,
+    switchingParameter,switchingAlternative,switchingValue};
+  // One demonstrated sign change is meaningful. But skipping invalid probes
+  // cannot justify declaring an option robust or equivalent over the range.
+  if(switchingParameter)return {status:'sensitive',range};
+  if(!tested||invalid>0)return {status:'insufficient',range};
   if(Math.abs(original)<1e-9)return {status:'equivalent',range};
-  return {status:switchingParameter?'sensitive':'stable',range};
+  return {status:'stable',range};
 }
 
 /** Bounded deterministic stress, *not* simulation percentiles.
