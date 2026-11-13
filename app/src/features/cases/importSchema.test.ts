@@ -12,7 +12,7 @@ describe('Versioned case import and provenance integrity',()=>{
  });
  it('rejects unsupported schema revisions and tampered reference scenario IDs',()=>{
    const c=createCase();
-   const bad=structuredClone(c) as typeof c & {caseSchemaVersion?:number};
+   const bad=structuredClone(c) as unknown as {caseSchemaVersion?:number};
    bad.caseSchemaVersion=3;
    expect(()=>validateCaseImport(bad)).toThrow(/Unsupported case/);
    const invalidId=structuredClone(c);
