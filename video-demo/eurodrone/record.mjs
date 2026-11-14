@@ -55,7 +55,7 @@ try{
  await page.waitForFunction((locale)=>document.documentElement.lang===locale,
    spanish?'es':'en',{timeout:12000});
  checks.push(spanish?'Spanish UI selected':'British English UI selected');
- checks.push('Current Translate prioritised: 41 narrated actions with seven in-depth conclusions');
+ checks.push('ASRI 2.0 Translate prioritised: 41 narrated actions with seven in-depth conclusions');
 
  const loc=x=>typeof x==='string'?page.locator(x).first():x;
  async function focus(selector){
@@ -99,9 +99,13 @@ try{
  const resultsValue=()=>page.locator('.cy-universal__output-table tbody tr').first().locator('td').nth(1).locator('strong').innerText();
  const altRecoveryInput=()=>page.locator('.cy-universal__section').nth(0).locator('.cy-universal__param').first().locator('input[type="number"]').nth(1);
  const actions={
-   welcome:()=>focus('.case-mode-switch'),
+   welcome:async()=>{await focus('.case-mode-switch');
+     await page.getByTestId('model-provenance').waitFor({timeout:20000});},
    mode:async()=>{await click(page.locator('.case-mode-switch button').last());
-     await page.getByTestId('custom-case-journey').waitFor({timeout:18000});},
+     await page.getByTestId('custom-case-journey').waitFor({timeout:18000});
+     const label=await page.getByTestId('model-provenance').innerText();
+     if(!label.includes('Strategic case')&&!label.includes('Case Studio'))throw new Error('ASRI 2.0 case model not selected: '+label);
+     checks.push('Published ASRI 2.0 Case Studio provenance verified');},
    examples:()=>focus('.cy-preset-grid'),
    choose:async()=>{await click(page.locator('.cy-preset-grid button').first());
      const title=await page.locator('textarea[data-case-field="title"]').inputValue();
@@ -119,14 +123,33 @@ try{
    deadline:()=>focus(page.locator('.cy-universal__section').nth(0).locator('.cy-universal__param').nth(2)),
    risk_expand:()=>ensureSection(1),
    risk_success:()=>focus(page.locator('.cy-universal__section').nth(1).locator('.cy-universal__param').nth(0)),
-   risk_external:()=>focus(page.locator('.cy-universal__section').nth(1).locator('.cy-universal__param').nth(2)),
+   risk_external:async()=>{
+     const section=page.locator('.cy-universal__section').nth(1);
+     const joint=section.locator('.cy-universal__param').filter({hasText:'Technical failure AND disruption together'});
+     if(await joint.count())await focus(joint);
+     else await focus(section.locator('.cy-universal__param').nth(2));
+   },
    cost_expand:()=>ensureSection(2),
    cost_values:()=>focus(page.locator('.cy-universal__section').nth(2).locator('.cy-universal__param').first()),
    contract_expand:()=>ensureSection(3),
    contracts:()=>focus(page.locator('.cy-universal__section').nth(3).locator('.cy-universal__param').nth(1)),
    environment_expand:()=>ensureSection(4),
-   environment:()=>focus(page.locator('.cy-universal__section').nth(4).locator('.cy-universal__param').first()),
-   evidence_section:()=>ensureSection(5),
+   environment:async()=>{
+     await focus(page.locator('.cy-universal__section').nth(4).locator('.cy-universal__param').first());
+     const method=page.getByTestId('environment-method-review');
+     await method.waitFor({timeout:12000});
+     if(!(await method.evaluate(el=>el.open)))await click(method.locator('summary'));
+     await focus(method.locator('summary'));
+     checks.push('ASRI 2.0 environmental comparability panel shown');
+   },
+   evidence_section:async()=>{
+     await ensureSection(5);
+     const routes=page.getByTestId('route-dependency-analysis');
+     await routes.waitFor({timeout:12000});
+     if(!(await routes.evaluate(el=>el.open)))await click(routes.locator('summary'));
+     await focus(routes.locator('summary'));
+     checks.push('ASRI 2.0 supplier-route dependency analysis shown');
+   },
    results:async()=>{await focus('.cy-universal__results');recoveryBefore=await resultsValue();},
    edit_recovery:async()=>{
      await ensureSection(0);
@@ -264,7 +287,10 @@ try{
      if(!(await details.evaluate(el=>el.open)))await click(details.locator('summary'));
      await downloaded(details.locator('button').first(),'eurodrone-case.json');
      const sample=JSON.parse(await fs.readFile(path.join(out,'eurodrone-case.json'),'utf8'));
-     if(sample.kind!=='ecodesign'||!sample.hypothetical)throw new Error('Export is not the hypothetical Eurodrone case');
+     const archived=sample.caseData??sample;
+     if(archived.kind!=='ecodesign'||!archived.hypothetical)throw new Error('Export is not the hypothetical Eurodrone case');
+     if(sample.caseData&&sample.integrity?.algorithm!=='SHA-256')throw new Error('ASRI 2.0 exported JSON is missing SHA-256 integrity metadata');
+     checks.push('ASRI 2.0 versioned case JSON and checksum metadata verified');
      checks.push('Roundtrip-capable case JSON exported');
    },
    closing:()=>focus('.cy-work-files')
