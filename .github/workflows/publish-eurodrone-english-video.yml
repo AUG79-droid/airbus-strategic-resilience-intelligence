@@ -42,7 +42,8 @@ jobs:
           assert report.get('translate_in_depth_conclusions')==7,report
           print('Verified real MP4, 41 Translate cues and seven extended conclusions')
           PY
-          mv release-assets/ASRI_Eurodrone_Tutorial_English.mp4 release-assets/ASRI_Eurodrone_Translate_English_2026.mp4
+          mv release-assets/ASRI_Eurodrone_Tutorial_English.mp4 release-assets/ASRI_2_0_Eurodrone_English_Tutorial.mp4
+          test -s release-assets/subtitles.srt
       - name: Publish directly downloadable MP4 (not an Actions ZIP)
         shell: bash
         env:
@@ -50,13 +51,13 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          TAG="asri-eurodrone-translate-2026-11-12"
-          VIDEO="release-assets/ASRI_Eurodrone_Translate_English_2026.mp4"
+          TAG="asri-v2-eurodrone-english-2026-11-14"
+          VIDEO="release-assets/ASRI_2_0_Eurodrone_English_Tutorial.mp4"
           if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$VIDEO" --repo "$REPO" --clobber
+            gh release upload "$TAG" "$VIDEO" release-assets/subtitles.srt release-assets/tutorial-report.json --repo "$REPO" --clobber
           else
-            gh release create "$TAG" "$VIDEO" --repo "$REPO" --latest=false \
-              --title "ASRI Eurodrone — Complete Translate English tutorial" \
-              --notes "Recorded tutorial of the current ASRI app: complete Eurodrone example, simulated evidence checks, seven detailed strategic conclusions and four audiences. British voice and subtitles. Illustrative exercise; not approved operational data."
+            gh release create "$TAG" "$VIDEO" release-assets/subtitles.srt release-assets/tutorial-report.json --repo "$REPO" --latest=false \
+              --title "ASRI 2.0 — Eurodrone English video tutorial" \
+              --notes "New recording of the published ASRI 2.0 application: Eurodrone hypothetical case, conditional risks, environmental comparability, supply-route dependencies, simulated evidence checks and a detailed Translate chapter for four audiences. Calm British en_GB-alba-medium narration; discrete two-line subtitle band. MP4 and editable SRT provided. Illustrative exercise only; not approved Airbus operational data."
           fi
           gh release view "$TAG" --repo "$REPO" --json url,assets
