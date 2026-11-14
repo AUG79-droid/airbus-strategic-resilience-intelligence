@@ -1,3 +1,4 @@
-Eurodrone British English tutorial — re-record against CURRENT ASRI with complete fictional evidence and extended Translate.
-85 cues, 7 chapters, 41 on Translate, all 7 strategic conclusions and 4 decision audiences, 18 fictional evidence references, four simulated checks. No artificial pending evidence. British Piper en_GB-alba-medium voice, real on-screen browser actions, cursor, accurate subtitles, FHD. Render and QA screenshots.
-Revision: 2026-11-12 expanded-translate-complete-demo-v3-fixed-evidence-QA.
+ASRI 2.0 British-English Eurodrone video — full re-record against the CURRENT published ASRI 2.0 application.
+Use en_GB-alba-medium original British voice, 85 actions and 41 detailed Translate cues. Keep subtitles outside the app image, slow deliberate narration, explicit fictional data and simulated-review limitations.
+Show ASRI 2.0 model provenance, supplier-route dependencies, environmental comparison and SHA-256 JSON, and the four decision audiences. Export verified MP4 + SRT + QA report in a dedicated ASRI 2.0 release.
+Revision: 2026-11-14-v2-english-final-studio-re-record.
