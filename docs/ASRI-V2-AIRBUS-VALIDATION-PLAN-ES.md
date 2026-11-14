@@ -1,58 +1,40 @@
-# ASRI 2.0 — Plan ejecutivo para validar capacidad predictiva
+# ASRI 2.0 | Plan ejecutivo de validación predictiva
 
-**Objetivo:** comprobar si ASRI puede predecir, con un error aceptable, los resultados de decisiones reales de mantenimiento y suministro. **Estado actual:** simulador didáctico; no validado para decisiones operativas.
+**Decisión solicitada a José Coll:** autorizar el estudio de un **piloto interno** y designar un responsable de negocio (*Business Owner*). No supone aprobar ASRI para uso operativo ni autorizar todavía el acceso a datos.
 
-## 1. Decisión que se solicita a José Coll
+## 1. Piloto: una decisión real, no cuatro casos
 
-**Autorizar el estudio de viabilidad de un único piloto interno**, designar un **Business Owner** (Programme/In-Service) y pedir a los equipos indicados que confirmen qué datos existen, quién los custodia y cómo podrían utilizarse. Esto **no** autoriza todavía el acceso a los datos ni el uso operativo de ASRI.
+Seleccionar **una familia de componentes y un programa In-Service**. Comparar tres estrategias: **sustituir**, **reparar primero** y **reparar + suministro paralelo**.
 
-## 2. Piloto propuesto: una decisión In-Service
+**Predicciones a verificar:** tiempo de recuperación, probabilidad de cumplir plazo y coste total por alternativa. El riesgo de suministro se evaluará como factor explicativo. **Disponibilidad de misión** e **impacto ambiental** solo se incluirán con modelos, unidades y fuentes adicionales validadas.
 
-**Alcance:** una familia de componentes, un programa y un periodo definidos. Comparar tres estrategias: **sustituir**, **reparar primero** y **reparar con vía de suministro paralela**.
+## 2. Datos y equipos necesarios
 
-| Resultado que deberá predecir ASRI | Indicador de validación |
+| Equipo propuesto | Qué debe aportar o validar |
 |---|---|
-| Tiempo de recuperación | Error de predicción en días u horas |
-| Cumplimiento del plazo acordado | Probabilidad prevista frente a frecuencia observada |
-| Coste total por alternativa | Error en euros; sin doble contabilización |
-| Riesgo de falta de suministro | Identificación y efecto medido de dependencias, retrasos y capacidad |
+| **In-Service / Engineering / Reliability** | Averías, viabilidad y duración real de reparaciones, resultados observados y reglas técnicas |
+| **Supply Chain / Operations** | Entregas, interrupciones, inventarios, proveedores/dependencias, capacidad y colas |
+| **Programme** | Decisión concreta, plazos, restricciones, KPIs y nivel de error aceptable |
+| **Finance / Contracts** | Costes, desembolsos, penalizaciones y reglas para evitar duplicidades |
+| **Sustainability / Materials** | Si se reclaman beneficios ambientales: inventarios comparables, factores y revisión de ACV |
+| **Systems Engineering / Operator** | Si se predice misión: dependencias de sistema y disponibilidad realmente observada |
+| **Quality / IT / Cybersecurity** | Calidad y trazabilidad documental; acceso autorizado, roles, firmas, conservación y auditoría |
 
-La **disponibilidad de misión** solo se incorporará si existen datos y un modelo autorizado de plataforma/sistema. Los **beneficios ambientales** solo se comunicarán si hay una comparación de inventarios y método revisados; no son un resultado predictivo automático del piloto.
+**Primera petición:** confirmar si los datos existen, quién los custodia, su calidad y clasificación. **Ningún archivo real se carga en GitHub ni en la web pública.**
 
-## 3. Datos necesarios y responsables propuestos
+## 3. Qué debe hacer el piloto
 
-| Equipo | Datos o validación que debe aportar |
-|---|---|
-| **In-Service / Engineering / Reliability** | Históricos de averías, inspecciones, viabilidad de reparación, duración real, recurrencias y resultado de cada intervención |
-| **Supply Chain / Procurement / Operations** | Plazos reales de suministro, incidencias, dependencias comunes, inventario, cualificación y capacidad/colas de taller |
-| **Programme** | Plazo exigido, restricciones de decisión, definición de éxito y umbrales aceptables |
-| **Finance / Contracts** | Costes reales por estrategia, desembolsos, penalizaciones, indisponibilidad y reglas financieras |
-| **Sustainability / Materials / ACV** | Solo si se afirma un beneficio ambiental: unidad funcional, inventarios, límites, factores e incertidumbre |
-| **Systems Engineering / Operator** | Solo si se analiza disponibilidad de misión: función, redundancias, datos observados y definición de disponibilidad |
-| **Quality + Digital/IT + Cybersecurity** | Calidad documental, permisos, autenticación, almacenamiento, trazabilidad, firma y revisión independiente |
+1. **Cerrar el método:** armonizar las reglas de los motores; definir eventos simultáneos, dependencias, colas, costes, unidad de análisis y resultados observables.
+2. **Calibrar:** estimar probabilidades, retrasos y costes con históricos autorizados, documentando datos faltantes y supuestos.
+3. **Contrastar:** reservar un periodo histórico **no usado para calibrar**. Comparar predicciones con lo realmente ocurrido y con un método de referencia. Medir error de tiempo y coste, calibración de probabilidad de plazo, cobertura de incertidumbre y fallos en escenarios adversos.
+4. **Validar antes de utilizar:** Programme, Engineering y Quality establecen **por adelantado** los umbrales de aceptación y evalúan resultados independientes. IT/Security aprueba la arquitectura interna, autenticación y auditoría; responsables competentes firman el alcance autorizado.
 
-**Primera petición a los equipos:** confirmar existencia, propietario, clasificación, calidad y posibilidad de uso de los datos. **No solicitar ni subir todavía archivos operativos.**
+## 4. Criterio de decisión
 
-## 4. Trabajo técnico y pruebas exigidas
+**GO** solo si hay datos suficientes y autorizados, se cumplen los umbrales definidos, el modelo mejora la referencia, su incertidumbre es útil y se aprueban seguridad, método y responsabilidades.
 
-1. **Definir y cerrar el modelo:** reglas comunes de las tres estrategias, secuencia de eventos, fallos correlacionados, proveedores, capacidad, costes y límites. Documentar qué variables están observadas y cuáles son hipótesis.
-2. **Calibrar con históricos autorizados:** estimar probabilidades, tiempos y costes; registrar faltantes, periodos, versiones y sesgos. Mantener datos de evaluación **separados cronológicamente** de los de calibración.
-3. **Validar fuera de muestra:** comparar predicciones con resultados que el modelo no haya visto, y con una referencia sencilla. Medir error de tiempo/coste, calibración de probabilidades de plazo, cobertura de incertidumbre y desempeño en escenarios desfavorables.
-4. **Acordar la aceptación antes de probar:** Programme, Engineering y Quality fijan, por indicador, umbrales máximos de error, representatividad mínima y condiciones de rechazo. **No inventar una precisión objetivo ni dar por suficiente un tamaño de muestra sin comprobarlo.**
-5. **Habilitar uso corporativo seguro:** alojar una versión interna en infraestructura aprobada; incorporar identidad y roles, separación autor/revisor, registro de cambios y aprobaciones, controles de acceso, conservación y monitorización de errores o degradación del modelo.
+**NO-GO** si falla cualquiera de esos controles: ASRI continúa como **simulador condicional**, sin capacidad predictiva acreditada. La validación se limita al caso ensayado; Eurodrone, clima, SAF e incendios requieren validaciones propias.
 
-## 5. Hitos y decisión final
+**Entregables:** ficha de alcance y responsables, inventario autorizado de datos, método versionado, informe de predicciones frente a resultados reales, registro de riesgos y decisión firmada.
 
-| Hito | Entregable | Condición para avanzar |
-|---|---|---|
-| **A. Viabilidad** | Responsable designado, caso único, KPIs, inventario de datos y clasificación | Datos suficientes y acceso potencialmente autorizable |
-| **B. Diseño** | Método documentado, arquitectura aprobada y criterios de aceptación previos | Conformidad funcional y autorización de tratamiento |
-| **C. Prueba histórica** | Predicciones fuera de muestra, errores, incertidumbre, desviaciones y comparación con referencia | Cumplir todos los umbrales pactados |
-| **D. Aprobación** | Informe independiente, evidencias trazables, controles de seguridad y firmas responsables | Autorización escrita para el **uso concreto** aprobado |
-
-**Resultado posible:** si supera los cuatro hitos, ASRI podrá utilizarse predictivamente **solo en el alcance validado**; si no, seguirá siendo un simulador condicional. Cualquier extensión a Eurodrone, clima, SAF o incendios exigirá su propia validación.
-
-**Restricción:** datos reales exclusivamente en sistemas Airbus autorizados; nunca en GitHub público ni en la aplicación web abierta.
-
----
-**Base técnica:** [Auditoría final](./ASRI-V2-FINAL-AUDIT.md) y [registro de los 24 hallazgos](./ASRI-V2-24-FINDINGS-VERIFICATION.md) (11 corregidos, 12 parcialmente resueltos y 1 dependiente de Airbus). Los responsables de esta propuesta no están formalmente designados.
+*Referencia técnica: [auditoría final](./ASRI-V2-FINAL-AUDIT.md) y [24 hallazgos](./ASRI-V2-24-FINDINGS-VERIFICATION.md). Responsables propuestos, aún no designados.*
