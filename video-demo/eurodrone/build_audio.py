@@ -23,6 +23,13 @@ mod=importlib.util.module_from_spec(spec)
 assert spec and spec.loader
 spec.loader.exec_module(mod)
 mod.ROOT=destination
+# Give the calm British narrator a little more room between sentences
+# and more visual reading time at chapter transitions.
+if lang=='en':
+    mod.CUE_PAUSE=1.25
+    mod.CHAPTER_PAUSE=2.6
+    mod.LEAD=1.5
+    mod.TAIL=3.0
 mod.OUT=destination/'output'
 mod.VOICE=destination/'_voice'
 mod.OUT.mkdir(parents=True,exist_ok=True)
@@ -30,7 +37,7 @@ mod.VOICE.mkdir(parents=True,exist_ok=True)
 mod.main()
 timeline_path=mod.OUT/'timeline.json'
 data=json.loads(timeline_path.read_text(encoding='utf-8'))
-data['title']='ASRI — Eurodrone | Complete Strategic Case Tutorial'
+data['title']='ASRI 2.0 — Eurodrone | Full British English Tutorial'
 data['case']='Eurodrone hypothetical eco-design and supply resilience, not Airbus performance'
 data['voice_inherited_from_original_tutorial']=True
 timeline_path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
