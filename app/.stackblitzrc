@@ -1,4 +1,4 @@
 {
-  "startCommand": "npx vite --host 0.0.0.0 --port 5173",
+  "startCommand": "ASRI_ISOLATED_PREVIEW=1 npx vite --host 0.0.0.0 --port 5173",
   "installDependencies": true
 }
