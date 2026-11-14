@@ -1,7 +1,7 @@
 {
-  "version": 2,
+  "version": 3,
   "language": "en-GB",
-  "case": "Eurodrone fictional eco-design and supply resilience",
+  "case": "ASRI 2.0 Eurodrone fictional eco-design, repair, supplier dependencies and strategic resilience",
   "fictional": true,
   "chapters": [
     {
@@ -10,31 +10,31 @@
       "cues": [
         {
           "id": "welcome",
-          "text": "In ASRI, we will examine supply chain resilience and eco-design using the Eurodrone case."
+          "text": "Welcome to ASRI 2.0. We will examine eco-design, critical materials and operational resilience through a fictional Eurodrone case."
         },
         {
           "id": "mode",
-          "text": "We select Create Your Own Strategic Case to evaluate decisions from an operational perspective."
+          "text": "Choose Create Your Own Strategic Case. The single case follows Investigate, Challenge, Check and Translate."
         },
         {
           "id": "examples",
-          "text": "In Investigate, we choose Eurodrone and focus on decisions involving critical materials."
+          "text": "In Investigate, four guided examples are available. We choose Eurodrone and its critical material dependencies."
         },
         {
           "id": "choose",
-          "text": "Select Eco-design and Critical Materials. ASRI loads the case definition and three comparable alternatives."
+          "text": "Select Eco-design and Critical Materials. ASRI loads one baseline and two alternatives for comparison."
         },
         {
           "id": "case_title",
-          "text": "The case definition identifies a support subsystem and the scope of the decision under review."
+          "text": "This is a synthetic support-subsystem exercise. Nothing here describes actual Eurodrone programme performance."
         },
         {
           "id": "case_decision",
-          "text": "The question is whether repair and supplier diversification can reduce in-service vulnerabilities."
+          "text": "We ask whether qualified repair and alternative sourcing could reduce a vulnerability during in-service support."
         },
         {
           "id": "case_boundary",
-          "text": "Before comparing, we set the same component, functional requirement and assessment period."
+          "text": "First, define a shared functional unit, system boundary and assessment period. Without them, comparisons can mislead."
         },
         {
           "id": "next_challenge",
@@ -52,7 +52,7 @@
         },
         {
           "id": "model_intro",
-          "text": "All six sections follow the same structure. Only the applicable parameters differ."
+          "text": "ASRI 2.0 has a common set of twenty-three parameters. Only those applicable to this case are activated."
         },
         {
           "id": "operational",
@@ -72,11 +72,11 @@
         },
         {
           "id": "risk_expand",
-          "text": "Open Risks and Probabilities to enter success likelihood and potential disruptions."
+          "text": "Open Risks and Probabilities. The model separates technical failure from external supply disruption."
         },
         {
           "id": "risk_success",
-          "text": "We distinguish technical success probability from the delay caused by failure of the chosen route."
+          "text": "A likelihood of technical success is not a qualification certificate. Failure also carries a defined delay."
         }
       ]
     },
@@ -86,19 +86,19 @@
       "cues": [
         {
           "id": "risk_external",
-          "text": "We also assess the possibility of an external disruption and the additional days it could cause."
+          "text": "Joint-event inputs can represent failures and disruptions occurring together. We must respect feasible probability bounds."
         },
         {
           "id": "cost_expand",
-          "text": "Economic Obligations covers direct costs, logistics and additional commitments under disruption."
+          "text": "Economic Obligations shows direct outlay, logistics and possible costs of interruption or disruption."
         },
         {
           "id": "cost_values",
-          "text": "Expected cost weights those expenses by probability to compare options within the same boundary."
+          "text": "Expected cost depends on stated probabilities and timing. Interruption cost must not be counted twice."
         },
         {
           "id": "contract_expand",
-          "text": "Contractual Conditions lets us assess reservations and penalties whenever those obligations apply."
+          "text": "Contractual Conditions handles reservations and penalties. Additional financial flows can be reviewed separately."
         },
         {
           "id": "contracts",
@@ -106,15 +106,15 @@
         },
         {
           "id": "environment_expand",
-          "text": "Environmental Factors covers materials, waste and greenhouse gases within a defined boundary."
+          "text": "Environmental Factors covers material demand, waste and bounded emissions for the same functional unit."
         },
         {
           "id": "environment",
-          "text": "These indicators reveal trade-offs between circularity, availability and cost."
+          "text": "ASRI 2.0 checks inventory scope and uncertainty. Neither a lower value nor a model output is a verified life-cycle benefit."
         },
         {
           "id": "evidence_section",
-          "text": "The sixth section covers evidence and uncertainty: every input needs an appropriate source and review."
+          "text": "Inputs can be linked to evidence records. Their review state is declared within this fictional exercise, not authenticated."
         }
       ]
     },
@@ -140,11 +140,11 @@
         },
         {
           "id": "sensitivity",
-          "text": "The sensitivity margin shows whether conclusions depend strongly on a particular assumption."
+          "text": "Sensitivity recalculates individual changes and identifies when a conclusion may switch. It is not a confidence interval."
         },
         {
           "id": "compare",
-          "text": "One option may improve one indicator and worsen another. ASRI makes those trade-offs visible."
+          "text": "Repair may reduce material demand but increase cost or miss a deadline. The model keeps adverse outcomes visible."
         },
         {
           "id": "next_check",
@@ -158,19 +158,19 @@
       "cues": [
         {
           "id": "check_intro",
-          "text": "Check shows how the Eurodrone exercise is documented, from assumptions through review and traceability."
+          "text": "Check distinguishes calculated results, supporting records and the approvals still required for real decisions."
         },
         {
           "id": "gates",
-          "text": "All four methodological gates are checked within this complete simulated exercise."
+          "text": "Four review gates are completed for the training exercise. They are NOT Airbus technical or corporate approvals."
         },
         {
           "id": "not_approved",
-          "text": "These are exercise-only reviews. ASRI makes that distinction clear without leaving our demonstration unfinished."
+          "text": "These are simulated checks. The distinction between exercise completion and real authorisation must remain visible."
         },
         {
           "id": "evidence_intro",
-          "text": "The register contains eighteen fictional records, with accountable teams, reviewers, dates and limitations."
+          "text": "The case includes fictional evidence records with owners, reviewers, dates and limitations."
         },
         {
           "id": "add_evidence",
@@ -178,11 +178,11 @@
         },
         {
           "id": "evidence_pending",
-          "text": "All seventeen applicable inputs in every option are linked to exercise records marked as reviewed."
+          "text": "The example links applicable inputs to reviewed exercise records. Reviewed here does not mean independently verified."
         },
         {
           "id": "readiness",
-          "text": "Both alternative comparisons show the exercise as complete, with no missing evidence or methodology gates."
+          "text": "Both alternatives are complete for training purposes. Operational results would need authorised data and independent review."
         },
         {
           "id": "next_translate",
@@ -196,23 +196,23 @@
       "cues": [
         {
           "id": "translate_intro",
-          "text": "Translate is the core of ASRI. It explains the operational value behind sustainability choices."
+          "text": "Translate is the heart of ASRI 2.0: the same calculated evidence becomes a decision story for each audience."
         },
         {
           "id": "translate_priority",
-          "text": "It asks what vulnerability changes, not merely which environmental indicator improves."
+          "text": "A customer needs continuity. Engineers need technical feasibility. Programme needs milestones. Leadership needs risk choices."
         },
         {
           "id": "translate_logic",
-          "text": "We can connect repairability to recovery options, supplier dependence and continuity of support."
+          "text": "Changing the audience never changes the underlying model or the numbers. It changes what matters to the decision."
         },
         {
           "id": "translate_causal",
-          "text": "The underlying figures stay the same while the decision-focused interpretation changes."
+          "text": "Environmental mechanisms and resilience outcomes must be connected by a defensible causal pathway, not a slogan."
         },
         {
           "id": "translate_conditions",
-          "text": "The analysis distinguishes a completed exercise from formally approved operational evidence."
+          "text": "Every positive claim retains its assumptions, evidence status and limitations, even in an executive summary."
         },
         {
           "id": "customer",
@@ -220,55 +220,55 @@
         },
         {
           "id": "customer_focus",
-          "text": "The headline now explains why having another recovery route matters when supply is disrupted."
+          "text": "For the Defence Customer, the question is whether critical service support could continue under supply disruption."
         },
         {
           "id": "customer_question",
-          "text": "The decision is whether the option meets operational requirements and restores the component sooner."
+          "text": "A faster component recovery is relevant, but it does not by itself establish aircraft or mission availability."
         },
         {
           "id": "customer_value",
-          "text": "Here, estimated component recovery falls from one hundred forty one point three to ninety two days."
+          "text": "We therefore express customer value as a conditional continuity scenario, not a certified mission improvement."
         },
         {
           "id": "customer_scope",
-          "text": "The benefit concerns component recovery in this scenario, not a guaranteed increase in fleet availability."
+          "text": "This is a component-level study with fictional data. Any claim about fleet readiness needs separate observations."
         },
         {
           "id": "deep_intro",
-          "text": "Below the headline, seven deeper conclusions explain the strategic significance of the results."
+          "text": "Seven deeper conclusions explain the bottleneck, risks, economics, environment, alternatives, evidence and next action."
         },
         {
           "id": "bottleneck",
-          "text": "First, the binding constraint. Repair work takes sixty five days, but supply still takes seventy eight."
+          "text": "Start with the bottleneck. Which step sets the recovery time: repair, sourcing, capacity or an external disruption?"
         },
         {
           "id": "supply_choice",
-          "text": "Shortening repair alone cannot remove that seventy eight day supply constraint. We must address the bottleneck."
+          "text": "Two suppliers can still depend on the same upstream source. ASRI 2.0 can document shared route dependencies."
         },
         {
           "id": "risk_assumptions",
-          "text": "Next, ASRI shows assumed disruption likelihood, technical success and the modelled chance of meeting the deadline."
+          "text": "Joint risks and capacity constraints can change deadline attainment. These are model assumptions, not calibrated forecasts."
         },
         {
           "id": "tradeoff_economics",
-          "text": "The cost analysis reveals whether faster recovery comes with savings, or requires an additional premium."
+          "text": "A resilience improvement may carry extra spending, downtime cost or commitments. The financial boundary is explicit."
         },
         {
           "id": "environment_tradeoff",
-          "text": "Environmental trade-offs are also explicit: material, waste and bounded emissions can move in different directions."
+          "text": "Materials, waste and emissions must be measured on comparable bases, with uncertainty and adverse changes visible."
         },
         {
           "id": "compare_options",
-          "text": "Crucially, ASRI compares the selected strategy with the other proposed option, not just the baseline."
+          "text": "Compare qualified repair with the combined repair-and-sourcing strategy. There may be no universally best option."
         },
         {
           "id": "evidence_confidence",
-          "text": "It then evaluates review coverage and sensitivity, without disguising assumptions as observed outcomes."
+          "text": "The evidence section identifies user-declared records and checks. No tick box is an Airbus signature."
         },
         {
           "id": "decision_action",
-          "text": "Finally, each audience gets a concrete next decision, with appropriate conditions for validation."
+          "text": "The conclusion should say what to test next, who must validate it and which result would change the choice."
         },
         {
           "id": "engineering",
@@ -276,15 +276,15 @@
         },
         {
           "id": "engineering_focus",
-          "text": "Engineering focuses on repair viability, safety, traceability and functional equivalence."
+          "text": "Engineering focuses on eligibility, failure modes, repair conditions and whether a route can really be qualified."
         },
         {
           "id": "engineering_question",
-          "text": "Which tests and authorisations would allow this recovery route to be used safely?"
+          "text": "The engineering question is not just whether repair is quicker, but whether it meets the technical constraints."
         },
         {
           "id": "engineering_value",
-          "text": "The action section turns that question into a practical set of engineering checks."
+          "text": "Technical qualification and capacity need direct evidence. Calculated resilience alone cannot establish either."
         },
         {
           "id": "programme",
@@ -292,15 +292,15 @@
         },
         {
           "id": "programme_focus",
-          "text": "The recovery result connects directly to milestone risk and the time available to respond."
+          "text": "Programme Management examines deadline risk, expected outlay and contractual consequences under each option."
         },
         {
           "id": "programme_question",
-          "text": "The model compares how much faster the option recovers and how likely it is to meet its deadline."
+          "text": "The same result helps assess milestone exposure, recovery time and options if conditions deteriorate."
         },
         {
           "id": "programme_value",
-          "text": "The economic analysis also shows whether that resilience comes with savings or a premium."
+          "text": "The comparison also reveals where extra resilience carries a price premium or a contractual obligation."
         },
         {
           "id": "leadership",
@@ -308,55 +308,55 @@
         },
         {
           "id": "leadership_focus",
-          "text": "The same evidence now supports decisions on repair capability and supply-chain dependence."
+          "text": "Executive Leadership views the broader question: which strategic dependency is worth addressing first?"
         },
         {
           "id": "leadership_question",
-          "text": "Leadership can see which constraints are binding, and where investment may change the outcome."
+          "text": "Management can see common-cause risks, single points of failure and the choices that need cross-team validation."
         },
         {
           "id": "leadership_value",
-          "text": "Instead of generic claims, ASRI suggests a bounded next decision and what would justify it."
+          "text": "The proposal is a bounded next decision, with clear owners and evidence needs, rather than a claimed saving."
         },
         {
           "id": "leadership_risks",
-          "text": "Leadership can revisit the risk assumptions and see which dependencies remain exposed."
+          "text": "A second route is not necessarily independent. Show what remains exposed before claiming industrial resilience."
         },
         {
           "id": "leadership_evidence",
-          "text": "The evidence section keeps the distinction between simulated reviews and actual programme authorisation."
+          "text": "Leadership also sees the difference between training evidence, independent review and genuine Airbus approvals."
         },
         {
           "id": "translation_summary",
-          "text": "One consistent analytical model now supports four audiences, with no change to the underlying facts."
+          "text": "Four audiences. One analytical basis. Different decisions, with no changes to the underlying figures."
         },
         {
           "id": "choose_option_b",
-          "text": "Switch from qualified repair to repair plus alternative sourcing. The interpretation changes immediately."
+          "text": "Now select the combined repair-and-alternative-supply option. The narrative responds to this new comparison."
         },
         {
           "id": "option_b_compare",
-          "text": "This combined option introduces a second sourcing route alongside repair, and changes the comparative result."
+          "text": "This option adds another possible recovery route. Its independence, capacity and effectiveness remain assumptions."
         },
         {
           "id": "option_b_cost",
-          "text": "Its additional resilience must still be weighed against cost. ASRI makes that compromise visible."
+          "text": "We compare the potential continuity gain against the cost, delays and environmental consequences of that route."
         },
         {
           "id": "limitations",
-          "text": "ASRI shows the scenario boundary clearly. A complete tutorial does not imply programme approval."
+          "text": "This complete exercise is still hypothetical. None of the numerical benefits is a verified Airbus result."
         },
         {
           "id": "translate_evolution",
-          "text": "These seven conclusions will also be generated for any future case built with the same tool."
+          "text": "The same seven conclusions can be produced for other cases, provided their data and assumptions are comparable."
         },
         {
           "id": "translation_conclusion",
-          "text": "The real value is translating sustainability into resilience, risk, trade-offs and actionable choices."
+          "text": "ASRI 2.0 translates sustainability choices into continuity, risk, trade-offs and practical next decisions."
         },
         {
           "id": "export_intro",
-          "text": "These expanded conclusions can also be exported with the full comparison and traceable exercise records."
+          "text": "Finally, export the comparison with its assumptions and evidence references for independent review."
         }
       ]
     },
@@ -366,27 +366,26 @@
       "cues": [
         {
           "id": "export_pdf",
-          "text": "The PDF report brings together the case, results, evidence and audience-specific interpretation."
+          "text": "The PDF report includes numerical comparisons, audience-specific meaning, sources and model limitations."
         },
         {
           "id": "export_markdown",
-          "text": "A Markdown version is also available for reviewing and editing the content."
+          "text": "The editable Markdown report supports technical review without changing the calculation."
         },
         {
           "id": "report_caution",
-          "text": "Before any external use, replace simulated records with verified sources and obtain the required approvals."
+          "text": "Before any real-world use, replace synthetic assumptions with authorised sources and complete the required approvals."
         },
         {
           "id": "save_draft",
-          "text": "We can download an editable case file and continue the analysis whenever needed."
+          "text": "A versioned JSON case archive preserves the inputs and a SHA-256 integrity check. It is not a digital signature."
         },
         {
           "id": "closing",
-          "text": "ASRI gives customers and teams a richer strategic conversation, grounded in alternatives, evidence and resilience."
+          "text": "ASRI 2.0 helps structure a more defensible conversation about sustainability and operational resilience."
         }
       ]
     }
   ],
-  "storyline": "English tutorial re-recorded against live current ASRI, complete Check and seven strategic insights, no missing exercise evidence.",
-  "reviewed_spanish_word": "ASRI Eurodrone Tutorial Castellano Locutor Sereno (1).docx"
+  "storyline": "ASRI 2.0 tutorial recorded live on the published application: Eurodrone, decision trade-offs, conditional risk, simulated reviews, seven conclusions and four audiences. No real Airbus figures or approvals."
 }
