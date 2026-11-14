@@ -228,7 +228,7 @@ try{
    translate_priority:()=>focus('.cy-strategic-meaning'),
    translate_logic:()=>focus('.cy-strategic-finding'),
    translate_causal:()=>focus('.cy-strategic-sustainability'),
-   translate_conditions:()=>focus('.cy-strategic-assumption'),
+   translate_conditions:()=>focus('.cy-deep-dive__item--risk'),
    customer_focus:()=>focus('.cy-strategic-message h3'),
    customer_question:()=>focus('.cy-strategic-decision'),
    customer_value:()=>focus('.cy-strategic-finding'),
@@ -243,7 +243,7 @@ try{
    leadership_value:()=>focus('.cy-deep-dive__item--action'),
    translation_summary:()=>focus('.cy-choices'),
    translation_conclusion:()=>focus('.cy-strategic-meaning'),
-   customer_scope:()=>focus('.cy-strategic-assumption'),
+   customer_scope:()=>focus('.cy-deep-dive__item--evidence'),
    deep_intro:()=>focus('.cy-deep-dive__intro'),
    bottleneck:async()=>{await focus('.cy-deep-dive__item--bottleneck');await page.screenshot({path:path.join(out,'translate-bottleneck.png')});},
    supply_choice:()=>focus('.cy-deep-dive__item--bottleneck'),
@@ -273,7 +273,7 @@ try{
      checks.push('Translate recalculated to repair plus alternative supplier');
 
    },
-   limitations:()=>focus('.cy-strategic-assumption'),
+   limitations:()=>focus('.cy-deep-dive__item--evidence'),
    export_intro:()=>focus(page.locator('.cy-panel').filter({hasText:spanish?'Exportar un análisis reproducible':'Export a reproducible analysis'}).last()),
    export_pdf:async()=>{
       await downloaded(page.getByRole('button',{name:spanish?'Informe PDF':'PDF report'}),'eurodrone-report.pdf');
@@ -281,7 +281,7 @@ try{
    export_markdown:async()=>{
       await downloaded(page.getByRole('button',{name:spanish?'Informe Markdown':'Markdown report'}),'eurodrone-report.md');
    },
-   report_caution:()=>focus('.cy-strategic-assumption'),
+   report_caution:()=>focus('.cy-deep-dive__item--evidence'),
    save_draft:async()=>{
      const details=page.locator('.cy-work-files');
      if(!(await details.evaluate(el=>el.open)))await click(details.locator('summary'));
