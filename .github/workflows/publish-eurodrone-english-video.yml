@@ -44,6 +44,7 @@ jobs:
           PY
           mv release-assets/ASRI_Eurodrone_Tutorial_English.mp4 release-assets/ASRI_2_0_Eurodrone_English_Tutorial.mp4
           test -s release-assets/subtitles.srt
+          test -s release-assets/voice-credits.txt
       - name: Publish directly downloadable MP4 (not an Actions ZIP)
         shell: bash
         env:
@@ -54,9 +55,9 @@ jobs:
           TAG="asri-v2-eurodrone-english-2026-11-14"
           VIDEO="release-assets/ASRI_2_0_Eurodrone_English_Tutorial.mp4"
           if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$VIDEO" release-assets/subtitles.srt release-assets/tutorial-report.json --repo "$REPO" --clobber
+            gh release upload "$TAG" "$VIDEO" release-assets/subtitles.srt release-assets/voice-credits.txt release-assets/tutorial-report.json --repo "$REPO" --clobber
           else
-            gh release create "$TAG" "$VIDEO" release-assets/subtitles.srt release-assets/tutorial-report.json --repo "$REPO" --latest=false \
+            gh release create "$TAG" "$VIDEO" release-assets/subtitles.srt release-assets/voice-credits.txt release-assets/tutorial-report.json --repo "$REPO" --latest=false \
               --title "ASRI 2.0 — Eurodrone English video tutorial" \
               --notes "New recording of the published ASRI 2.0 application: Eurodrone hypothetical case, conditional risks, environmental comparability, supply-route dependencies, simulated evidence checks and a detailed Translate chapter for four audiences. Calm British en_GB-alba-medium narration; discrete two-line subtitle band. MP4 and editable SRT provided. Illustrative exercise only; not approved Airbus operational data."
           fi
