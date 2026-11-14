@@ -46,6 +46,10 @@ for phrase in ('Eurodrone synthetic case loaded','Fictional input changed live c
                'Both comparisons show completed simulated exercise with no missing evidence',
                'Translate shows seven in-depth conclusions and complete exercise status, no pending checklist',
                'Translate recalculated to repair plus alternative supplier',
+               'Published ASRI 2.0 Case Studio provenance verified',
+               'ASRI 2.0 environmental comparability panel shown',
+               'ASRI 2.0 supplier-route dependency analysis shown',
+               'ASRI 2.0 versioned case JSON and checksum metadata verified',
                'eurodrone-report.pdf downloaded','eurodrone-case.json downloaded'):
     if phrase not in recording['checks']:
         raise RuntimeError('Missing required interactive check: '+phrase)
@@ -62,7 +66,7 @@ max_drift=max(abs(c['drift_ms']) for c in recording['cue_timings'])
 if max_drift>1900:
     raise RuntimeError('Narration/browser sync drift: '+str(max_drift))
 filter='fps=25,pad=1920:1080:0:0:color=0x101821,tpad=stop_mode=clone:stop_duration=2,ass=captions.ass'
-label='Eurodrone | Expanded Strategic Translate | British English' if lang=='en' else 'Eurodrone | Caso Estratégico Completo | Castellano'
+label='ASRI 2.0 | Eurodrone | Full British English Tutorial' if lang=='en' else 'Eurodrone | Caso Estratégico Completo | Castellano'
 subprocess.run([
     'ffmpeg','-hide_banner','-nostdin','-y',
     '-ss',f'{offset:.3f}','-i',str(webm.resolve()),
