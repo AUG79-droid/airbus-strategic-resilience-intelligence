@@ -1,4 +1,9 @@
-import { comparisons, type Audience, type OptionComparison, type StrategicCase } from './model';
+import { comparisons, evidenceObserved, type Audience, type OptionComparison, type StrategicCase } from './model';
+import { analyzeRoutes } from './supplyGraph';
+import { assessMissionBridge } from './missionBridge';
+import { evaluateDiscountedFinance } from './discountedCashFlows';
+import { boundedEnvironmentalDifference } from './environmentBasis';
+import { evaluateWorkshopCapacity } from './workshopCapacity';
 
 /**
  * Dynamic strategic analysis for Translate. Uses the same calculated scenario
@@ -156,6 +161,22 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   if(!lead&&!base&&!recovery)bottleneck+=es
     ?' Todavía faltan tiempos comparables para saber qué actividad provoca la espera.'
     :' There are not yet comparable timings to identify what causes the delay.';
+  const queue=evaluateWorkshopCapacity(data.workshopCapacity?.find(x=>x.optionId===c.option.id));
+  const baselineQueue=evaluateWorkshopCapacity(data.workshopCapacity?.find(x=>x.optionId===data.options[0].id));
+  if(queue.status==='calculated'){
+    bottleneck+=es
+      ?` En el escenario adicional de taller FIFO, la espera por capacidad sería ${fmt(queue.waitingTime!,locale)} ${unit}, con finalización condicional en ${fmt(queue.completionTime!,locale)} ${unit}.`
+      :` Under the optional FIFO workshop scenario, capacity waiting time would be ${fmt(queue.waitingTime!,locale)} ${unit}, with conditional completion at ${fmt(queue.completionTime!,locale)} ${unit}.`;
+    if(baselineQueue.status==='calculated'){
+      const difference=queue.completionTime!-baselineQueue.completionTime!;
+      bottleneck+=es
+        ?` Frente a la misma hipótesis de taller en la referencia, cambia ${fmt(difference,locale)} ${unit}.`
+        :` Versus the baseline workshop assumption, the difference is ${fmt(difference,locale)} ${unit}.`;
+    }
+    bottleneck+=es
+      ?' Esta espera NO está integrada en el tiempo medio del modelo principal para evitar duplicaciones. No es una estimación validada de capacidad industrial.'
+      :' This queue time is NOT added to the main recovery KPI to avoid double counting. It is not validated industrial capacity.';
+  }
   insights.push({id:'bottleneck',title:es?'1. Qué está retrasando la recuperación':'1. What is slowing recovery',body:bottleneck});
 
   // Conditional exposure: parameter inputs, not empirical interruption probabilities.
@@ -182,9 +203,38 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   if(!riskPieces.length)riskPieces.push(es
     ?'Todavía faltan probabilidades y retrasos comparables para saber cómo cambian los riesgos.'
     :'Comparable likelihoods and delays are still needed to assess changes in risk.');
-  if((shock||success)&&(failure||shockDelay))riskPieces.push(es
-    ?'El cálculo trata el fallo técnico y la interrupción externa como dos riesgos separados.'
-    :'The calculation treats technical failure and external disruption as separate risks.');
+  if((shock||success)&&(failure||shockDelay)){
+    const joint=data.parameters.jointFailureShock?.applicability==='applies';
+    const jointValues=joint?input(data,c,'jointFailureShock'):undefined;
+    riskPieces.push(joint
+      ?(jointValues
+        ?(es
+          ?`El cálculo emplea la probabilidad conjunta declarada de fallo técnico e interrupción: ${fmt(jointValues.b,locale)} % en la referencia y ${fmt(jointValues.v,locale)} % en la alternativa. La independencia, capacidad y causalidad siguen pendientes de verificación externa.`
+          :`The model uses the declared joint technical-failure/disruption probability: ${fmt(jointValues.b,locale)}% for the baseline and ${fmt(jointValues.v,locale)}% for the option. Independence, capacity and causality remain unverified.`)
+        :(es?'Se ha activado el riesgo conjunto, pero falta un valor aplicable y no podemos valorar su efecto.':
+          'Joint-event modelling is enabled, but an input is missing; its effect cannot be assessed.'))
+      :(es?'El cumplimiento del plazo supone independencia entre fallo técnico e interrupción externa. Es una hipótesis del modelo, no una independencia demostrada.':
+        'Deadline attainment assumes technical failure and external disruption are independent. This is a model assumption, not demonstrated independence.'));
+  }
+  const graph=analyzeRoutes(data.dependencyRoutes??[],c.option.id);
+  if(graph.qualifiedRoutes>0){
+    if(graph.singlePointsOfFailure.length)riskPieces.push(es
+      ?`Las rutas cualificadas comparten un posible punto único de fallo: ${graph.singlePointsOfFailure.join(', ')}. Dos proveedores no bastan para demostrar independencia real.`
+      :`Qualified paths share a possible single point of failure: ${graph.singlePointsOfFailure.join(', ')}. Separate suppliers do not prove real independence.`);
+    else riskPieces.push(es
+      ?`Se han declarado ${graph.qualifiedRoutes} rutas cualificadas, con ${graph.independentPairs} pares sin dependencias comunes documentadas. La independencia y capacidad efectiva siguen SIN demostrar.`
+      :`${graph.qualifiedRoutes} qualified paths are declared, with ${graph.independentPairs} pairs lacking documented shared nodes. Real independence and capacity remain UNPROVEN.`);
+  }
+  const observedIds=data.evidence.filter(x=>evidenceObserved(data,{value:0,evidenceId:x.id})).map(x=>x.id);
+  const bridge=assessMissionBridge(data.missionBridges?.find(x=>x.optionId===c.option.id),observedIds);
+  if(data.missionBridges?.some(x=>x.optionId===c.option.id)){
+    riskPieces.push(bridge.status==='userDeclaredObservation'
+      ?(es
+        ?`El usuario ha declarado una observación separada del ${fmt(bridge.availabilityPercent!,locale)} % de disponibilidad de misión con una fuente marcada como observada. NO demuestra relación causal con la reparación ni supone aprobación de Airbus.`
+        :`A separate mission-availability observation of ${fmt(bridge.availabilityPercent!,locale)}% is user-declared with an observed source. This does NOT establish causality from component repair or Airbus approval.`)
+      :(es?'La relación entre recuperación de componente y disponibilidad de misión no está demostrada. No se infiere disponibilidad de flota.'
+        :'The link from component restoration to mission availability is not demonstrated. Fleet availability is not inferred.'));
+  }
   insights.push({id:'risk',title:es?'2. Cómo cambian los riesgos':'2. How the risks change',body:riskPieces.join(' ')});
 
   // Explicit economic trade-off, including a ratio only when higher cost buys faster recovery.
@@ -193,7 +243,7 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   if(cost){
     economic+=es
       ?` El coste esperado pasa de ${fmt(cost.baseline!,locale,0)} € a ${fmt(cost.candidate!,locale,0)} €: ${outcomePhrase(cost.delta!,locale,'€')}.`
-      :` Expected cost moves from €${fmt(cost.baseline!,locale,0)} to €${fmt(cost.candidate!,locale,0)}: it ${outcomePhrase(cost.delta!,locale,'€')}.`;
+      :` Expected cost moves from €${fmt(cost.baseline!,locale,0)} to €${fmt(cost.candidate!,locale,0)}: ${cost.delta===0?'it is unchanged':`it ${outcomePhrase(cost.delta!,locale,'€')}`}.`;
   }
   if(recovery&&cost){
     if(recovery.delta!<0&&cost.delta!<0)economic+=es
@@ -213,6 +263,19 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   }
   if(!cost)economic+=es?' Todavía faltan costes comparables para evaluar esta alternativa.':
     ' Comparable costs are still needed to assess this option.';
+  if(data.discountedFinance?.flows.length){
+    const cash=evaluateDiscountedFinance(data.discountedFinance,c.option.id);
+    const cashBaseline=evaluateDiscountedFinance(data.discountedFinance,data.options[0].id);
+    if(cash.status==='calculated'&&cashBaseline.status==='calculated'){
+      const diff=cash.incrementalPresentValueEuro!-cashBaseline.incrementalPresentValueEuro!;
+      economic+=es
+        ?` Como análisis financiero SEPARADO, los flujos de caja adicionales descontados declarados tienen valor actual de ${fmt(cash.incrementalPresentValueEuro!,locale,0)} € frente a ${fmt(cashBaseline.incrementalPresentValueEuro!,locale,0)} € en la referencia (diferencia ${fmt(diff,locale,0)} €). No deben sumarse sin comprobar los límites contables y posibles duplicaciones.`
+        :` In a SEPARATE financial worksheet, declared additional discounted cash flows have present value €${fmt(cash.incrementalPresentValueEuro!,locale,0)} versus €${fmt(cashBaseline.incrementalPresentValueEuro!,locale,0)} for the reference (difference €${fmt(diff,locale,0)}). Do not combine these figures without reviewing accounting boundaries and possible duplicates.`;
+    }else{
+      economic+=es?' Los flujos futuros no pueden descontarse porque falta una tasa declarada.':
+        ' Future cash flows cannot be discounted because no annual rate is declared.';
+    }
+  }
   insights.push({id:'economics',title:es?'3. Coste de la alternativa':'3. What the option costs',body:economic});
 
   // Report all relevant environmental measures, including increases.
@@ -223,19 +286,44 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
     ['lifeExtension','vida útil adicional modelizada','modelled additional service life']
   ];
   const envPieces:string[]=[];
+  if(c.environmentCheck.status!=='declaredComparable'){
+    envPieces.push(es
+      ?'Los inventarios NO son aún comparables: sus unidades funcionales, límites, periodos o métodos están incompletos o son incompatibles. No puede afirmarse una reducción ambiental con estos datos.'
+      :'Inventories are NOT yet comparable: their functional units, boundaries, periods or methods are missing or incompatible. No environmental reduction can be claimed from these data.');
+  }
   for(const [id,esLabel,enLabel] of envIds){
+    if(c.environmentCheck.status!=='declaredComparable')break;
     const v=metric(c,id);if(!v)continue;
     const u=id==='ghgKg'?'kg CO₂e':id==='lifeExtension'?(es?'horas':'hours'):'kg';
     envPieces.push(es
       ?`La variable «${esLabel}» pasa de ${fmt(v.baseline!,locale)} a ${fmt(v.candidate!,locale)} ${u}; ${outcomePhrase(v.delta!,locale,u)}.`
       :`The “${enLabel}” measure moves from ${fmt(v.baseline!,locale)} to ${fmt(v.candidate!,locale)} ${u}; it ${outcomePhrase(v.delta!,locale,u)}.`);
+    // An observed point-estimate reduction is not proof that the sign holds
+    // within declared inventory uncertainty. No confidence level is implied.
+    const bound=boundedEnvironmentalDifference(v.baseline!,v.candidate!,
+      data.environmentalBasis?.find(x=>x.optionId===data.options[0].id),
+      data.environmentalBasis?.find(x=>x.optionId===c.option.id));
+    if(bound.status==='unassessed'){
+      envPieces.push(es
+        ?`La incertidumbre de «${esLabel}» no está cuantificada en ambos escenarios: su reducción no puede afirmarse frente a los márgenes de error.`
+        :`Uncertainty for “${enLabel}” is not quantified in both scenarios: its reduction cannot be asserted against error margins.`);
+    }else{
+      const verdict=bound.status==='reductionUnderBounds'
+        ?(es?'reducción mantenida en los márgenes declarados':'reduction remains under declared margins')
+        :bound.status==='increaseUnderBounds'
+          ?(es?'aumento mantenido en los márgenes declarados':'increase remains under declared margins')
+          :(es?'los rangos se solapan; el signo del cambio no queda demostrado':'ranges overlap; the sign of change is not established');
+      envPieces.push(es
+        ?`Rango determinista de diferencia (alternativa menos referencia): ${fmt(bound.minDelta!,locale)} a ${fmt(bound.maxDelta!,locale)} ${u}; ${verdict}. NO es intervalo de confianza ni beneficio validado.`
+        :`Deterministic difference range (option minus baseline): ${fmt(bound.minDelta!,locale)} to ${fmt(bound.maxDelta!,locale)} ${u}; ${verdict}. NOT a confidence interval or validated environmental benefit.`);
+    }
   }
   if(!envPieces.length)envPieces.push(es
     ?'Aún no hay datos ambientales comparables entre alternativas.'
     :'Environmental impacts cannot yet be compared between options.');
-  else envPieces.push(es
-    ?'Estos datos corresponden a los impactos ambientales incluidos en el caso, no a todos los impactos posibles.'
-    :'These figures cover the environmental impacts included in this case, not every possible impact.');
+  else if(c.environmentCheck.status==='declaredComparable')envPieces.push(es
+    ?'Estos datos corresponden a los impactos ambientales incluidos en el caso, no a todos los impactos posibles. Las magnitudes son comparables según los metadatos declarados, pero todavía requieren verificación de factores, trazabilidad, incertidumbre y metodología. No constituyen un ACV validado.'
+    :'Figures are comparable under user-declared metadata, but factor sources, traceability, uncertainty and methodology still require independent verification. This is not a validated LCA.');
   insights.push({id:'environment',title:es?'4. Impactos ambientales':'4. Environmental impact',body:envPieces.join(' ')});
 
   // Compare the selected option directly with the other candidate, not only baseline.
@@ -296,8 +384,32 @@ export function strategicInsights(data:StrategicCase,c:OptionComparison,audience
   const sensitive=active.filter(row=>row.robustness==='sensitive').length;
   const equivalent=active.filter(row=>row.robustness==='equivalent').length;
   let readiness=es
-    ?`${reviewed} de ${active.length} indicadores tienen fuentes marcadas como revisadas. Hemos variado cada parámetro aplicable un ±${fmt(data.robustnessPercent,locale)} %, uno por uno, recalculando los resultados. En ${stable} indicadores se mantiene la dirección de la comparación, en ${sensitive} cambia y en ${equivalent} las alternativas son equivalentes con los datos actuales. Esta prueba no evalúa cambios simultáneos.`
-    :`${reviewed} of ${active.length} indicators have records marked as reviewed. We varied each applicable input by ±${fmt(data.robustnessPercent,locale)} %, one at a time, and recalculated the results. In ${stable} indicators the comparison direction held, in ${sensitive} it changed, and in ${equivalent} the options were equivalent at current inputs. This test does not cover simultaneous changes.`;
+    ?`${reviewed} de ${active.length} indicadores tienen fuentes marcadas como revisadas. Hemos variado cada parámetro aplicable un ±${fmt(data.robustnessPercent,locale)} %, uno por uno, recalculando los resultados. En ${stable} indicadores se mantiene la dirección de la comparación, en ${sensitive} cambia y en ${equivalent} las alternativas son equivalentes con los datos actuales. La prueba individual no evalúa cambios simultáneos.`
+    :`${reviewed} of ${active.length} indicators have records marked as reviewed. We varied each applicable input by ±${fmt(data.robustnessPercent,locale)} %, one at a time, and recalculated the results. In ${stable} indicators the comparison direction held, in ${sensitive} it changed, and in ${equivalent} the options were equivalent at current inputs. The one-at-a-time test does not cover simultaneous changes.`;
+  const incompleteLocal=active.filter(row=>(row.sensitivityRange?.invalidScenarios??0)>0);
+  if(incompleteLocal.length)readiness+=es
+    ?` ATENCIÓN: ${incompleteLocal.length} indicadores tienen variaciones individuales matemáticamente inválidas. No puede afirmarse estabilidad ante todo el intervalo de variación.`
+    :` CAUTION: ${incompleteLocal.length} indicators contain mathematically invalid one-at-a-time perturbations. Stability across the full range cannot be claimed.`;
+  const coordinated=active.filter(row=>!!row.coordinatedStress).map(row=>row.coordinatedStress!);
+  if(coordinated.length){
+    const valid=coordinated.reduce((sum,item)=>sum+item.validScenarios,0);
+    const attempted=coordinated.reduce((sum,item)=>sum+item.attemptedScenarios,0);
+    readiness+=es
+      ?` Además hemos recalculado cambios de varios parámetros a la vez mediante cuatro escenarios extremos por indicador: ${valid} de ${attempted} combinaciones fueron matemáticamente válidas. Son pruebas deterministas de estrés, NO intervalos de confianza ni distribuciones calibradas.`
+      :` We also recalculated multiple inputs together using four extreme scenarios per indicator: ${valid} of ${attempted} combinations were mathematically valid. These are deterministic stress tests, NOT confidence intervals or calibrated distributions.`;
+    if(valid<attempted)readiness+=es
+      ?' COBERTURA INCOMPLETA: las combinaciones matemáticamente inválidas se han excluido. Los extremos observados NO son una cota de riesgo ni demuestran estabilidad.'
+      :' INCOMPLETE COVERAGE: mathematically invalid combinations were excluded. The tested extremes are NOT a risk bound or proof of robustness.';
+    const attainment=c.rows.find(row=>row.metric.id==='deadlineAttainment')?.coordinatedStress;
+    if(attainment?.coverage==='none')readiness+=es
+      ?' Para cumplimiento del plazo no existe ningún escenario extremo válido: NO puede interpretarse un rango de estrés.'
+      :' For deadline attainment no extreme scenario was valid: a stress range CANNOT be inferred.';
+    else if(attainment){
+      readiness+=es
+        ?` Para cumplimiento del plazo, el rango de DIFERENCIA entre alternativas entre las combinaciones evaluadas es de ${fmt(attainment.minDelta,locale)} a ${fmt(attainment.maxDelta,locale)} puntos porcentuales.`
+        :` For deadline attainment, the DIFFERENCE between options across evaluated combinations ranges from ${fmt(attainment.minDelta,locale)} to ${fmt(attainment.maxDelta,locale)} percentage points.`;
+    }
+  }
   readiness+=data.hypothetical
     ?(es
       ?' En este ejemplo, esas fuentes, revisiones y condiciones son simuladas: el caso didáctico está completo, pero no existe verificación externa ni beneficio operativo certificado.'

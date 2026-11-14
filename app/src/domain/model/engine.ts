@@ -1,6 +1,7 @@
 import { NUMERIC_EPSILON, sum } from '../common/validation';
 import { newOnlyEconomics, parallelEconomics, repairFirstEconomics } from './economics';
 import { buildRiskTable } from './probability';
+import { aggregateTimingMoments } from './timingMoments';
 import type {
   BranchEconomics,
   EnvironmentalEvents,
@@ -140,6 +141,9 @@ function positiveProbability<T extends { probability: number }>(items: T[]) {
 
 function aggregate(strategy: StrategyId, branches: ModelBranch[]): StrategyResult {
   const probabilityTotal = sum(branches.map((item) => item.probability));
+  const timing = aggregateTimingMoments(branches.map(item => ({
+    probability:item.probability,completionTime:item.recoveryDays,targetMet:item.targetMet
+  })));
   const expected = (selector: (item: ModelBranch) => number) =>
     sum(branches.map((item) => item.probability * selector(item))) / probabilityTotal;
 
@@ -151,8 +155,8 @@ function aggregate(strategy: StrategyId, branches: ModelBranch[]): StrategyResul
   return {
     strategy,
     branches,
-    expectedRecoveryDays: expected((item) => item.recoveryDays),
-    probabilityTargetMet: expected((item) => (item.targetMet ? 1 : 0)),
+    expectedRecoveryDays: timing.meanCompletionTime,
+    probabilityTargetMet: timing.probabilityTargetMet!,
     expectedCashOutlay: expected((item) => item.economics.totalCashOutlay),
     expectedSunkCost: expected((item) => item.economics.sunkCost),
     maximumCashCommitment: Math.max(...branches.map((item) => item.economics.totalCashOutlay)),

@@ -8,8 +8,24 @@ import { ValidateView } from '../views/ValidateView';
 import type { Locale, ViewId } from './types';
 import type { StrategyId } from '../domain';
 import { CaseJourney } from '../features/cases/CaseJourney';
-import { createCase } from '../features/cases/model';
+import { createCase, validateCaseImport } from '../features/cases/model';
+import { MODEL_PROVENANCE } from '../features/cases/modelProvenance';
 
+const DEMO_DRAFT_KEY='asri-demo-draft-v2';
+const DEMO_DRAFT_CONSENT='asri-demo-draft-opt-in';
+function storageAllowed():boolean{
+  try{return window.localStorage.getItem(DEMO_DRAFT_CONSENT)==='true';}
+  catch{return false;}
+}
+function loadOptedInDemoDraft(){
+  try {
+    if(!storageAllowed())return createCase();
+    const raw=window.localStorage.getItem(DEMO_DRAFT_KEY);
+    if(!raw)return createCase();
+    const restored=validateCaseImport(JSON.parse(raw));
+    return restored.hypothetical?restored:createCase();
+  } catch { return createCase(); }
+}
 const workflow: ViewId[] = ['investigate', 'challenge', 'validate', 'translate'];
 type ChallengePanel = 'parameters' | 'technical' | null;
 type ChallengeTab = 'branches' | 'sensitivity' | 'environment' | 'method';
@@ -44,7 +60,11 @@ function viewFromHash(): ViewId {
 export function App() {
   const [locale, setLocale] = useState<Locale>('en');
   const [caseMode, setCaseMode] = useState<'demo' | 'custom'>('demo');
-  const [customCase, setCustomCase] = useState(createCase);
+  // Only fictional demo cases can be saved locally, and only with opt-in.
+  // Real working cases remain file-export only. Nothing is sent to a server.
+  const [customCase, setCustomCase] = useState(loadOptedInDemoDraft);
+  const [demoDraftOptIn,setDemoDraftOptIn]=useState(storageAllowed);
+  const [draftStatus,setDraftStatus]=useState('');
   const [view, setView] = useState<ViewId>(viewFromHash);
   const [challengeScreen, setChallengeScreen] = useState<ChallengeScreen>(screenFromHistory);
   const [challengeChoice, setChallengeChoice] = useState<StrategyId | null>(() => currentHistory().asriChoice ?? null);
@@ -53,6 +73,30 @@ export function App() {
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
+
+  useEffect(()=>{
+    if(!demoDraftOptIn||!customCase.hypothetical)return;
+    try{
+      window.localStorage.setItem(DEMO_DRAFT_KEY,JSON.stringify(customCase));
+    }catch{setDraftStatus(locale==='es'
+      ?'No se ha podido guardar el borrador en este navegador.'
+      :'The browser could not save this demo draft.');}
+  },[customCase,demoDraftOptIn,locale]);
+
+  const toggleDemoDraft=(enabled:boolean)=>{
+    try {
+      if(enabled){
+        window.localStorage.setItem(DEMO_DRAFT_CONSENT,'true');
+      } else {
+        window.localStorage.removeItem(DEMO_DRAFT_CONSENT);
+        window.localStorage.removeItem(DEMO_DRAFT_KEY);
+      }
+      setDemoDraftOptIn(enabled);
+      setDraftStatus(enabled
+        ?(locale==='es'?'Guardado automático activado para ejemplos hipotéticos.':'Automatic saving enabled for hypothetical cases.')
+        :(locale==='es'?'Copia local borrada y guardado desactivado.':'Local copy deleted and saving disabled.'));
+    }catch{setDraftStatus(locale==='es'?'No se pudo acceder al almacenamiento local.':'Local browser storage is unavailable.');}
+  };
 
   // Protect unsaved user-created work without storing case data in the
   // browser or a remote account. Browsers choose their own warning text.
@@ -198,6 +242,22 @@ export function App() {
             <button type="button" className={caseMode === 'demo' ? 'is-active' : ''} aria-pressed={caseMode === 'demo'} onClick={() => { setCaseMode('demo'); navigate('investigate'); }}>DEMO-60</button>
             <button type="button" className={caseMode === 'custom' ? 'is-active' : ''} aria-pressed={caseMode === 'custom'} onClick={() => { setCaseMode('custom'); navigate('investigate'); }}>{locale === 'es' ? 'Crear tu propio caso estratégico' : 'Create your own strategic case'}</button>
           </nav>
+          <p className="cy-help" data-testid="model-provenance">
+            {MODEL_PROVENANCE[caseMode].title[locale]} · {MODEL_PROVENANCE[caseMode].scope[locale]}
+            {' '}{locale==='es'
+              ?'Las cifras de DEMO-60 y del creador de casos no son directamente intercambiables.'
+              :'DEMO-60 figures and Case Studio figures cannot be directly compared.'}
+          </p>
+          {caseMode === 'custom' && view === 'investigate' && <section className="cy-panel" aria-label={locale==='es'?'Guardado local opcional':'Optional local draft saving'}>
+            <label className="cy-field">
+              <span>{locale==='es'?'Guardar automáticamente ejemplos ficticios en este navegador':'Auto-save fictional examples on this browser'}</span>
+              <input type="checkbox" checked={demoDraftOptIn} onChange={e=>toggleDemoDraft(e.target.checked)} />
+            </label>
+            <p className="cy-help">{locale==='es'
+              ?'Desactivado por defecto. Solo se guardan casos marcados como hipotéticos; se almacenan SIN cifrar en este dispositivo. No usar para datos corporativos, sensibles o confidenciales. Los casos reales deben exportarse a un archivo.'
+              :'Off by default. Only hypothetical cases are stored; local browser data are NOT encrypted. Do not use for confidential or corporate data. Export real cases to a file.'}</p>
+            {draftStatus&&<p role="status">{draftStatus}</p>}
+          </section>}
           {caseMode === 'demo' && view === 'investigate' && <section className="hero" aria-labelledby="hero-title">
             <div className="hero__copy">
               <p className="eyebrow">{content.eyebrow}</p>

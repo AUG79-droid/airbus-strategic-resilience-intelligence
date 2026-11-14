@@ -1,6 +1,9 @@
+import { buildRiskTable } from '../../domain/model/probability';
+import {aggregateTimingMoments} from '../../domain/model/timingMoments';
+
 /**
  * Shared parameter catalogue for ALL custom case families.
- * The same 19 fields always exist, in identical sections and order.
+ * The same 23 fields always exist, in identical sections and order.
  * Each has a *case-wide* applicability state and a separate value for
  * baseline and each alternative. N/A excludes a mechanism, not a zero.
  * Unknown blocks the derived outputs that depend on it.
@@ -40,8 +43,16 @@ export const UNIVERSAL_PARAMETERS:ParameterDefinition[]=[
     'Probabilidad de que se materialice un retraso ajeno a la vía técnica.','Likelihood of an independent external delay.',0,100),
   def('shockDelay','risk','Retraso adicional de disrupción','Additional disruption delay','time',
     'Aplicable conjuntamente con probabilidad de disrupción.','Must be assessed together with disruption probability.'),
+  def('jointFailureShock','risk','Fallo técnico y disrupción simultáneos','Technical failure AND disruption together','%',
+    'Probabilidad CONJUNTA de los dos eventos: no es la probabilidad condicional. Activa este parámetro solo si hay evidencia sobre dependencia; debe respetar los límites matemáticos. Si no aplica se supone independencia de forma explícita.',
+    'JOINT likelihood of BOTH events, not a conditional probability. Enable only with dependency evidence; must satisfy mathematical bounds. Otherwise independence is explicitly assumed.',0,100),
+  def('jointExtraDelay','risk','Retraso adicional cuando coinciden ambos fallos','Additional delay if both events coincide','time',
+    'Solo si se ha declarado una probabilidad CONJUNTA de fallo técnico y disrupción. Retraso ADICIONAL al de ambos sucesos por separado, no duplicar impactos.','Requires a declared joint failure/disruption probability. Additional delay beyond the separate event delays; do not double-count.'),
   def('baseCost','economic','Coste de la alternativa','Base option cost','€',
     'Coste directo comparable por unidad funcional.','Comparable direct cost per functional unit.'),
+  def('downtimeRate','economic','Coste por unidad de tiempo de interrupción','Cost per recovery-time unit','€/time',
+    'Opcional: coste incremental por día, hora o minuto según el caso. NO lo actives si ese impacto ya está incluido en el coste base o penalizaciones: evitar doble contabilización. Requiere estimar también el tiempo de recuperación.',
+    'Optional incremental cost per day, hour or minute according to this case. DO NOT enable if the same impact is already in baseline cost or penalties: avoid double counting. Requires expected recovery time.'),
   def('logisticsCost','economic','Costes logísticos','Logistics costs','€',
     'Solo costes adicionales no incluidos en el coste base.','Additional logistics not included in base cost.'),
   def('investmentCost','economic','Inversión de adaptación','Adaptation investment','€',
@@ -50,6 +61,8 @@ export const UNIVERSAL_PARAMETERS:ParameterDefinition[]=[
     'Coste condicional ponderado por la probabilidad de disrupción.','Conditional cost weighted by disruption likelihood.'),
   def('failureCost','economic','Sobrecoste si falla la vía técnica','Technical failure surcharge','€',
     'Coste condicional ponderado por la probabilidad de fallo.','Conditional cost weighted by technical failure likelihood.'),
+  def('jointExtraCost','economic','Sobrecoste adicional por fallo simultáneo','Extra cost of concurrent failures','€',
+    'Solo si se ha declarado la probabilidad conjunta; coste adicional a los costes independientes, no duplicar penalizaciones.','Requires explicit joint-event probability; incremental cost beyond isolated-event costs. Avoid double-counting.'),
   def('reservationFee','contract','Coste de reserva o activación','Reservation / activation fee','€',
     'Obligación fija del contrato.','Fixed contractual commitment.'),
   def('cancellationProbability','contract','Probabilidad de cancelación','Cancellation probability','%',
@@ -98,6 +111,42 @@ export function displayUnit(unit:string,locale:'es'|'en'):string{
 export function parameterUnit(unit:string,kind:string,locale:'es'|'en'):string{
   return unit==='time'?timeUnit(kind,locale):displayUnit(unit,locale);
 }
+export interface JointRiskBranch {
+  technicalSuccess:boolean;
+  shock:boolean;
+  probability:number;
+}
+/**
+ * Joint risk distribution for technical failure F and disruption S.
+ * With no explicit P(F∩S), independence is a visible modelling assumption.
+ * Reject impossible overlapping probabilities (Fréchet bounds), rather than
+ * silently clamping an invalid scenario.
+ */
+export function jointRiskBranches(successPercent:number,shockPercent:number,
+  bothFailureShockPercent?:number|null):JointRiskBranch[]{
+  const valid=(n:number)=>Number.isFinite(n)&&n>=0&&n<=100;
+  if(!valid(successPercent)||!valid(shockPercent)||
+    (bothFailureShockPercent!==null&&bothFailureShockPercent!==undefined&&!valid(bothFailureShockPercent)))
+    throw new RangeError('Probabilities must be between 0 and 100 percent');
+  const independence=bothFailureShockPercent===null||bothFailureShockPercent===undefined;
+  // Reuse the SAME validated joint risk engine as DEMO-60.
+  // DEMO-60 defines overlap P(technical success ∩ shock); Case Studio inputs
+  // P(technical FAILURE ∩ shock), so convert by complement.
+  const risk=buildRiskTable({
+    repairFeasibilityProbability:successPercent/100,
+    supplierShockProbability:shockPercent/100,
+    dependence:independence?{mode:'independent'}:
+      {mode:'joint',repairFeasibleAndShockProbability:
+        (shockPercent-bothFailureShockPercent)/100}
+  });
+  return [
+    {technicalSuccess:true,shock:false,probability:risk.states.find(x=>x.repairFeasible&&!x.supplierShock)?.probability??0},
+    {technicalSuccess:true,shock:true,probability:risk.states.find(x=>x.repairFeasible&&x.supplierShock)?.probability??0},
+    {technicalSuccess:false,shock:false,probability:risk.states.find(x=>!x.repairFeasible&&!x.supplierShock)?.probability??0},
+    {technicalSuccess:false,shock:true,probability:risk.states.find(x=>!x.repairFeasible&&x.supplierShock)?.probability??0}
+  ];
+}
+
 export type DerivedState='calculated'|'excluded'|'missing'|'invalid';
 export interface DerivedValue {state:DerivedState;value:number|null;formula:string;missing:string[];}
 export interface CalculatedOption {
@@ -146,60 +195,88 @@ export function calculateUniversal(c:ParamCase,o:ParamOption):CalculatedOption{
     return (x.state==='excluded') !== (y.state==='excluded')
       ? [a+' / '+b+': inconsistent applicability']: [];
   };
+  const validJoint=(technical:number|null,shock:number|null,overlap:number|null):boolean=>{
+    if(overlap===null)return true;
+    if(technical===null||shock===null)return false;
+    try{jointRiskBranches(technical,shock,overlap);return true;}catch{return false;}
+  };
   const pairIssues=[...paired('technicalSuccess','failureDelay'),...paired('shockProbability','shockDelay'),
     ...paired('cancellationProbability','cancellationFee')];
   const invalidPair=(x:DerivedValue):DerivedValue=>
     pairIssues.length?result('missing',null,x.formula,[...x.missing,...pairIssues]):x;
+  // DEMO-60 and Case Studio share the SAME risk-branch aggregation kernel.
+  // Their strategy-specific completion rules differ and remain labelled as such.
+  const timingMoments=(v:(id:string)=>number|null,target?:number)=>{
+    const base=v('baseRecovery'),tech=v('technicalSuccess'),shock=v('shockProbability');
+    const overlap=v('jointFailureShock'),jointDelay=v('jointExtraDelay');
+    if(base===null||jointDelay!==null&&(overlap===null||tech===null||shock===null)||
+      !validJoint(tech,shock,overlap))return null;
+    try{
+      const branches=jointRiskBranches(tech??100,shock??0,overlap);
+      const startTime=Math.max(base,v('supplyLead')??0);
+      return aggregateTimingMoments(branches.map(branch=>{
+        const completionTime=startTime+
+          (branch.technicalSuccess?0:(v('failureDelay')??0))+
+          (branch.shock?(v('shockDelay')??0):0)+
+          (!branch.technicalSuccess&&branch.shock?(jointDelay??0):0);
+        return {probability:branch.probability,completionTime,
+          ...(target===undefined?{}:{targetMet:completionTime<=target})};
+      }));
+    }catch{return null;}
+  };
   const recovery=invalidPair(join(
-    ['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay'],
-    'max(baseRecovery,supplyLead if applicable) + (1-P(success))*failureDelay + P(shock)*shockDelay',
-    v=>{
-      const base=v('baseRecovery'); if(base===null)return NaN;
-      const supply=v('supplyLead');
-      const tech=v('technicalSuccess'),failure=v('failureDelay');
-      const risk=v('shockProbability'),delay=v('shockDelay');
-      return Math.max(base,supply??0)+(tech===null?0:(1-tech/100)*(failure??0))
-        +(risk===null?0:risk/100*(delay??0));
-    }
+    ['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay'],
+    'Σ branch probability × branch completion time, shared risk-moment kernel',
+    v=>timingMoments(v)?.meanCompletionTime??NaN
   ));
   const deadline=invalidPair(join(
-    ['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay'],
-    'Σ P(technical branch)*P(disruption branch)*I(completion<=target), assuming independence',
+    ['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay'],
+    'Σ branch probability × I(branch completion<=target), shared risk-moment kernel',
     v=>{
-      const base=v('baseRecovery'),target=v('recoveryTarget');
-      if(base===null||target===null)return NaN;
-      const start=Math.max(base,v('supplyLead')??0);
-      const pt=(v('technicalSuccess')??100)/100;
-      const ps=(v('shockProbability')??0)/100;
-      let output=0;
-      for(const technical of [true,false])for(const shock of [false,true]){
-        const probability=(technical?pt:1-pt)*(shock?ps:1-ps);
-        const time=start+(technical?0:(v('failureDelay')??0))+(shock?(v('shockDelay')??0):0);
-        if(time<=target)output+=probability;
-      }
-      return output*100;
+      const target=v('recoveryTarget');
+      if(target===null)return NaN;
+      const probability=timingMoments(v,target)?.probabilityTargetMet;
+      return probability===null||probability===undefined?NaN:probability*100;
     }
   ));
-  const cost=invalidPair(join(
+  const costBasis=invalidPair(join(
     ['baseCost','logisticsCost','investmentCost','shockProbability','shockSurcharge',
-      'technicalSuccess','failureCost','reservationFee','cancellationProbability','cancellationFee'],
-    'base + applicable fixed expenses + P(shock)*surcharge + P(failure)*failureCost + P(cancel)*fee',
+      'technicalSuccess','failureCost','reservationFee','cancellationProbability','cancellationFee','downtimeRate','jointFailureShock','jointExtraCost'],
+    'base + fixed expenses + P(shock)*surcharge + P(failure)*failureCost + P(cancel)*fee + optional downtime + P(both)*jointExtraCost',
     v=>{
       if(v('baseCost')===null)return NaN;
+      const joint=v('jointFailureShock'),extra=v('jointExtraCost');
+      if(extra!==null&&joint===null)return NaN;
+      if(!validJoint(v('technicalSuccess'),v('shockProbability'),joint))return NaN;
       const r=(v('shockProbability')??0)/100,t=(v('technicalSuccess')??100)/100,
         p=(v('cancellationProbability')??0)/100;
       return v('baseCost')!+(v('logisticsCost')??0)+(v('investmentCost')??0)+
         (v('reservationFee')??0)+r*(v('shockSurcharge')??0)+
-        (1-t)*(v('failureCost')??0)+p*(v('cancellationFee')??0);
+        (1-t)*(v('failureCost')??0)+p*(v('cancellationFee')??0)+
+        (v('downtimeRate')===null?0:v('downtimeRate')!*(recovery.value??NaN))+
+        (joint??0)/100*(extra??0);
     }
   ));
+  const cost=states.downtimeRate?.applicability==='applies'&&recovery.state!=='calculated'
+    ?result('missing',null,costBasis.formula,[
+      'Downtime valuation needs a calculated recovery time',...recovery.missing
+    ])
+    :costBasis;
   // Financial and environmental outputs stay separate; no arbitrary combined score.
   return {
     recovery,deadline,cost,
     material:get('materialKg'),waste:get('wasteKg'),
     ghg:get('ghgKg'),lifeExtension:get('lifeExtension'),
     assumptions:[
-      'Risk events are modelled as independent; verify this before using the result.',
+      states.jointFailureShock?.applicability==='applies'
+        ? 'An explicit joint technical-failure/disruption probability is supplied; it must satisfy Fréchet limits and be supported by evidence.'
+        : 'Technical failure and external disruption are assumed independent for deadline probability; this is not a demonstrated property of the scenario.',
+      states.jointExtraDelay?.applicability==='applies'||states.jointExtraCost?.applicability==='applies'
+        ? 'Extra concurrent-event delay/cost is modelled when explicitly declared; assumptions and double counting need independent verification.'
+        : 'Expected recovery and cost are additive marginal-event estimates unless additional concurrent-event effects are explicitly enabled.',
+      states.downtimeRate?.applicability==='applies'
+        ? 'Downtime valuation is an assumed incremental € per time unit times expected recovery. Verify contract and avoid double-counting against fixed and conditional costs.'
+        : 'No monetary value is attributed to downtime; the expected cost may understate operational consequences.',
       'Calculated outcomes are conditional scenarios, not calibrated predictions.',
       ...reasons
     ]

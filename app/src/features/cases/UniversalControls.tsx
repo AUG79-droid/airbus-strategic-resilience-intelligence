@@ -115,13 +115,28 @@ export function UniversalControls({locale,data,setData}:Props){
             {state.applicability==='applies'&&<div className="cy-universal__option-grid">
               {data.options.map(option=>{
                 const value=option.parameterValues?.[def.id]?.value??null;
-                const invalid=value!==null&&(value<(def.minimum??-Infinity)||value>(def.maximum??Infinity));
+                const technical=option.parameterValues?.technicalSuccess?.value;
+                const shock=option.parameterValues?.shockProbability?.value;
+                const isJoint=def.id==='jointFailureShock';
+                const bounds=isJoint&&
+                  data.parameters.technicalSuccess?.applicability==='applies'&&
+                  data.parameters.shockProbability?.applicability==='applies'&&
+                  technical!==null&&technical!==undefined&&shock!==null&&shock!==undefined&&
+                  Number.isFinite(technical)&&Number.isFinite(shock)
+                  ?{min:Math.max(0,shock-technical),max:Math.min(100-technical,shock)}
+                  :null;
+                const invalid=value!==null&&(value<(bounds?.min??def.minimum??-Infinity)||
+                  value>(bounds?.max??def.maximum??Infinity));
                 return <div className="cy-universal__option" key={option.id}>
                   <strong>{displayOptionName(option,locale)}</strong>
                   <label className="cy-field"><span>{t('Valor','Value')} · {parameterUnit(def.unit,data.kind,locale)}</span>
-                    <input type="number" step="any" min={def.minimum} max={def.maximum}
+                    <input type="number" step="any" min={bounds?.min??def.minimum} max={bounds?.max??def.maximum}
                       value={value??''} onChange={e=>setNumber(option.id,def.id,e.target.value)}
+                      aria-invalid={invalid}
                       aria-label={def.label[locale]+' · '+displayOptionName(option,locale)}/></label>
+                  {isJoint&&(bounds
+                    ?<small>{t('Intervalo conjunto admisible','Admissible joint range')}: {pretty(bounds.min,locale)}–{pretty(bounds.max,locale)} %</small>
+                    :<small className="cy-error">{t('Para calcular la dependencia, declara antes las probabilidades de éxito técnico y disrupción.','Set both technical success and disruption probabilities before entering joint risk.')}</small>)}
                   <label className="cy-field"><span>{t('Evidencia del valor','Evidence for this value')}</span>
                     <select value={option.parameterValues?.[def.id]?.evidenceId??''} onChange={e=>setEvidence(option.id,def.id,e.target.value)}>
                       <option value="">{t('Pendiente de justificar','No supporting source yet')}</option>

@@ -1,9 +1,10 @@
 name: ASRI Case Studio Quality Gate
 on:
   push:
-    branches: [main]
+    branches: [main, asri-v2-audit-remediation]
     paths:
       - 'app/**'
+      - 'docs/ASRI-V2-AUDIT-TRACKER.md'
       - '.github/workflows/case-studio-quality.yml'
   workflow_dispatch:
 
@@ -12,7 +13,7 @@ permissions:
   statuses: write
 
 concurrency:
-  group: case-studio-quality
+  group: case-studio-quality-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -39,6 +40,24 @@ jobs:
         id: build
         working-directory: app
         run: npm run build
+      - name: Smoke-test isolated browser preview at /
+        id: isolated
+        working-directory: app
+        run: |
+          ASRI_ISOLATED_PREVIEW=1 npx vite --host 127.0.0.1 --port 5173 > /tmp/asri-isolated-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+          READY=0
+          for attempt in {1..35}; do
+            if curl -fsS "http://127.0.0.1:5173/" | grep -q 'src/main.tsx'; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$READY" != "1" ]; then cat /tmp/asri-isolated-preview.log; exit 1; fi
+          curl -fsS "http://127.0.0.1:5173/src/main.tsx" >/dev/null
+          echo "Isolated browser preview responds at / and serves React entrypoint"
       - name: Run browser journeys and export checks
         id: e2e
         working-directory: app
@@ -57,6 +76,12 @@ jobs:
           npm run test:final-qa
           npm run test:translator-ui
           npm run test:export-ui
+          npm run test:lab-ui
+          npm run test:evidence-ui
+          npm run test:guided-ui
+          npm run test:four-cases-ui
+          node scripts/test-joint-risk-ui.mjs
+          node scripts/test-capacity-ui.mjs
       - name: Report granular quality status on commit
         if: always()
         env:
@@ -65,10 +90,11 @@ jobs:
           TESTS: ${{ steps.tests.outcome }}
           BUILD: ${{ steps.build.outcome }}
           E2E: ${{ steps.e2e.outcome }}
+          ISOLATED: ${{ steps.isolated.outcome }}
         run: |
-          if [ "$INSTALL" = "success" ] && [ "$TESTS" = "success" ] && [ "$BUILD" = "success" ] && [ "$E2E" = "success" ]; then state=success; else state=failure; fi
+          if [ "$INSTALL" = "success" ] && [ "$TESTS" = "success" ] && [ "$BUILD" = "success" ] && [ "$E2E" = "success" ] && [ "$ISOLATED" = "success" ]; then state=success; else state=failure; fi
           gh api -X POST "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
             -f state="$state" \
             -f context="asri/case-studio-quality" \
-            -f description="Install: $INSTALL; tests: $TESTS; build: $BUILD; e2e: $E2E" \
+            -f description="Install: $INSTALL; tests: $TESTS; build: $BUILD; e2e: $E2E; preview: $ISOLATED" \
             -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

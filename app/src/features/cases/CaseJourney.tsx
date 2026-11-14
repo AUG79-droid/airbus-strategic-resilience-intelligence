@@ -2,15 +2,27 @@ import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { downloadText, downloadBytes } from '../export/download';
 import type { Locale, ViewId } from '../../app/types';
 import {
-  comparisons, createCase, displayOptionName, templateInfo, validateCaseImport,
+  comparisons, createCase, displayOptionName, templateInfo,
   type StrategicCase, type CaseKind, type EvidenceItem, type Audience,
   type OptionComparison
 } from './model';
 import { fromPreset, presetTitle, type PresetKey } from './presets';
+import { exportCaseEnvelope, importCaseEnvelope } from './caseIntegrity';
 import { UniversalControls } from './UniversalControls';
+import { DependencyRoutes } from './DependencyRoutes';
+import { RepairCapacity } from './RepairCapacity';
+import { EnvironmentalMethod } from './EnvironmentalMethod';
+import { MissionBridgeReview } from './MissionBridgeReview';
+import { DiscountedFinance } from './DiscountedFinance';
+import { evaluateDiscountedFinance, emptyFinancePlan } from './discountedCashFlows';
+import { boundedEnvironmentalDifference } from './environmentBasis';
+import { evaluateWorkshopCapacity } from './workshopCapacity';
+import { pdfSafeText } from './pdfSafeText';
+import {localizeResultStatus,localizeCaseDiagnostic} from './reportI18n';
+import { sha256EvidenceBlob } from './documentProof';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
-import { calculateUniversal, parameterUnit } from './universal';
+import { calculateUniversal, parameterUnit, UNIVERSAL_PARAMETERS } from './universal';
 import './CaseJourney.css';
 
 type Props = {
@@ -68,10 +80,10 @@ function metricTitle(label:string,locale:Locale){
 function describeVerdict(c:OptionComparison,locale:Locale){
   return verdicts[c.verdict][locale==='es'?0:1];
 }
-function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale:Locale):string{
+export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale:Locale):string{
   const es=locale==='es';
   const lines=[
-    '# ASRI — '+(data.title||'Custom strategic case'),
+    '# ASRI — '+(data.title||(es?'Caso estratégico sin título':'Untitled strategic case')),
     '',es?'AVISO: prototipo independiente, no aprobado por Airbus.':'NOTICE: independent prototype, not Airbus approved.',
     es?'RESULTADOS: modelización comparativa, no beneficios validados.':'RESULTS: comparative modelling, not validated benefits.',
     data.hypothetical?(es?'DATOS: 100 % HIPOTÉTICOS.':'DATA: 100% HYPOTHETICAL.'):'',
@@ -83,22 +95,60 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
     '',es?'## 02 Cuestionar':'## 02 Challenge',
     `${es?'Referencia':'Baseline'}: ${displayOptionName(data.options[0],locale)}`,`${es?'Alternativa':'Alternative'}: ${displayOptionName(chosen.option,locale)}`,
     `${es?'Resultado':'Verdict'}: ${describeVerdict(chosen,locale)}`,
-    ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${r.robustness} | evidence: ${r.evidenceReady?'reviewed':'pending'}`),
+    ...chosen.rows.map(r=>`- ${metricTitle(r.metric.label,locale)}: ${r.issue==='excluded'?(es?'No aplica':'Not applicable'):`${present(r.baseline,locale)} → ${present(r.candidate,locale)} ${parameterUnit(r.metric.unit,data.kind,locale)} | Δ ${present(r.delta,locale)}`} | ${localizeResultStatus(r.robustness,locale)} | ${es?'evidencia':'evidence'}: ${r.evidenceReady?(es?'revisada (declarada)':'reviewed (declared)'):(es?'pendiente':'pending')}${r.sensitivityRange
+      ?` | ${es?'rango Δ univariable':'OAT Δ range'}: [${present(r.sensitivityRange.minDelta,locale)}, ${present(r.sensitivityRange.maxDelta,locale)}] (${r.sensitivityRange.validScenarios}/${r.sensitivityRange.attemptedScenarios} ${es?'recalculados válidos':'valid recalculations'})${r.sensitivityRange.invalidScenarios>0?(es?' · COBERTURA INCOMPLETA':' · INCOMPLETE COVERAGE'):''}${r.sensitivityRange.switchingParameter?` | ${es?'umbral aproximado de cambio':'approx switch threshold'}: ${r.sensitivityRange.switchingParameter}=${present(r.sensitivityRange.switchingValue??null,locale)}`:''}`
+      :''}${r.coordinatedStress?(r.coordinatedStress.coverage==='none'
+        ?` | ${es?'SIN RANGO de estrés':'NO stress range'} (0/4 ${es?'válidos':'valid'})`
+        :` | ${es?'rango Δ simultáneo':'coordinated Δ range'} [${present(r.coordinatedStress.minDelta,locale)}, ${present(r.coordinatedStress.maxDelta,locale)}] (${r.coordinatedStress.validScenarios}/4 ${es?'válidos':'valid'})${r.coordinatedStress.coverage==='partial'?(es?' · COBERTURA INCOMPLETA, no es una cota de riesgo':' · INCOMPLETE COVERAGE, not a risk bound'):''}`):''}`),
     `${es?'Prueba de variación individual de parámetros':'One-at-a-time input test'}: ±${data.robustnessPercent} %. ${es?'Cada entrada se modifica por separado; no es un intervalo de confianza.':'Each input is changed separately; not a confidence interval.'}`,
+    `${es?'Prueba de escenarios simultáneos':'Coordinated stress test'}: 4 ${es?'combinaciones extremas de entradas de referencia y alternativa':'extreme reference/option input combinations'}, ±${data.robustnessPercent} %. ${es?'Rango determinista, no probabilidad ni intervalo de confianza.':'Deterministic bound, not a probability or confidence interval.'}`,
     '',es?'## Controles y aplicabilidad':'## Universal controls and applicability',
-    ...Object.entries(data.parameters).map(([id,state])=>'- '+id+': '+state.applicability+'; '+state.reason),
+    ...Object.entries(data.parameters).map(([id,state])=>'- '+id+': '+localizeResultStatus(state.applicability,locale)+'; '+state.reason),
     ...data.options.flatMap(option=>{
       const calc=calculateUniversal(data,option);
       return [displayOptionName(option,locale)+': '+JSON.stringify(Object.fromEntries(Object.entries(calc).filter(([k])=>k!=='assumptions')))];
     }),
+    '',es?'## Comparabilidad ambiental declarada':'## Declared environmental comparability',
+    ...data.environmentalBasis.map(x=>`- ${x.optionId}: functionalUnit=${x.functionalUnit}; period=${x.period}; boundary=${x.boundary}; method=${x.inventoryMethod}; allocation=${x.allocationRule}; factorVersion=${x.factorSourceVersion}; uncertaintyPercent=${x.relativeUncertaintyPercent??'N/A'}; evidence=${x.evidenceId||'unlinked'}`),
+    ...chosen.rows.filter(row=>row.metric.category==='environment'&&row.baseline!==null&&row.candidate!==null).map(row=>{
+      const bound=boundedEnvironmentalDifference(row.baseline!,row.candidate!,
+        data.environmentalBasis.find(x=>x.optionId===data.options[0].id),
+        data.environmentalBasis.find(x=>x.optionId===chosen.option.id));
+      return `- ${row.metric.id}: ${es?'incertidumbre de la diferencia':'difference uncertainty'}=${bound.status}; Δrange=[${bound.minDelta??'N/A'},${bound.maxDelta??'N/A'}]; ${es?'NO es un intervalo de confianza':'NOT a confidence interval'}`;
+    }),
+    '',es?'## Flujos de caja descontados adicionales (opcional)':'## Additional discounted cash flows (optional)',
+    `${es?'Tasa anual de descuento declarada':'User-declared annual discount rate'}: ${data.discountedFinance.annualDiscountPercent??'N/A'}%`,
+    `${es?'Escalación anual declarada para euros constantes':'Declared annual escalation for constant-price EUR'}: ${data.discountedFinance.annualEscalationPercent??'N/A'}%`,
+    ...data.options.map(option=>{
+      const result=evaluateDiscountedFinance(data.discountedFinance,option.id);
+      return `- ${displayOptionName(option,locale)}: ${result.status==='calculated'
+        ?`${present(result.incrementalPresentValueEuro,locale)} EUR ${es?'de valor actual incremental':'incremental present value'}`
+        :es?'Valor actual no evaluado':'Present value not assessed'}`;
+    }),
+    ...data.discountedFinance.flows.map(flow=>`- ${flow.optionId} / ${flow.id}: year=${flow.year}; netEUR=${flow.amountEuro}; priceBasis=${flow.priceBasis??'futureNominal'}; account=${flow.accounting}; evidence=${flow.evidenceId||'unlinked'}; ${flow.explanation}`),
+    `${es?'Un importe nominal futuro NO recibe escalación adicional; uno de euros constantes exige tasa explícita. No hay validación financiera ni contractual':'A future nominal amount is NOT escalated again; constant-price EUR requires an explicit escalation rate. Financial and contractual validation remains outstanding'}.`,
+    '',es?'## Relación entre componente y misión':'## Component-to-mission evidence bridge',
+    ...(data.missionBridges.length
+      ?data.missionBridges.map(link=>`- ${link.optionId}: ${link.componentOrService} > ${link.subsystem} > ${link.platform} > ${link.missionFunction}; dependency=${link.dependencyType}; ${es?'disponibilidad de misión DECLARADA':'USER-DECLARED mission availability'}=${link.observedMissionAvailabilityPercent??(es?'no medida':'not measured')}%; metricDefinition=${link.availabilityDefinition||'not defined'}; observationPeriod=${link.observationPeriod||'not declared'}; evidence=${link.evidenceId||'none'}`)
+      :[es?'Sin evaluación de disponibilidad de misión. No se infiere a partir de la recuperación del componente.':'Mission availability not assessed. Never inferred from component recovery.']),
+    '',es?'## Capacidad de taller y cola FIFO (ilustrativa)':'## Repair-workshop capacity and FIFO queue (illustrative)',
+    ...data.workshopCapacity.map(x=>{
+      const r=evaluateWorkshopCapacity(x);
+      return `- ${x.optionId}: bays=${x.availableBays}; jobsAhead=${x.jobsAhead}; backlogServiceTime=${x.serviceTimePerBacklogJob}; targetServiceTime=${x.targetServiceTime}; conditionalWait=${r.waitingTime??'N/A'}; conditionalCompletion=${r.completionTime??'N/A'}; evidence=${x.evidenceId||'unlinked'}`;
+    }),
+    `${es?'NO suma al tiempo medio de recuperación y no representa capacidad validada ni una cola predictiva':'NOT added to mean recovery time; not validated capacity or a predictive queue'}.`,
+    '',es?'## Dependencias de rutas':'## Supply and repair dependencies',
+    ...(data.dependencyRoutes.length
+      ?data.dependencyRoutes.map(route=>`- ${route.optionId} / ${route.label}: ${route.qualified?(es?'cualificada (declarada)':'qualified (user-declared)'):(es?'no cualificada':'unqualified')}; nodes=[${route.dependencies.join(', ')}]; declaredCapacity=${route.capacityPercent??'not specified'}%; evidence=${route.evidenceId||'unlinked'}`)
+      :[es?'Dependencias no evaluadas; la independencia no está acreditada.':'Dependencies not assessed; independence not demonstrated.']),
     '',es?'## 03 Comprobar':'## 03 Check',
-    `Review gates: ${JSON.stringify(data.gates)}`,
-    `Evidence trace: ${chosen.reviewedData?'all inputs linked to reviewed records':'incomplete'}`,
-    `Observed measurements: ${chosen.observedData?'linked for all compared values':'not confirmed'}`,
-    ...chosen.missing.map(m=>'- '+m),
-    ...data.evidence.map(e=>`- ${e.id}: ${e.title} | ${e.status} / ${e.nature} | ${e.reference} | ${e.owner} | ${e.reviewer} ${e.reviewedOn} | ${e.limitations}`),
+    `${es?'Controles de revisión declarados':'User-declared review gates'}: ${JSON.stringify(data.gates)}`,
+    `${es?'Trazabilidad documental':'Evidence trace'}: ${chosen.reviewedData?(es?'todas las entradas asociadas a registros revisados (declarados)':'all inputs linked to user-declared reviewed records'):(es?'incompleta':'incomplete')}`,
+    `${es?'Mediciones observadas':'Observed measurements'}: ${chosen.observedData?(es?'asociadas a todos los valores comparados':'linked for all compared values'):(es?'no confirmadas':'not confirmed')}`,
+    ...chosen.missing.map(m=>'- '+localizeCaseDiagnostic(m,locale)),
+    ...data.evidence.map(e=>`- ${e.id}: ${e.title} | ${localizeResultStatus(e.status,locale)} / ${localizeResultStatus(e.nature,locale)} | ${e.reference} | ${e.owner} | ${e.reviewer} ${e.reviewedOn} | ${es?'versión':'version'}=${e.documentVersion||(es?'no indicada':'not declared')} | sha256=${e.documentSha256||(es?'no indicada':'not declared')} | ${es?'vigencia':'expiry'}=${e.validUntil||(es?'sin fecha':'none')} | ${es?'revocación':'revoked'}=${e.revokedOn||(es?'no':'no')} | ${es?'fragmento':'excerpt'}=${e.excerptUsed||(es?'no facilitado':'not supplied')} | ${es?'limitaciones':'limitations'}=${e.limitations}`),
     '',es?'## 04 Traducir':'## 04 Translate',
-    `Audience: ${audienceNames[a][es?0:1]}`,
+    `${es?'Audiencia':'Audience'}: ${audienceNames[a][es?0:1]}`,
     strategicNarrativeText(data,chosen,a,locale),
     '',es?'### Conclusiones estratégicas ampliadas':'### Extended strategic conclusions',
     ...strategicInsights(data,chosen,a,locale).flatMap(item=>['', '#### '+item.title,item.body]),
@@ -107,20 +157,28 @@ function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience,locale
   return lines.join('\n');
 }
 async function downloadReportPdf(text:string, filename:string):Promise<void>{
-  const { PDFDocument, StandardFonts, rgb }=await import('pdf-lib');
+  const [{ PDFDocument, rgb }, {default: fontkit}]=await Promise.all([
+    import('pdf-lib'),import('@pdf-lib/fontkit')
+  ]);
   const doc=await PDFDocument.create();
-  const font=await doc.embedFont(StandardFonts.Helvetica);
-  const fontBold=await doc.embedFont(StandardFonts.HelveticaBold);
+  doc.registerFontkit(fontkit);
+  const fetchFont=async(filename:string):Promise<Uint8Array>=>{
+    const response=await fetch(import.meta.env.BASE_URL+'fonts/'+filename);
+    if(!response.ok)throw new Error('Bundled PDF font unavailable: '+filename);
+    return new Uint8Array(await response.arrayBuffer());
+  };
+  // Locally bundled OFL-licensed font: no third-party network request or
+  // runtime font service. UTF-8 scientific characters remain selectable text.
+  const [regularBytes,boldBytes]=await Promise.all([
+    fetchFont('Lato-Regular.ttf'),fetchFont('Lato-Bold.ttf')
+  ]);
+  const font=await doc.embedFont(regularBytes,{subset:true});
+  const fontBold=await doc.embedFont(boldBytes,{subset:true});
+  const rawFont=fontkit.create(regularBytes);
+  const clean=(value:string)=>Array.from(value,ch=>
+    rawFont.hasGlyphForCodePoint(ch.codePointAt(0)!)?ch:pdfSafeText(ch)).join('');
   const A4:[number,number]=[595.28,841.89];
   let page=doc.addPage(A4),y=A4[1]-42;
-  // The built-in PDF font supports WinAnsi. Preserve report meaning for
-  // non-WinAnsi symbols instead of silently dropping them (CO₂e -> CO2e).
-  const clean=(value:string)=>value
-    .replace(/→/g,' -> ').replace(/[–—−]/g,' - ')
-    .replace(/[“”]/g,'"').replace(/[‘’]/g,"'")
-    .replace(/…/g,'...').replace(/≤/g,'<=').replace(/≥/g,'>=')
-    .replace(/[₀-₉]/g,ch=>String('₀₁₂₃₄₅₆₇₈₉'.indexOf(ch)))
-    .replace(/[^\x20-\x7e\u00a0-\u00ff\u20ac]/g,'?');
   const maxWidth=A4[0]-76;
   for(const raw of text.split('\n')){
     const bold=raw.startsWith('#')||raw.startsWith('NOTICE:')||raw.startsWith('AVISO:');
@@ -182,11 +240,21 @@ export function CaseJourney({locale,view,data,setData}:Props){
   }));
   const removeEvidence=(id:string)=>setData(current=>({
     ...current,evidence:current.evidence.filter(e=>e.id!==id),
-    options:current.options.map(o=>({...o,measures:Object.fromEntries(Object.entries(o.measures).map(([k,v])=>[k,v.evidenceId===id?{...v,evidenceId:''}:v]))}))
+    options:current.options.map(o=>({
+      ...o,
+      measures:Object.fromEntries(Object.entries(o.measures).map(([k,v])=>[k,v.evidenceId===id?{...v,evidenceId:''}:v])),
+      parameterValues:Object.fromEntries(Object.entries(o.parameterValues).map(([k,v])=>[k,v.evidenceId===id?{...v,evidenceId:''}:v]))
+    })),
+    dependencyRoutes:current.dependencyRoutes.map(r=>r.evidenceId===id?{...r,evidenceId:''}:r),
+    environmentalBasis:current.environmentalBasis.map(e=>e.evidenceId===id?{...e,evidenceId:''}:e),
+    missionBridges:current.missionBridges.map(m=>m.evidenceId===id?{...m,evidenceId:''}:m),
+    discountedFinance:{...current.discountedFinance,
+      flows:current.discountedFinance.flows.map(f=>f.evidenceId===id?{...f,evidenceId:''}:f)},
+    workshopCapacity:current.workshopCapacity.map(f=>f.evidenceId===id?{...f,evidenceId:''}:f)
   }));
   const addEvidence=()=>{
     setData(current=>({...current,evidence:[...current.evidence,{
-      id:'EV-'+Date.now().toString(36)+'-'+current.evidence.length,
+      id:'EV-'+crypto.randomUUID(),
       title:'',reference:'',owner:'',reviewer:'',reviewedOn:'',
       status:'pending',nature:'estimate',limitations:''
     }]}));
@@ -197,7 +265,9 @@ export function CaseJourney({locale,view,data,setData}:Props){
     ...current,
     id:'CASE-'+Date.now().toString(36),hypothetical:false,programme:'',owner:'',
     gates:{comparableBoundary:false,technicalEligibility:false,measurementMethod:false,independentReview:false},
-    evidence:[],options:current.options.map(o=>({
+    evidence:[],dependencyRoutes:[],environmentalBasis:[],missionBridges:[],workshopCapacity:[],
+    discountedFinance:emptyFinancePlan(),
+    options:current.options.map(o=>({
       ...o,
       measures:Object.fromEntries(current.metrics.map(m=>[m.id,{value:null,evidenceId:''}])),
       parameterValues:Object.fromEntries(Object.keys(o.parameterValues).map(id=>[id,{value:null,evidenceId:''}]))
@@ -205,14 +275,25 @@ export function CaseJourney({locale,view,data,setData}:Props){
   }));
   const importCase=async(file?:File)=>{
     if(!file)return;
-    if(file.size>300_000){setMessage(t('Archivo demasiado grande (máximo 300 KB).','File too large (300 KB max).'));return;}
+    if(file.size>2_000_000){setMessage(t('Archivo demasiado grande (máximo 2 MB).','File too large (2 MB max).'));return;}
     try{
-      const data=validateCaseImport(JSON.parse(await file.text()));
+      const {data,verifiedIntegrity}=await importCaseEnvelope(await file.text());
       setData(data);setSelectedOption('option-a');
-      setMessage(t('Caso cargado. Comprueba la procedencia de cada dato.','Case loaded. Verify each data source.'));
+      setMessage(verifiedIntegrity
+        ?t('Caso cargado. Integridad del archivo comprobada (no equivale a aprobación de evidencias).',
+          'Case loaded. File integrity verified (this does not approve the underlying evidence).')
+        :t('Caso antiguo cargado sin huella de integridad. Comprueba la procedencia y las evidencias.',
+          'Legacy case loaded without an integrity checksum. Check its origin and evidence.'));
     }catch(e){setMessage(t('Archivo no válido: ','Invalid file: ')+String(e));}
   };
-  const exportJson=()=>downloadText(JSON.stringify(data,null,2),safeFilename(data)+'.json','application/json');
+  const exportJson=async()=>{
+    try{
+      const archived=await exportCaseEnvelope(data);
+      downloadText(archived,safeFilename(data)+'.json','application/json');
+      setMessage(t('JSON exportado con huella SHA-256 (integridad, no firma ni aprobación).',
+        'JSON exported with SHA-256 checksum (integrity only, not a signature or approval).'));
+    }catch(error){setMessage(t('No se pudo exportar el JSON: ','Could not export JSON: ')+String(error));}
+  };
   const exportMarkdown=()=>{
     if(!active)return;
     downloadText(reportText(data,active,selectedAudience,locale),safeFilename(data)+'.md','text/markdown;charset=utf-8');
@@ -303,6 +384,11 @@ export function CaseJourney({locale,view,data,setData}:Props){
         </div>)}</div>
       </section>
       <UniversalControls locale={locale} data={data} setData={setData}/>
+      <DependencyRoutes locale={locale} data={data} setData={setData}/>
+      <RepairCapacity locale={locale} data={data} setData={setData}/>
+      <EnvironmentalMethod locale={locale} data={data} setData={setData}/>
+      <MissionBridgeReview locale={locale} data={data} setData={setData}/>
+      <DiscountedFinance locale={locale} data={data} setData={setData}/>
       <section className="cy-panel">
         <h3>{t('Comparación de las alternativas','Comparison of alternatives')}</h3>
         <p>{t('Los indicadores se calculan con los controles anteriores. Los que no aplican se excluyen, y los desconocidos bloquean las conclusiones afectadas. No hay un ganador automático si existen compromisos.',
@@ -323,6 +409,30 @@ export function CaseJourney({locale,view,data,setData}:Props){
             <small>{row.robustness==='stable'?t('Conclusión estable ante variaciones individuales','Stable under individual input changes'):
               row.robustness==='sensitive'?t('La conclusión cambia con alguna variación','The result changes under some variation'):
               row.robustness==='equivalent'?t('Alternativas equivalentes con los valores actuales','Equivalent with the current inputs'):t('No se ha podido evaluar la variación','Local variation not evaluated')}</small>
+            {row.sensitivityRange&&<small>
+              {t('Rango de diferencia bajo cambios individuales','Difference range under one-at-a-time changes')}: 
+              {present(row.sensitivityRange.minDelta,locale)} – {present(row.sensitivityRange.maxDelta,locale)} {parameterUnit(row.metric.unit,data.kind,locale)}.
+              {' '}{row.sensitivityRange.validScenarios}/{row.sensitivityRange.attemptedScenarios} {t('recalculos válidos','valid recalculations')}.
+              {row.sensitivityRange.invalidScenarios>0&&<> <strong>{t('Cobertura incompleta: no puede afirmarse estabilidad.','Incomplete coverage: stability cannot be claimed.')}</strong></>}
+              {row.sensitivityRange.switchingParameter&&<>
+                {' · '}{t('Puede cambiar al modificar','Can switch when changing')}{' '}
+                {UNIVERSAL_PARAMETERS.find(p=>p.id===row.sensitivityRange?.switchingParameter)?.label[locale]??row.sensitivityRange.switchingParameter}
+                {' '}({t('umbral aproximado','approximate switch threshold')} {present(row.sensitivityRange.switchingValue??null,locale)})
+              </>}
+            </small>}
+            {row.coordinatedStress&&<small>
+              {t('Prueba simultánea de entradas (4 combinaciones extremas, NO un intervalo estadístico)',
+                 'Coordinated input stress (4 extreme combinations, NOT a statistical interval)')}: 
+              {row.coordinatedStress.coverage==='none'
+                ?t('SIN RANGO: ninguna combinación extrema válida.','NO RANGE: no mathematically valid extreme combinations.')
+                :<>{present(row.coordinatedStress.minDelta,locale)} – {present(row.coordinatedStress.maxDelta,locale)}
+                  {' '}{parameterUnit(row.metric.unit,data.kind,locale)}</>}
+              {' · '}{row.coordinatedStress.validScenarios}/{row.coordinatedStress.attemptedScenarios}{' '}
+              {t('escenarios matemáticamente válidos','mathematically valid scenarios')}
+              {row.coordinatedStress.coverage==='partial'&&
+                <> · {t('COBERTURA INCOMPLETA: no es una cota de riesgo.',
+                       'INCOMPLETE COVERAGE: not a risk bound.')}</>}
+            </small>}
           </li>)}</ul>
           <p className="cy-help">{t('Referencia:','Baseline:')} {displayOptionName(data.options[0],locale)}. {t('Hipótesis de modelo, no beneficio validado.','Model assumption, not a validated benefit.')}</p>
         </article>)}</div>
@@ -372,6 +482,34 @@ export function CaseJourney({locale,view,data,setData}:Props){
               <input value={item.reviewer} onChange={e=>patchEvidence(item.id,{reviewer:e.target.value})}/></label>
             <label className="cy-field"><span>{t('Fecha de revisión','Review date')}</span>
               <input type="date" value={item.reviewedOn} onChange={e=>patchEvidence(item.id,{reviewedOn:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('Versión o revisión exacta del documento','Exact source document version / revision')}</span>
+              <input maxLength={120} value={item.documentVersion??''} onChange={e=>patchEvidence(item.id,{documentVersion:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('Fecha de caducidad (si aplica)','Evidence validity date (if applicable)')}</span>
+              <input type="date" value={item.validUntil??''} onChange={e=>patchEvidence(item.id,{validUntil:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('Fecha de revocación (si aplica)','Revocation date (if applicable)')}</span>
+              <input type="date" value={item.revokedOn??''} onChange={e=>patchEvidence(item.id,{revokedOn:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('Fragmento exacto que sustenta el dato','Exact supporting source excerpt')}</span>
+              <textarea rows={2} maxLength={4000} value={item.excerptUsed??''}
+                onChange={e=>patchEvidence(item.id,{excerptUsed:e.target.value})}/></label>
+            <label className="cy-field"><span>{t('SHA-256 del archivo fuente (sin subir documento)','Source file SHA-256 (document NOT uploaded)')}</span>
+              <input spellCheck={false} maxLength={64} value={item.documentSha256??''}
+                onChange={e=>patchEvidence(item.id,{documentSha256:e.target.value.toLowerCase()})}
+                placeholder="64 hexadecimal digits"/>
+              <small>{t('Compara versiones de bytes. No autentica revisiones ni constituye firma.',
+                'Checks file byte identity. It does not authenticate approvals or signatures.')}</small>
+            </label>
+            <label className="cy-field"><span>{t('Calcular SHA-256 en el navegador; el archivo NO se envía','Compute SHA-256 in browser; file is NOT sent')}</span>
+              <input type="file" onChange={async e=>{
+                const source=e.target.files?.[0];
+                if(!source)return;
+                try{
+                  const digest=await sha256EvidenceBlob(source);
+                  patchEvidence(item.id,{documentSha256:digest});
+                  setMessage(t('Huella calculada localmente. El archivo no se ha subido.',
+                    'Checksum calculated locally. The file was not uploaded.'));
+                }catch(err){setMessage(t('No se pudo calcular la huella: ','Checksum failed: ')+String(err));}
+                finally{e.target.value='';}
+              }}/></label>
             <label className="cy-field"><span>{t('Naturaleza del dato','Evidence nature')}</span>
               <select value={item.nature} onChange={e=>patchEvidence(item.id,{nature:e.target.value as EvidenceItem['nature']})}>
                 <option value="estimate">{t('Estimación / hipótesis','Estimate / assumption')}</option>

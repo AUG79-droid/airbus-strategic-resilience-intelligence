@@ -18,6 +18,10 @@ const n=(x:number,locale:Locale,digits=1)=>
   new Intl.NumberFormat(locale,{maximumFractionDigits:digits}).format(x);
 const asPercent=(x:number,locale:Locale)=>n(x,locale,1)+' %';
 const measure=(c:OptionComparison,id:string)=>{
+  // A physical inventory difference is not a sustainability benefit when
+  // functional units, periods or factor datasets cannot be compared.
+  if(['materialKg','wasteKg','ghgKg'].includes(id)&&
+    c.environmentCheck.status!=='declaredComparable')return undefined;
   const row=c.rows.find(x=>x.metric.id===id);
   return row && row.issue===undefined && row.baseline!==null && row.candidate!==null
     && row.delta!==null ?row:undefined;
@@ -103,8 +107,8 @@ function otherStrategicMessage(data:StrategicCase,c:OptionComparison,audience:Au
       titleEn:'Response resilience: coordinated and dependable alerts',
       processEs:'el flujo operativo de información y coordinación ante incendios',
       processEn:'the operational fire information and coordination flow',
-      mechanismEs:'La integración de observación aérea y satelital puede ofrecer más vías de información, y la redundancia de comunicaciones reduce la dependencia de un único enlace.',
-      mechanismEn:'Integrated airborne and satellite observations can offer more information routes, while redundant communications reduce reliance on a single link.',
+      mechanismEs:'La integración de observación aérea y satelital puede ofrecer más vías de información, y la redundancia de comunicaciones podría reducir la dependencia de un único enlace, siempre que las rutas sean efectivamente independientes y operativas.',
+      mechanismEn:'Integrated airborne and satellite observations can offer more information routes, while redundant communications could reduce single-link dependence if routes are truly independent and operational.',
       benefitEs:'El valor estratégico no es simplemente incorporar tecnología: es conservar una coordinación útil cuando fallan sensores o comunicaciones.',
       benefitEn:'The strategic value is not technology alone: it is maintaining useful coordination when sensors or communications fail.',
       engineeringEs:'¿Qué pruebas de latencia, alarmas falsas, seguridad de datos y conectividad confirmarían un flujo fiable de información?',
@@ -307,6 +311,17 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
     ?(es?`La demanda de material virgen pasa de ${n(material.baseline!,locale)} a ${n(material.candidate!,locale)} kg por unidad funcional.`
       :`Virgin material demand moves from ${n(material.baseline!,locale)} to ${n(material.candidate!,locale)} kg per functional unit.`)
     :'';
+  const materialMeaning=material
+    ?material.delta!< -1e-9
+      ?(es?'El valor ambiental modelizado es consumir menos material virgen, sujeto a la comparabilidad y validación del inventario.':
+        'The modelled environmental value is lower virgin-material demand, subject to inventory comparability and validation.')
+      :material.delta!>1e-9
+        ?(es?'La alternativa aumenta la demanda de material virgen; no puede afirmarse un ahorro de material.':
+          'The option increases virgin-material demand; no material saving can be claimed.')
+        :(es?'La demanda de material virgen no cambia en esta comparación.':
+          'Virgin-material demand is unchanged in this comparison.')
+    :(es?'No hay una comparación ambiental suficiente para afirmar un ahorro de material.':
+      'There is not enough comparable environmental information to claim a material saving.');
   const supplyText=supply
     ?(es?`El plazo condicionante de suministro introducido pasa de ${n(supply.base,locale)} a ${n(supply.value,locale)} ${hours}.`
       :`The entered supply lead-time constraint moves from ${n(supply.base,locale)} to ${n(supply.value,locale)} ${hours}.`)
@@ -314,8 +329,8 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
   const better=recovery&&recovery.delta!<0;
   const mechanism=isEco
     ?(combo
-      ?(es?'Combinar la reparación con un proveedor alternativo ofrece dos vías para recuperar el componente ante problemas de suministro.':
-        'Combining repair with an alternative supplier provides two ways to recover the component if normal supply is disrupted.')
+      ?(es?'El escenario propone reparación y un proveedor alternativo como dos posibles vías. Antes de atribuir resiliencia, debe comprobarse que sean independientes, viables y con capacidad suficiente.':
+        'The scenario proposes repair and alternative supply as two possible routes. Independence, eligibility and capacity must be verified before claiming a resilience benefit.')
       :(es?'Una reparación cualificada permite recuperar el componente sin depender únicamente de recibir uno nuevo.':
         'Qualified repair offers another way to recover the component without relying only on a new delivery.'))
     :(es?`La iniciativa plantea este mecanismo de resiliencia: ${data.mechanism||'reducir una vulnerabilidad operativa definida'}.`
@@ -332,8 +347,8 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
       operationalMeaning:`${mechanism} ${improvementQualifier}`,
       quantifiedFinding:recoveryText+deadlineText,
       sustainabilityLink:es
-        ?`${materialText} El valor para Defensa es consumir menos materiales y disponer de una alternativa a la sustitución convencional.`
-        :`${materialText} For Defence, the value is using less material and having an alternative to conventional replacement.`,
+        ?`${materialText} ${materialMeaning} La vía adicional solo aporta resiliencia si es técnicamente viable y está disponible.`
+        :`${materialText} ${materialMeaning} The additional route supports resilience only if it is technically viable and available.`,
       decisionQuestion:es
         ?'Pregunta del cliente: ¿qué aporta esta alternativa a la recuperación del componente cuando falla el suministro?'
         :'Customer question: what does this option add to component recovery when supply is disrupted?'
@@ -476,8 +491,8 @@ export function strategicDecisionAnswer(
         'This comparison shows which option can restore the service you defined sooner.')
       :data.kind==='ecodesign'
         ?c.option.id==='option-b'
-          ?(es?'Combinar reparación con otro proveedor ofrece dos vías para recuperar el componente ante problemas de suministro.':
-            'Combining repair and another supplier gives two ways to restore the component when supply is disrupted.')
+          ?(es?'El escenario plantea dos vías de recuperación, pero todavía debe demostrarse su independencia, capacidad y disponibilidad.':
+            'The scenario proposes two recovery routes, but their independence, capacity and availability still require verification.')
           :(es?'Contar con una vía de reparación, además de poder sustituir la pieza, ofrece más opciones para recuperar el componente ante un problema de suministro.':
             'Having a repair route as well as replacement offers another way to recover the component when supply is disrupted.')
       :data.kind==='climate'

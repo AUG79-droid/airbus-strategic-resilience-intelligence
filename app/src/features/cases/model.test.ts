@@ -167,6 +167,12 @@ describe('Create your own strategic case', () => {
     c.robustnessPercent=100;
     const change=compareOption(c,c.options[1]);
     expect(change.rows[0].robustness).toBe('sensitive');
+    const range=change.rows[0].sensitivityRange;
+    expect(range).toBeDefined();
+    expect(range!.minDelta).toBeLessThanOrEqual(change.rows[0].delta!);
+    expect(range!.maxDelta).toBeGreaterThanOrEqual(change.rows[0].delta!);
+    expect(range!.switchingParameter).toBeTruthy();
+    expect(Number.isFinite(range!.switchingValue)).toBe(true);
     c.robustnessPercent=0;
     expect(compareOption(c,c.options[1]).rows[0].robustness).toBe('insufficient');
   });
@@ -224,6 +230,10 @@ describe('Create your own strategic case', () => {
       }
     }
     let result=compareOption(c,c.options[1]);
+    expect(result.canDescribeAsMeasured).toBe(false); // Missing source for environmental methodology.
+    c.environmentalBasis[0].evidenceId='BASE';
+    c.environmentalBasis[1].evidenceId='ALT';
+    result=compareOption(c,c.options[1]);
     expect(result.canDescribeAsMeasured).toBe(true);
     c.evidence[1].nature='estimate';
     result=compareOption(c,c.options[1]);
@@ -242,10 +252,10 @@ describe('Create your own strategic case', () => {
     expect(comparisons(c)[0].verdict).toBe('tradeoff');
   });
 
-  it.each(['general','ecodesign','climate','saf','wildfire'] as const)('provides the same 19 parameters for %s',kind=>{
+  it.each(['general','ecodesign','climate','saf','wildfire'] as const)('provides the same 23 parameters for %s',kind=>{
     const c=kind==='general'?createCase(kind):fromPreset(kind);
-    expect(Object.keys(c.parameters)).toHaveLength(19);
-    expect(c.options.every(o=>Object.keys(o.parameterValues).length===19)).toBe(true);
+    expect(Object.keys(c.parameters)).toHaveLength(23);
+    expect(c.options.every(o=>Object.keys(o.parameterValues).length===23)).toBe(true);
   });
   it('does not treat no-aplica values as numeric zero or demand their evidence',()=>{
     const c=fromPreset('ecodesign','es');
@@ -280,7 +290,27 @@ describe('Create your own strategic case', () => {
     expect(after.rows.find(r=>r.metric.id==='expectedCost')?.candidate)
       .not.toBe(before.rows.find(r=>r.metric.id==='expectedCost')?.candidate);
   });
-  it('preserves N/A reasons and the nineteen inputs across JSON save and restore',()=>{
+  it('requires evidence for concurrent-event delay when downtime valuation makes cost depend on it',()=>{
+    const c=fromPreset('ecodesign');
+    c.parameters.downtimeRate={applicability:'applies',reason:'Fictional value of interruption'};
+    c.parameters.jointFailureShock={applicability:'applies',reason:'Fictional dependent events'};
+    c.parameters.jointExtraDelay={applicability:'applies',reason:'Fictional extra concurrent delay'};
+    for(const [index,option] of c.options.entries()){
+      const evidence=index===0?'SIM-EURO-OPS-REF':index===1?'SIM-EURO-OPS-A':'SIM-EURO-OPS-B';
+      option.parameterValues.downtimeRate={value:100,evidenceId:evidence};
+      option.parameterValues.jointFailureShock={value:index===0?10:5,evidenceId:evidence};
+      option.parameterValues.jointExtraDelay={value:5,evidenceId:''};
+    }
+    let cost=compareOption(c,c.options[1]).rows.find(r=>r.metric.id==='expectedCost')!;
+    expect(cost.candidate).not.toBeNull();
+    expect(cost.evidenceReady).toBe(false);
+    c.options[0].parameterValues.jointExtraDelay.evidenceId='SIM-EURO-OPS-REF';
+    c.options[1].parameterValues.jointExtraDelay.evidenceId='SIM-EURO-OPS-A';
+    cost=compareOption(c,c.options[1]).rows.find(r=>r.metric.id==='expectedCost')!;
+    expect(cost.evidenceReady).toBe(true);
+    expect(cost.sensitivityRange?.attemptedScenarios).toBeGreaterThan(32);
+  });
+  it('preserves N/A reasons and the 23 inputs across JSON save and restore',()=>{
     const c=fromPreset('wildfire','es');
     c.parameters.materialKg={applicability:'notApplicable',reason:'No se evalúan materiales'};
     const imported=validateCaseImport(JSON.parse(JSON.stringify(c)));

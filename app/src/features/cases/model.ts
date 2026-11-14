@@ -1,4 +1,9 @@
 import { calculateUniversal, defaultParameterStates, emptyParameterValues, UNIVERSAL_PARAMETERS, type DerivedValue, type ParamMap, type ParamValues } from './universal';
+import { validateRoutes, type DependencyRoute } from './supplyGraph';
+import { compareEnvironmentalBasis, validateEnvironmentalBasis, type EnvironmentalBasis, type EnvironmentBasisCheck } from './environmentBasis';
+import { validateMissionBridges, type MissionBridge } from './missionBridge';
+import { emptyFinancePlan, validateFinancePlan, type DiscountedFinancePlan } from './discountedCashFlows';
+import {validateWorkshopCapacity,type WorkshopCapacityScenario} from './workshopCapacity';
 // Independent custom-case model. This is a transparent comparative calculator, not
 // a predictive aerospace certification, LCA, mission-availability or emissions model.
 export type CaseKind = 'general' | 'ecodesign' | 'climate' | 'saf' | 'wildfire';
@@ -37,6 +42,12 @@ export function displayOptionName(option:Pick<Option,'id'|'name'>,locale:'es'|'e
 export interface EvidenceItem {
   id: string; title: string; reference: string; owner: string; reviewer: string;
   reviewedOn: string; status: EvidenceStatus; nature: EvidenceNature; limitations: string;
+  /** Optional source provenance declarations; none authenticates a reviewer. */
+  documentVersion?:string;
+  documentSha256?:string;
+  excerptUsed?:string;
+  validUntil?:string;
+  revokedOn?:string;
 }
 export interface ReviewGates {
   comparableBoundary: boolean;
@@ -46,6 +57,8 @@ export interface ReviewGates {
 }
 export interface StrategicCase {
   version: 1;
+  /** Import schema revision; legacy cases without this field use revision 1. */
+  caseSchemaVersion?:2;
   id: string;
   kind: CaseKind;
   title: string;
@@ -64,6 +77,13 @@ export interface StrategicCase {
   gates: ReviewGates;
   robustnessPercent: number;
   hypothetical: boolean;
+  /** Optional topology assessment, never a validated recovery or readiness factor. */
+  dependencyRoutes: DependencyRoute[];
+  environmentalBasis: EnvironmentalBasis[];
+  missionBridges: MissionBridge[];
+  discountedFinance: DiscountedFinancePlan;
+  /** Optional illustrative FIFO capacity planning, separate from recovery KPI. */
+  workshopCapacity: WorkshopCapacityScenario[];
 }
 
 export interface IndicatorComparison {
@@ -74,6 +94,16 @@ export interface IndicatorComparison {
   percentChange: number | null;
   improvement: number | null;
   robustness: 'stable' | 'sensitive' | 'insufficient' | 'equivalent';
+  /** Raw delta range under isolated input changes, NOT a confidence interval. */
+  sensitivityRange?: {
+    minDelta:number;maxDelta:number;
+    attemptedScenarios:number;validScenarios:number;invalidScenarios:number;
+    switchingParameter?:string;switchingAlternative?:string;switchingValue?:number;
+  };
+  /** Four coordinated ± input-stress scenarios; not statistical confidence bounds. */
+  coordinatedStress?: {minDelta:number;maxDelta:number;validScenarios:number;attemptedScenarios:number;
+    /** Scope of the extreme-scenario evaluation, never a confidence score. */
+    coverage:'none'|'partial'|'complete'};
   evidenceReady: boolean;
   observedEvidence: boolean;
   issue?: 'excluded' | 'missing';
@@ -87,6 +117,7 @@ export interface OptionComparison {
   reviewedData: boolean;
   observedData: boolean;
   canDescribeAsMeasured: boolean;
+  environmentCheck: EnvironmentBasisCheck;
   missing: string[];
 }
 
@@ -206,12 +237,12 @@ function makeOptions(metrics: MetricDefinition[], locale:'en'|'es'): Option[] {
 export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): StrategicCase {
   const metrics = MODEL_TEMPLATES[kind].metrics.map((m,i)=>({...m,label:locale==='es'?MODEL_TEMPLATES_ES[kind].labels[i]:m.label}));
   return {
-    version:1, id: 'CASE-'+Date.now().toString(36), kind, title:'',
+    version:1, caseSchemaVersion:2, id: 'CASE-'+Date.now().toString(36), kind, title:'',
     programme:'', decision:'', initiative:'', vulnerability:'', mechanism:'',
     boundary:'', timeHorizon:'', owner:'', metrics,
     parameters:defaultParameterStates(kind,locale),
     options:makeOptions(metrics,locale), evidence:[], gates:emptyGates(),
-    robustnessPercent:10, hypothetical:false
+    robustnessPercent:10, hypothetical:false, dependencyRoutes:[], environmentalBasis:[], missionBridges:[], discountedFinance:emptyFinancePlan(), workshopCapacity:[]
   };
 }
 
@@ -226,6 +257,9 @@ export function evidenceReviewed(caseData: StrategicCase, measure: Measure): boo
     !!record.owner.trim() && !!record.reviewer.trim() &&
     record.owner.trim().toLowerCase()!==record.reviewer.trim().toLowerCase() &&
     /^\d{4}-\d{2}-\d{2}$/.test(record.reviewedOn) &&
+    record.reviewedOn<=new Date().toISOString().slice(0,10) &&
+    (!record.validUntil||record.validUntil>=new Date().toISOString().slice(0,10)) &&
+    !record.revokedOn &&
     !!record.title.trim();
 }
 
@@ -240,12 +274,12 @@ const COMPUTED_INDICATORS:{
   category:MetricDefinition['category']; sourceIds:string[];
 }[]=[
   {id:'expectedRecovery',label:'Tiempo medio de recuperación / Expected recovery',unit:'time',direction:'lower',category:'resilience',
-    sourceIds:['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay']},
+    sourceIds:['baseRecovery','supplyLead','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay']},
   {id:'deadlineAttainment',label:'Probabilidad de cumplir el plazo / Deadline attainment',unit:'%',direction:'higher',category:'operational',
-    sourceIds:['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay']},
+    sourceIds:['baseRecovery','supplyLead','recoveryTarget','technicalSuccess','failureDelay','shockProbability','shockDelay','jointFailureShock','jointExtraDelay']},
   {id:'expectedCost',label:'Coste esperado / Expected cost',unit:'€',direction:'lower',category:'cost',
     sourceIds:['baseCost','logisticsCost','investmentCost','shockProbability','shockSurcharge','technicalSuccess','failureCost',
-      'reservationFee','cancellationProbability','cancellationFee']},
+      'reservationFee','cancellationProbability','cancellationFee','downtimeRate','jointFailureShock','jointExtraCost']},
   {id:'materialKg',label:'Material virgen / Virgin material',unit:'kg',direction:'lower',category:'environment',sourceIds:['materialKg']},
   {id:'wasteKg',label:'Residuos / Waste',unit:'kg',direction:'lower',category:'environment',sourceIds:['wasteKg']},
   {id:'ghgKg',label:'GEI parciales / Bounded GHG',unit:'kg CO₂e',direction:'lower',category:'environment',sourceIds:['ghgKg']},
@@ -263,13 +297,18 @@ function localInputSensitivity(
   caseData:StrategicCase, baseline:Option, candidate:Option,
   outputKey:typeof OUTPUT_KEYS[number], sourceIds:string[],
   baseValue:number, candidateValue:number, direction:Direction
-):IndicatorComparison['robustness']{
+):{
+  status:IndicatorComparison['robustness'];
+  range?:IndicatorComparison['sensitivityRange'];
+}{
   const original=(direction==='lower'?1:-1)*(baseValue-candidateValue);
-  if(!Number.isFinite(original))return 'insufficient';
-  if(Math.abs(original)<1e-9)return 'equivalent';
-  if(caseData.robustnessPercent<=0)return 'insufficient';
+  if(!Number.isFinite(original))return {status:'insufficient'};
+  if(caseData.robustnessPercent<=0)return {status:Math.abs(original)<1e-9?'equivalent':'insufficient'};
   const referenceSign=Math.sign(original);
-  let tested=0;
+  const startDelta=candidateValue-baseValue;
+  let minDelta=startDelta,maxDelta=startDelta;
+  let tested=0,attempted=0,invalid=0;
+  let switchingParameter:string|undefined,switchingAlternative:string|undefined,switchingValue:number|undefined;
   for(const id of sourceIds){
     if(caseData.parameters[id]?.applicability!=='applies')continue;
     const definition=UNIVERSAL_PARAMETERS.find(p=>p.id===id);
@@ -277,28 +316,102 @@ function localInputSensitivity(
     for(const option of [baseline,candidate]){
       const present=option.parameterValues[id]?.value;
       if(typeof present!=='number'||!Number.isFinite(present))continue;
-      // For a zero starting value, use a 1-unit floor so the check can
-      // still explore adding a small chance/cost/delay rather than 0 × %.
       const step=Math.max(Math.abs(present),1)*caseData.robustnessPercent/100;
       for(const directionStep of [-1,1]){
         const changedValue=Math.max(definition.minimum??-Infinity,
           Math.min(definition.maximum??Infinity,present+directionStep*step));
         if(changedValue===present)continue;
+        attempted++;
         const changed:Option={...option,parameterValues:{
           ...option.parameterValues,
           [id]:{...option.parameterValues[id],value:changedValue}
         }};
         const output=calculateUniversal(caseData,changed)[outputKey];
-        if(output.state!=='calculated'||output.value===null)return 'insufficient';
+        // Invalid perturbed states (e.g. a joint probability outside Fréchet
+        // limits) are not counted as simulated outcomes or proof of stability.
+        if(output.state!=='calculated'||output.value===null){invalid++;continue;}
         const nextBaseline=option===baseline?output.value:baseValue;
         const nextCandidate=option===candidate?output.value:candidateValue;
+        const delta=nextCandidate-nextBaseline;
+        minDelta=Math.min(minDelta,delta);
+        maxDelta=Math.max(maxDelta,delta);
         const signed=(direction==='lower'?1:-1)*(nextBaseline-nextCandidate);
         tested++;
-        if(Math.abs(signed)<1e-9||Math.sign(signed)!==referenceSign)return 'sensitive';
+        if(referenceSign!==0 && !switchingParameter &&
+          (Math.abs(signed)<1e-9||Math.sign(signed)!==referenceSign)){
+          switchingParameter=id;
+          switchingAlternative=option.id;
+          // Bisect the first sign reversal along this one input to return an
+          // approximate DECISION THRESHOLD, not merely the stress endpoint.
+          let sameSide=present,oppositeSide=changedValue;
+          for(let iteration=0;iteration<26;iteration++){
+            const midpoint=(sameSide+oppositeSide)/2;
+            if(midpoint===sameSide||midpoint===oppositeSide)break;
+            const probeOption:Option={...option,parameterValues:{
+              ...option.parameterValues,
+              [id]:{...option.parameterValues[id],value:midpoint}
+            }};
+            const trial=calculateUniversal(caseData,probeOption)[outputKey];
+            if(trial.state!=='calculated'||trial.value===null)break;
+            const x=option===baseline?trial.value:baseValue;
+            const y=option===candidate?trial.value:candidateValue;
+            const signedTrial=(direction==='lower'?1:-1)*(x-y);
+            if(Math.abs(signedTrial)<1e-9||Math.sign(signedTrial)!==referenceSign)
+              oppositeSide=midpoint;
+            else sameSide=midpoint;
+          }
+          switchingValue=oppositeSide;
+        }
       }
     }
   }
-  return tested>0?'stable':'insufficient';
+  if(!attempted)return {status:'insufficient'};
+  const range={minDelta,maxDelta,attemptedScenarios:attempted,validScenarios:tested,invalidScenarios:invalid,
+    switchingParameter,switchingAlternative,switchingValue};
+  // One demonstrated sign change is meaningful. But skipping invalid probes
+  // cannot justify declaring an option robust or equivalent over the range.
+  if(switchingParameter)return {status:'sensitive',range};
+  if(!tested||invalid>0)return {status:'insufficient',range};
+  if(Math.abs(original)<1e-9)return {status:'equivalent',range};
+  return {status:'stable',range};
+}
+
+/** Bounded deterministic stress, *not* simulation percentiles.
+ * For each input, vary by the configured percentage in the same
+ * direction. Evaluate four combinations of reference/alternative
+ * upward/downward changes; record valid outcomes only. Important:
+ * neither scenario probabilities nor model confidence are estimated.
+ */
+function coordinatedInputStress(
+  data:StrategicCase,base:Option,candidate:Option,
+  key:typeof OUTPUT_KEYS[number],sourceIds:string[],
+  baselineValue:number,candidateValue:number
+):IndicatorComparison['coordinatedStress'] {
+  if(data.robustnessPercent<=0)return undefined;
+  const change=(option:Option,sign:-1|1):Option=>{
+    const values={...option.parameterValues};
+    for(const id of sourceIds){
+      if(data.parameters[id]?.applicability!=='applies')continue;
+      const present=option.parameterValues[id]?.value;
+      const def=UNIVERSAL_PARAMETERS.find(p=>p.id===id);
+      if(typeof present!=='number'||!Number.isFinite(present)||!def)continue;
+      const step=Math.max(Math.abs(present),1)*data.robustnessPercent/100;
+      const updated=Math.max(def.minimum??-Infinity,Math.min(def.maximum??Infinity,present+sign*step));
+      values[id]={...values[id],value:updated};
+    }
+    return {...option,parameterValues:values};
+  };
+  const result=[candidateValue-baselineValue];
+  let validScenarios=0;
+  for(const baselineSign of [-1,1] as const)for(const optionSign of [-1,1] as const){
+    const x=calculateUniversal(data,change(base,baselineSign))[key];
+    const y=calculateUniversal(data,change(candidate,optionSign))[key];
+    if(x.state!=='calculated'||y.state!=='calculated'||x.value===null||y.value===null)continue;
+    result.push(y.value-x.value);
+    validScenarios++;
+  }
+  return {minDelta:Math.min(...result),maxDelta:Math.max(...result),validScenarios,attemptedScenarios:4,
+    coverage:validScenarios===0?'none':validScenarios===4?'complete':'partial'};
 }
 
 function parameterEvidence(caseData:StrategicCase,option:Option,ids:string[],kind:'reviewed'|'observed'):boolean{
@@ -333,16 +446,23 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
     }
     const delta=a.value!-b.value!;
     const improvement=definition.direction==='lower'?-delta:delta;
-    const robustness=localInputSensitivity(caseData,baseline,candidate,key,
-      definition.sourceIds,b.value!,a.value!,definition.direction);
-    const evidenceReady=parameterEvidence(caseData,baseline,definition.sourceIds,'reviewed')&&
-      parameterEvidence(caseData,candidate,definition.sourceIds,'reviewed');
-    const observedEvidence=parameterEvidence(caseData,baseline,definition.sourceIds,'observed')&&
-      parameterEvidence(caseData,candidate,definition.sourceIds,'observed');
+    const sourceIds=definition.id==='expectedCost'&&
+      caseData.parameters.downtimeRate?.applicability==='applies'
+      ?[...definition.sourceIds,'baseRecovery','supplyLead','failureDelay','shockDelay','jointExtraDelay']
+      :definition.sourceIds;
+    const sensitivity=localInputSensitivity(caseData,baseline,candidate,key,
+      sourceIds,b.value!,a.value!,definition.direction);
+    const coordinatedStress=coordinatedInputStress(caseData,baseline,candidate,
+      key,sourceIds,b.value!,a.value!);
+    const evidenceReady=parameterEvidence(caseData,baseline,sourceIds,'reviewed')&&
+      parameterEvidence(caseData,candidate,sourceIds,'reviewed');
+    const observedEvidence=parameterEvidence(caseData,baseline,sourceIds,'observed')&&
+      parameterEvidence(caseData,candidate,sourceIds,'observed');
     if(!evidenceReady)missing.push(definition.label+': missing traceable review for baseline and alternative');
     return {metric,baseline:b.value,candidate:a.value,delta,
       percentChange:b.value===0?null:delta/Math.abs(b.value!)*100,improvement,
-      robustness,evidenceReady,observedEvidence};
+      robustness:sensitivity.status,sensitivityRange:sensitivity.range,coordinatedStress,
+      evidenceReady,observedEvidence};
   });
   const active=rows.filter(r=>r.issue!=='excluded');
   const incomplete=active.length===0||active.some(r=>r.improvement===null);
@@ -358,11 +478,27 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
   const missingReasons=UNIVERSAL_PARAMETERS.filter(p=>caseData.parameters[p.id].applicability==='notApplicable'&&
     !caseData.parameters[p.id].reason.trim());
   if(missingReasons.length)missing.push('N/A exclusions require a reason: '+missingReasons.map(p=>p.id).join(', '));
+  const hasEnvironmentalRows=active.some(row=>row.metric.category==='environment'&&row.issue!=='excluded');
+  const environmentCheck=compareEnvironmentalBasis(
+    caseData.environmentalBasis?.find(x=>x.optionId===baseline.id),
+    caseData.environmentalBasis?.find(x=>x.optionId===candidate.id)
+  );
+  if(hasEnvironmentalRows&&environmentCheck.status!=='declaredComparable')
+    missing.push('Environmental inventory boundary/method not comparable: '+environmentCheck.issues.join(', '));
+  const environmentalMethodObserved=!hasEnvironmentalRows||
+    [baseline.id,candidate.id].every(id=>{
+      const method=caseData.environmentalBasis?.find(x=>x.optionId===id);
+      return !!method?.evidenceId&&evidenceObserved(caseData,{value:0,evidenceId:method.evidenceId});
+    });
+  if(hasEnvironmentalRows&&!caseData.hypothetical&&!environmentalMethodObserved)
+    missing.push('Environmental methodology metadata require independently traceable observed evidence for baseline and alternative (user-declared only).');
   const reviewedData=active.length>0&&active.every(r=>r.evidenceReady);
   const observedData=active.length>0&&active.every(r=>r.observedEvidence);
   return {option:candidate,rows,verdict,gatesReady,reviewedData,observedData,
     canDescribeAsMeasured:!caseData.hypothetical&&caseDefined&&reviewedData&&observedData&&
-      gatesReady&&!incomplete&&missingReasons.length===0,missing};
+      gatesReady&&!incomplete&&missingReasons.length===0&&
+      (!hasEnvironmentalRows||(environmentCheck.status==='declaredComparable'&&environmentalMethodObserved)),
+      missing,environmentCheck};
 }
 
 export function comparisons(caseData: StrategicCase):OptionComparison[] {
@@ -372,7 +508,7 @@ export function comparisons(caseData: StrategicCase):OptionComparison[] {
 export function validateCaseImport(value: unknown): StrategicCase {
   if (!value || typeof value!=='object') throw new Error('Invalid case JSON.');
   const x=value as Partial<StrategicCase>;
-  if(x.version!==1 || typeof x.id!=='string'|| !/^[a-zA-Z0-9_-]{1,100}$/.test(x.id) ||
+  if(x.version!==1 || (x.caseSchemaVersion!==undefined&&x.caseSchemaVersion!==2) || typeof x.id!=='string'|| !/^[a-zA-Z0-9_-]{1,100}$/.test(x.id) ||
     !Object.keys(MODEL_TEMPLATES).includes(String(x.kind)) ||
     typeof x.title!=='string' || !Array.isArray(x.metrics) || !Array.isArray(x.options) ||
     !Array.isArray(x.evidence) || !x.gates || x.options.length!==3 ||
@@ -402,7 +538,8 @@ export function validateCaseImport(value: unknown): StrategicCase {
         typeof measure.evidenceId!=='string'||measure.evidenceId.length>100) throw new Error('Invalid measure '+m.id);
     }
   }
-  if(!['baseline'].includes(x.options[0].id))throw new Error('Invalid reference alternative');
+  if(x.options[0].id!=='baseline'||x.options[1].id!=='option-a'||x.options[2].id!=='option-b')
+    throw new Error('Invalid scenario IDs or order: baseline, option-a, option-b expected');
     const evidenceIds=new Set<string>();
   if(x.evidence.some(e=>{
     if(!e||typeof e.id!=='string'|| !/^[a-zA-Z0-9_-]{1,100}$/.test(e.id) ||
@@ -412,6 +549,12 @@ export function validateCaseImport(value: unknown): StrategicCase {
       typeof e.reviewer!=='string'||e.reviewer.length>250||
       typeof e.reviewedOn!=='string'||e.reviewedOn.length>20||
       typeof e.limitations!=='string'||e.limitations.length>4000||
+      (e.documentVersion!==undefined&&(typeof e.documentVersion!=='string'||e.documentVersion.length>120))||
+      (e.documentSha256!==undefined&&(typeof e.documentSha256!=='string'||
+        (e.documentSha256!==''&&!/^[a-f0-9]{64}$/.test(e.documentSha256))))||
+      (e.excerptUsed!==undefined&&(typeof e.excerptUsed!=='string'||e.excerptUsed.length>4000))||
+      (e.validUntil!==undefined&&(typeof e.validUntil!=='string'||e.validUntil.length>20))||
+      (e.revokedOn!==undefined&&(typeof e.revokedOn!=='string'||e.revokedOn.length>20))||
       !['pending','reviewed','rejected'].includes(e.status)||
       !['observed','estimate','method'].includes(e.nature))return true;
     evidenceIds.add(e.id);
@@ -420,6 +563,12 @@ export function validateCaseImport(value: unknown): StrategicCase {
       const d=new Date(e.reviewedOn);
       if(Number.isNaN(d.getTime())||d.toISOString().slice(0,10)!==e.reviewedOn)return true;
     }
+    for(const dateValue of [e.validUntil,e.revokedOn]){
+      if(dateValue===undefined||dateValue==='')continue;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(dateValue))return true;
+      const d=new Date(dateValue);
+      if(Number.isNaN(d.getTime())||d.toISOString().slice(0,10)!==dateValue)return true;
+    }
     return false;
   })) throw new Error('Invalid evidence register');
   if(typeof x.robustnessPercent!=='number'||!Number.isFinite(x.robustnessPercent)||
@@ -427,8 +576,34 @@ export function validateCaseImport(value: unknown): StrategicCase {
   if(['comparableBoundary','technicalEligibility','measurementMethod','independentReview'].some(k=>typeof x.gates?.[k as keyof ReviewGates]!=='boolean'))throw new Error('Invalid review gates');
   // Upgrade saved cases from the original four-KPI builder safely.
   const upgraded=structuredClone(x as StrategicCase);
+  upgraded.caseSchemaVersion=2;
+  upgraded.dependencyRoutes=validateRoutes(upgraded.dependencyRoutes,upgraded.options.map(o=>o.id));
+  upgraded.environmentalBasis=validateEnvironmentalBasis(upgraded.environmentalBasis,upgraded.options.map(o=>o.id));
+  upgraded.missionBridges=validateMissionBridges(upgraded.missionBridges,upgraded.options.map(o=>o.id));
+  upgraded.discountedFinance=validateFinancePlan(upgraded.discountedFinance,upgraded.options.map(o=>o.id));
+  upgraded.workshopCapacity=validateWorkshopCapacity(upgraded.workshopCapacity,upgraded.options.map(o=>o.id));
   upgraded.parameters??=defaultParameterStates(upgraded.kind);
   if(!upgraded.parameters||typeof upgraded.parameters!=='object'||Array.isArray(upgraded.parameters))throw new Error('Invalid applicability catalogue');
+  // Version-1 JSON files predate the optional joint-event field.
+  // Keep them readable and retain explicit independence as the legacy assumption.
+  if(!upgraded.parameters.jointFailureShock){
+    upgraded.parameters.jointFailureShock={
+      applicability:'notApplicable',
+      reason:'Legacy model: technical failure and external shock assumed independent / Modelo anterior: independencia supuesta.'
+    };
+  }
+  if(!upgraded.parameters.jointExtraDelay){
+    upgraded.parameters.jointExtraDelay={applicability:'notApplicable',reason:'Concurrent-event delay not specified in archived model / Retraso conjunto no especificado en el modelo anterior.'};
+  }
+  if(!upgraded.parameters.jointExtraCost){
+    upgraded.parameters.jointExtraCost={applicability:'notApplicable',reason:'Concurrent-event surcharge not specified in archived model / Sobrecoste conjunto no especificado en el modelo anterior.'};
+  }
+  if(!upgraded.parameters.downtimeRate){
+    upgraded.parameters.downtimeRate={
+      applicability:'notApplicable',
+      reason:'Legacy model: the monetary value of interruption time was not estimated / El coste de indisponibilidad no se incluía.'
+    };
+  }
   for(const item of UNIVERSAL_PARAMETERS){
     const p=upgraded.parameters[item.id];
     if(!p||!['applies','notApplicable','unknown'].includes(p.applicability)||
@@ -437,6 +612,10 @@ export function validateCaseImport(value: unknown): StrategicCase {
   for(const option of upgraded.options){
     option.parameterValues??=emptyParameterValues();
     if(!option.parameterValues||typeof option.parameterValues!=='object'||Array.isArray(option.parameterValues))throw new Error('Invalid parameter values');
+    option.parameterValues.jointFailureShock??={value:null,evidenceId:''};
+    option.parameterValues.downtimeRate??={value:null,evidenceId:''};
+    option.parameterValues.jointExtraDelay??={value:null,evidenceId:''};
+    option.parameterValues.jointExtraCost??={value:null,evidenceId:''};
     for(const p of UNIVERSAL_PARAMETERS){
       const m=option.parameterValues[p.id];
       if(!m||typeof m.evidenceId!=='string'||m.evidenceId.length>100||
@@ -445,5 +624,20 @@ export function validateCaseImport(value: unknown): StrategicCase {
         throw new Error('Invalid parameter '+p.id);
     }
   }
+  // Evidence references must identify a real entry in this file. A dangling
+  // ID is not traceability and must never silently pass the import gate.
+  const references=[
+    ...upgraded.options.flatMap(opt=>[
+      ...Object.values(opt.measures).map(m=>m.evidenceId),
+      ...Object.values(opt.parameterValues).map(m=>m.evidenceId)
+    ]),
+    ...upgraded.dependencyRoutes.map(x=>x.evidenceId),
+    ...upgraded.environmentalBasis.map(x=>x.evidenceId),
+    ...upgraded.missionBridges.map(x=>x.evidenceId),
+    ...upgraded.discountedFinance.flows.map(x=>x.evidenceId),
+    ...upgraded.workshopCapacity.map(x=>x.evidenceId)
+  ];
+  const unresolved=[...new Set(references.filter(id=>id.length>0&&!evidenceIds.has(id)))];
+  if(unresolved.length)throw new Error('Unresolved evidence references: '+unresolved.slice(0,12).join(', '));
   return upgraded;
 }
