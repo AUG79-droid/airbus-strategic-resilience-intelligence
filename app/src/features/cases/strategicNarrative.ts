@@ -311,6 +311,17 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
     ?(es?`La demanda de material virgen pasa de ${n(material.baseline!,locale)} a ${n(material.candidate!,locale)} kg por unidad funcional.`
       :`Virgin material demand moves from ${n(material.baseline!,locale)} to ${n(material.candidate!,locale)} kg per functional unit.`)
     :'';
+  const materialMeaning=material
+    ?material.delta!< -1e-9
+      ?(es?'El valor ambiental modelizado es consumir menos material virgen, sujeto a la comparabilidad y validación del inventario.':
+        'The modelled environmental value is lower virgin-material demand, subject to inventory comparability and validation.')
+      :material.delta!>1e-9
+        ?(es?'La alternativa aumenta la demanda de material virgen; no puede afirmarse un ahorro de material.':
+          'The option increases virgin-material demand; no material saving can be claimed.')
+        :(es?'La demanda de material virgen no cambia en esta comparación.':
+          'Virgin-material demand is unchanged in this comparison.')
+    :(es?'No hay una comparación ambiental suficiente para afirmar un ahorro de material.':
+      'There is not enough comparable environmental information to claim a material saving.');
   const supplyText=supply
     ?(es?`El plazo condicionante de suministro introducido pasa de ${n(supply.base,locale)} a ${n(supply.value,locale)} ${hours}.`
       :`The entered supply lead-time constraint moves from ${n(supply.base,locale)} to ${n(supply.value,locale)} ${hours}.`)
@@ -336,8 +347,8 @@ export function strategicMessage(data:StrategicCase,c:OptionComparison,audience:
       operationalMeaning:`${mechanism} ${improvementQualifier}`,
       quantifiedFinding:recoveryText+deadlineText,
       sustainabilityLink:es
-        ?`${materialText} El valor para Defensa es consumir menos materiales y disponer de una alternativa a la sustitución convencional.`
-        :`${materialText} For Defence, the value is using less material and having an alternative to conventional replacement.`,
+        ?`${materialText} ${materialMeaning} La vía adicional solo aporta resiliencia si es técnicamente viable y está disponible.`
+        :`${materialText} ${materialMeaning} The additional route supports resilience only if it is technically viable and available.`,
       decisionQuestion:es
         ?'Pregunta del cliente: ¿qué aporta esta alternativa a la recuperación del componente cuando falla el suministro?'
         :'Customer question: what does this option add to component recovery when supply is disrupted?'

@@ -3,7 +3,7 @@ import {aggregateTimingMoments} from '../../domain/model/timingMoments';
 
 /**
  * Shared parameter catalogue for ALL custom case families.
- * The same 19 fields always exist, in identical sections and order.
+ * The same 23 fields always exist, in identical sections and order.
  * Each has a *case-wide* applicability state and a separate value for
  * baseline and each alternative. N/A excludes a mechanism, not a zero.
  * Unknown blocks the derived outputs that depend on it.

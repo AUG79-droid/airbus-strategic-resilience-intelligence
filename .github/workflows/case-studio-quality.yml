@@ -61,6 +61,7 @@ jobs:
           npm run test:lab-ui
           npm run test:evidence-ui
           npm run test:guided-ui
+          npm run test:four-cases-ui
           node scripts/test-joint-risk-ui.mjs
           node scripts/test-capacity-ui.mjs
       - name: Report granular quality status on commit

@@ -448,7 +448,7 @@ export function compareOption(caseData: StrategicCase, candidate: Option): Optio
     const improvement=definition.direction==='lower'?-delta:delta;
     const sourceIds=definition.id==='expectedCost'&&
       caseData.parameters.downtimeRate?.applicability==='applies'
-      ?[...definition.sourceIds,'baseRecovery','supplyLead','failureDelay','shockDelay']
+      ?[...definition.sourceIds,'baseRecovery','supplyLead','failureDelay','shockDelay','jointExtraDelay']
       :definition.sourceIds;
     const sensitivity=localInputSensitivity(caseData,baseline,candidate,key,
       sourceIds,b.value!,a.value!,definition.direction);

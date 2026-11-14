@@ -31,4 +31,18 @@ describe('32 combinations × two languages: strategic translation contract',()=>
     }
   });
  }
+
+ it.each(['es','en'] as const)('never claims a material saving when Eurodrone material demand increases (%s)',locale=>{
+   const c=fromPreset('ecodesign',locale);
+   c.options[1].parameterValues.materialKg.value=c.options[0].parameterValues.materialKg.value!+10;
+   const comparison=compareOption(c,c.options[1]);
+   const text=strategicMessage(c,comparison,'defenceCustomer',locale).sustainabilityLink;
+   if(locale==='es'){
+     expect(text).toContain('aumenta la demanda de material virgen');
+     expect(text).not.toContain('consumir menos materiales');
+   }else{
+     expect(text).toContain('increases virgin-material demand');
+     expect(text).not.toContain('value is using less material');
+   }
+ });
 });
