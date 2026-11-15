@@ -22,6 +22,7 @@ import {localizeResultStatus,localizeCaseDiagnostic} from './reportI18n';
 import { sha256EvidenceBlob } from './documentProof';
 import { strategicDecisionAnswer, strategicMessage, strategicNarrativeText } from './strategicNarrative';
 import { strategicInsights } from './strategicDeepDive';
+import { referenceRows, referenceNarrative, referenceReportText } from './referenceView';
 import { calculateUniversal, parameterUnit, UNIVERSAL_PARAMETERS } from './universal';
 import './CaseJourney.css';
 
@@ -226,7 +227,12 @@ export function CaseJourney({locale,view,data,setData}:Props){
   const [message,setMessage]=useState('');
   const [exportBusy,setExportBusy]=useState(false);
   const results=useMemo(()=>comparisons(data),[data]);
+  const baselineSelected=selectedOption==='baseline';
   const active=results.find(r=>r.option.id===selectedOption)??results[0];
+  const reference=referenceNarrative(data,selectedAudience,locale);
+  const baselineOutcomes=referenceRows(data,locale);
+  const baselineExerciseComplete=data.hypothetical&&data.evidence.some(e=>e.id.startsWith('SIM-'))&&
+    Object.values(data.gates).every(Boolean)&&baselineOutcomes.filter(row=>row.state!=='excluded').every(row=>row.state==='calculated');
   const strategic=active?strategicMessage(data,active,selectedAudience,locale):null;
   const deepDive=active?strategicInsights(data,active,selectedAudience,locale):[];
   // An exercise can be COMPLETE as a simulation without being validated
@@ -297,13 +303,16 @@ export function CaseJourney({locale,view,data,setData}:Props){
     }catch(error){setMessage(t('No se pudo exportar el JSON: ','Could not export JSON: ')+String(error));}
   };
   const exportMarkdown=()=>{
-    if(!active)return;
-    downloadText(reportText(data,active,selectedAudience,locale),safeFilename(data)+'.md','text/markdown;charset=utf-8');
+    if(!active&&!baselineSelected)return;
+    const report=baselineSelected?referenceReportText(data,selectedAudience,locale):reportText(data,active,selectedAudience,locale);
+    downloadText(report,safeFilename(data)+'.md','text/markdown;charset=utf-8');
   };
   const exportPdf=async()=>{
-    if(!active)return;
+    if(!active&&!baselineSelected)return;
     setExportBusy(true);
-    try{await downloadReportPdf(reportText(data,active,selectedAudience,locale),safeFilename(data));setMessage(t('PDF generado (borrador sujeto a validación).','PDF generated (draft subject to validation).'));}
+    try{
+      const report=baselineSelected?referenceReportText(data,selectedAudience,locale):reportText(data,active,selectedAudience,locale);
+      await downloadReportPdf(report,safeFilename(data));setMessage(t('PDF generado (borrador sujeto a validación).','PDF generated (draft subject to validation).'));}
     catch(e){setMessage(t('Error al generar PDF: ','PDF generation failed: ')+String(e));}
     finally{setExportBusy(false);}
   };
@@ -407,6 +416,8 @@ export function CaseJourney({locale,view,data,setData}:Props){
       <DiscountedFinance locale={locale} data={data} setData={setData}/>
       <section className="cy-panel">
         <h3>{t('Comparación de las alternativas','Comparison of alternatives')}</h3>
+        <p>{t('Se muestran las tres decisiones. La sustitución convencional presenta sus resultados absolutos como referencia; las otras dos muestran las diferencias frente a ella. No se calcula una mejora de la referencia respecto a sí misma.',
+          'All three decisions are shown. Conventional replacement has absolute baseline outcomes; the other two show differences against it. The baseline is never compared against itself.')}</p>
         <p>{t('Los indicadores se calculan con los controles anteriores. Los que no aplican se excluyen, y los desconocidos bloquean las conclusiones afectadas. No hay un ganador automático si existen compromisos.',
           'Metrics are calculated from the controls above. Not-applicable inputs are excluded; unknown inputs block affected conclusions. Trade-offs do not produce an automatic winner.')}</p>
         <label className="cy-field cy-width-short"><span>{t('Variación de parámetros para la prueba (%)','Input variation for local test (%)')}</span>
@@ -414,7 +425,19 @@ export function CaseJourney({locale,view,data,setData}:Props){
             onChange={e=>{const n=Number(e.target.value);if(Number.isFinite(n))setField('robustnessPercent',Math.min(100,Math.max(0,n)));}}/></label>
         <p className="cy-help">{t('ASRI cambia cada parámetro aplicable un ± porcentaje, uno por uno, y recalcula si la conclusión favorable o desfavorable se mantiene. No es un intervalo de confianza ni analiza cambios simultáneos.',
           'ASRI changes applicable inputs one at a time by ± the selected percentage and recalculates whether the favourable or unfavourable result holds. It is not a confidence interval or a simultaneous-risk test.')}</p>
-        <div className="cy-results">{results.map(c=><article key={c.option.id}>
+        <div className="cy-results cy-results--three">
+          <article className="cy-reference-result" data-testid="baseline-results">
+            <h4>{displayOptionName(data.options[0],locale)}</h4>
+            <strong>{t('SITUACIÓN DE REFERENCIA · resultados calculados','BASELINE · calculated outcomes')}</strong>
+            <ul>{baselineOutcomes.filter(row=>row.state!=='excluded').map(row=><li key={row.key}>
+              <span>{row.label}</span>
+              <b>{row.formatted}</b>
+              {row.state!=='calculated'&&<small>{t('No hay datos suficientes para calcular este indicador.','Insufficient data to calculate this indicator.')}</small>}
+            </li>)}</ul>
+            <p className="cy-help">{t('Estos son valores absolutos de la sustitución convencional, no diferencias ni beneficios respecto a sí misma. Se utilizan como referencia para evaluar las otras dos decisiones.',
+              'These are absolute values for conventional replacement, not differences or self-comparison benefits. They provide the baseline for evaluating the other two decisions.')}</p>
+          </article>
+          {results.map(c=><article key={c.option.id}>
           <h4>{displayOptionName(c.option,locale)}</h4><strong>{describeVerdict(c,locale)}</strong>
           <ul>{c.rows.filter(row=>row.issue!=='excluded').map(row=><li key={row.metric.id}>
             <span>{metricTitle(row.metric.label,locale)}</span>
@@ -572,12 +595,48 @@ export function CaseJourney({locale,view,data,setData}:Props){
         <p>{t('ASRI explica qué mejora cada alternativa, qué riesgos mantiene y qué decisiones permite tomar. Cambia la alternativa o la audiencia para ver cómo cambian las conclusiones.',
           'ASRI explains what each option improves, what risks remain and which decisions it supports. Change the option or audience to see the conclusions update.')}</p>
         <div className="cy-choices">
-          <label className="cy-field"><span>{t('Alternativa analizada','Alternative')}</span><select value={active?.option.id??''} onChange={e=>setSelectedOption(e.target.value)}>
+          <label className="cy-field"><span>{t('Decisión analizada','Decision being analysed')}</span><select data-testid="translate-option-select" value={baselineSelected?'baseline':active?.option.id??''} onChange={e=>setSelectedOption(e.target.value)}>
+            <option value="baseline">{displayOptionName(data.options[0],locale)} · {t('referencia','baseline')}</option>
             {results.map(c=><option key={c.option.id} value={c.option.id}>{displayOptionName(c.option,locale)}</option>)}</select></label>
           <label className="cy-field"><span>{t('Audiencia','Audience')}</span><select value={selectedAudience} onChange={e=>setSelectedAudience(e.target.value as Audience)}>
             {audiences.map(a=><option key={a} value={a}>{audienceNames[a][es?0:1]}</option>)}</select></label>
         </div>
-        {active&&<div className="cy-output" role="status">
+        {baselineSelected&&<div className="cy-output" role="status" data-testid="baseline-translation">
+          <span className="cy-status">{baselineExerciseComplete
+            ?t('EJERCICIO COMPLETO · REVISIÓN SIMULADA','COMPLETE EXERCISE · SIMULATED REVIEW')
+            :data.hypothetical?t('EJEMPLO HIPOTÉTICO','HYPOTHETICAL CASE')
+            :t('RESULTADO NO VALIDADO','UNVALIDATED RESULT')}</span>
+          <h4>{audienceNames[selectedAudience][es?0:1]} · {displayOptionName(data.options[0],locale)}</h4>
+          <section className="cy-strategic-message" aria-labelledby="cy-baseline-heading">
+            <p className="cy-strategic-eyebrow">{t('Valor estratégico de la situación de referencia','Strategic meaning of the baseline')}</p>
+            <h3 id="cy-baseline-heading">{reference.headline}</h3>
+            <p className="cy-strategic-meaning">{reference.operationalMeaning}</p>
+            <div className="cy-strategic-finding">
+              <strong>{t('Resultados absolutos modelados · sin comparación consigo misma','Modelled absolute outcomes · no self-comparison')}</strong>
+              <p>{reference.quantifiedFinding}</p>
+            </div>
+            <p className="cy-strategic-sustainability">{reference.sustainabilityLink}</p>
+            <div className="cy-strategic-decision">
+              <p className="cy-strategic-question">{reference.decisionQuestion}</p>
+              <div className="cy-strategic-answer">
+                <strong>{t('Respuesta del análisis','Model-based answer')}</strong>
+                <p>{reference.answer}</p>
+              </div>
+            </div>
+          </section>
+          <section className="cy-deep-dive" aria-label={t('Conclusiones estratégicas ampliadas','Extended strategic conclusions')}>
+            <div className="cy-deep-dive__intro">
+              <h3>{t('Conclusiones estratégicas ampliadas','Extended strategic conclusions')}</h3>
+              <p>{t('Resultados, dependencias y límites de la opción de referencia. No se atribuye una mejora respecto a sí misma.',
+                'Outcomes, dependencies and boundaries of the baseline. No benefit relative to itself is claimed.')}</p>
+            </div>
+            <div className="cy-deep-dive__grid">{reference.insights.map(insight=>
+              <article key={insight.id} className={'cy-deep-dive__item cy-deep-dive__item--'+insight.id}>
+                <h4>{insight.title}</h4><p>{insight.body}</p>
+              </article>)}</div>
+          </section>
+        </div>}
+        {!baselineSelected&&active&&<div className="cy-output" role="status">
           <span className="cy-status">{exerciseComplete(active)
             ?t('EJERCICIO COMPLETO · REVISIÓN SIMULADA','COMPLETE EXERCISE · SIMULATED REVIEW')
             :data.hypothetical?t('EJEMPLO HIPOTÉTICO','HYPOTHETICAL CASE')
