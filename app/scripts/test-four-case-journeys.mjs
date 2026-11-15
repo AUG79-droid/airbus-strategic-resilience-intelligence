@@ -7,7 +7,7 @@ const browser=await chromium.launch({
 });
 const expected=['Eurodrone','Climate','SAF','Wildfire'];
 const audiences=['defenceCustomer','engineering','programmeManager','executiveLeadership'];
-const options=['option-a','option-b'];
+const options=['baseline','option-a','option-b'];
 const checks=[];
 try{
   const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'});
@@ -30,6 +30,10 @@ try{
     for(let phase=0;phase<4;phase++){
       await page.locator('.workflow-button').nth(phase).click();
       await page.locator('.cy-stage').waitFor();
+      if(phase===1){
+        if((await page.locator('.cy-results article').count())!==3)throw Error(`${expected[preset]} does not display all three decisions`);
+        if((await page.getByTestId('baseline-results').count())!==1)throw Error(`${expected[preset]} lacks its explicit baseline card`);
+      }
       if(phase>0){
         const recap=await page.getByTestId('case-scenario-recap').innerText();
         if(!recap.includes(scenario))throw new Error(`${expected[preset]} phase ${phase+1} lost starting incident`);
@@ -40,10 +44,12 @@ try{
         throw new Error(`${expected[preset]} phase ${phase+1} contains an invalid numeric token`);
     }
     const selects=page.locator('.cy-choices select');
+    if((await selects.nth(0).locator('option').count())!==3)throw Error(`${expected[preset]} lacks three Translate decisions`);
     for(const option of options)for(const audience of audiences){
       await selects.nth(0).selectOption(option);
       await selects.nth(1).selectOption(audience);
       const output=page.locator('.cy-output');
+      if(option==='baseline'&&!(await page.getByTestId('baseline-translation').count()))throw Error(`${expected[preset]} missing baseline translation`);
       await output.getByText(/COMPLETE EXERCISE.*SIMULATED REVIEW/).waitFor();
       const text=await output.innerText();
       if(!text.includes('Model-based answer'))
@@ -53,7 +59,7 @@ try{
       if(/\bNaN\b|\bundefined\b|\bInfinity\b/.test(text))
         throw new Error(`${expected[preset]} ${option}/${audience} contains an invalid numeric token`);
     }
-    checks.push(`${expected[preset]}: four phases, two alternatives and four audiences`);
+    checks.push(`${expected[preset]}: four phases, baseline plus two alternatives and four audiences`);
   }
   if(errors.length)throw new Error(`Browser errors:\n${errors.join('\n')}`);
   console.log(JSON.stringify({base,checks,combinations:expected.length*options.length*audiences.length,errors},null,2));
