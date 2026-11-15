@@ -118,7 +118,7 @@ export function referenceNarrative(data:StrategicCase,audience:Audience,locale:L
 }
 
 export function referenceReportText(data:StrategicCase,audience:Audience,locale:Locale):string{
-  const es=locale==='es',n=referenceNarrative(data,audience,locale);
+  const n=referenceNarrative(data,audience,locale);
   const lines=[
     '# ASRI — '+(data.title||t(locale,'Caso sin título','Untitled case')),
     '',t(locale,'AVISO: prototipo independiente, no aprobado por Airbus.','NOTICE: independent prototype, not Airbus approved.'),
