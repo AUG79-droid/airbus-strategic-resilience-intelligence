@@ -88,7 +88,9 @@ export function reportText(data:StrategicCase,chosen:OptionComparison,a:Audience
     es?'RESULTADOS: modelización comparativa, no beneficios validados.':'RESULTS: comparative modelling, not validated benefits.',
     data.hypothetical?(es?'DATOS: 100 % HIPOTÉTICOS.':'DATA: 100% HYPOTHETICAL.'):'',
     '',es?'## 01 Investigar':'## 01 Investigate',
-    `${es?'Programa':'Programme'}: ${data.programme}`,`${es?'Decisión':'Decision'}: ${data.decision}`,
+    `${es?'Programa':'Programme'}: ${data.programme}`,
+    ...(data.scenario?.trim()?[`${es?'Qué ha ocurrido':'What has happened'}: ${data.scenario}`]:[]),
+    `${es?'Decisión':'Decision'}: ${data.decision}`,
     `${es?'Iniciativa':'Initiative'}: ${data.initiative}`,`${es?'Vulnerabilidad':'Vulnerability'}: ${data.vulnerability}`,
     `${es?'Mecanismo':'Mechanism'}: ${data.mechanism}`,`${es?'Alcance':'Scope'}: ${data.boundary}`,
     `${es?'Horizonte':'Horizon'}: ${data.timeHorizon}`,`${es?'Responsable':'Owner'}: ${data.owner}`,
@@ -263,7 +265,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
   const loadPreset=(kind:PresetKey)=>{setData(fromPreset(kind,locale));setSelectedOption('option-a');setMessage('');};
   const convertToReal=()=>setData(current=>({
     ...current,
-    id:'CASE-'+Date.now().toString(36),hypothetical:false,programme:'',owner:'',
+    id:'CASE-'+Date.now().toString(36),hypothetical:false,programme:'',owner:'',scenario:'',
     gates:{comparableBoundary:false,technicalEligibility:false,measurementMethod:false,independentReview:false},
     evidence:[],dependencyRoutes:[],environmentalBasis:[],missionBridges:[],workshopCapacity:[],
     discountedFinance:emptyFinancePlan(),
@@ -326,6 +328,10 @@ export function CaseJourney({locale,view,data,setData}:Props){
         'You can save a copy of your case in the optional save section and resume work later.')}</p>
     </header>
 
+    {view!=='investigate'&&!!data.scenario?.trim()&&<aside className="cy-scenario-recap" data-testid="case-scenario-recap">
+      <strong>{t('El problema que estamos analizando','The problem we are analysing')}</strong>
+      <p>{data.scenario}</p>
+    </aside>}
     {view==='investigate' && <div className="cy-stage">
       <section className="cy-panel cy-start-panel">
         <h3>{t('Opción 1 · Crear un caso nuevo','Option 1 · Create a new case')}</h3>
@@ -343,6 +349,16 @@ export function CaseJourney({locale,view,data,setData}:Props){
         {data.hypothetical&&<p className="cy-example-notice">{sampleWarning}{' '}
           <button type="button" onClick={convertToReal}>{t('Convertirlo en plantilla vacía para datos reales','Convert to an empty real-data template')}</button>
         </p>}
+      </section>
+      <section className="cy-panel cy-scenario-panel" data-testid="case-scenario">
+        <p className="cy-scenario-kicker">{t('SITUACIÓN DE PARTIDA','STARTING SITUATION')}</p>
+        <h3>{t('¿Qué ha ocurrido?','What happened?')}</h3>
+        <p>{t('Antes de comparar soluciones, define el problema concreto que debemos resolver.','Before comparing options, explain the actual problem that triggered this case.')}</p>
+        <label className="cy-field"><span>{t('Descripción del problema','Description of the problem')}</span>
+          <textarea data-case-field="scenario" rows={4} value={data.scenario??''}
+            placeholder={t('Ejemplo: un componente crítico se ha averiado y necesitamos recuperar su función antes del plazo establecido.','Example: a critical component has failed and its function must be restored before the deadline.')}
+            onChange={e=>setField('scenario',e.target.value)}/>
+        </label>
       </section>
       <section className="cy-panel">
         <h3>{t('Ficha del caso','Case definition')}</h3>
