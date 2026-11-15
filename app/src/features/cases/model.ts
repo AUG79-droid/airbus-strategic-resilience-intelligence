@@ -63,6 +63,8 @@ export interface StrategicCase {
   kind: CaseKind;
   title: string;
   programme: string;
+  /** Plain-language description of the triggering problem, not a modelled input. */
+  scenario?: string;
   decision: string;
   initiative: string;
   vulnerability: string;
@@ -238,7 +240,7 @@ export function createCase(kind: CaseKind = 'general', locale:'en'|'es'='en'): S
   const metrics = MODEL_TEMPLATES[kind].metrics.map((m,i)=>({...m,label:locale==='es'?MODEL_TEMPLATES_ES[kind].labels[i]:m.label}));
   return {
     version:1, caseSchemaVersion:2, id: 'CASE-'+Date.now().toString(36), kind, title:'',
-    programme:'', decision:'', initiative:'', vulnerability:'', mechanism:'',
+    programme:'', scenario:'', decision:'', initiative:'', vulnerability:'', mechanism:'',
     boundary:'', timeHorizon:'', owner:'', metrics,
     parameters:defaultParameterStates(kind,locale),
     options:makeOptions(metrics,locale), evidence:[], gates:emptyGates(),
@@ -514,6 +516,9 @@ export function validateCaseImport(value: unknown): StrategicCase {
     !Array.isArray(x.evidence) || !x.gates || x.options.length!==3 ||
     x.metrics.length<1 || x.metrics.length>8 || x.evidence.length>150) throw new Error('Unsupported case structure.');
   const strings=['title','programme','decision','initiative','vulnerability','mechanism','boundary','timeHorizon','owner'] as const;
+  // Older signed JSON archives did not carry a scenario; accept them unchanged.
+  if(x.scenario!==undefined&&(typeof x.scenario!=='string'||x.scenario.length>4000))
+    throw new Error('Invalid field: scenario');
   for(const k of strings) if(typeof x[k]!=='string' || x[k].length>4000) throw new Error('Invalid field: '+k);
   const ids=new Set<string>();
   for(const m of x.metrics) {
@@ -577,6 +582,7 @@ export function validateCaseImport(value: unknown): StrategicCase {
   // Upgrade saved cases from the original four-KPI builder safely.
   const upgraded=structuredClone(x as StrategicCase);
   upgraded.caseSchemaVersion=2;
+  upgraded.scenario??='';
   upgraded.dependencyRoutes=validateRoutes(upgraded.dependencyRoutes,upgraded.options.map(o=>o.id));
   upgraded.environmentalBasis=validateEnvironmentalBasis(upgraded.environmentalBasis,upgraded.options.map(o=>o.id));
   upgraded.missionBridges=validateMissionBridges(upgraded.missionBridges,upgraded.options.map(o=>o.id));

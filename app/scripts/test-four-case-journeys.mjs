@@ -24,9 +24,16 @@ try{
   for(let preset=0;preset<expected.length;preset++){
     await page.locator('.workflow-button').nth(0).click();
     await page.locator('.cy-preset-grid button').nth(preset).click();
+    const scenario=await page.getByTestId('case-scenario').locator('textarea[data-case-field="scenario"]').inputValue();
+    if(scenario.length<130 || !scenario.toLowerCase().includes('fictional'))
+      throw new Error(`${expected[preset]} missing explicit fictional incident context`);
     for(let phase=0;phase<4;phase++){
       await page.locator('.workflow-button').nth(phase).click();
       await page.locator('.cy-stage').waitFor();
+      if(phase>0){
+        const recap=await page.getByTestId('case-scenario-recap').innerText();
+        if(!recap.includes(scenario))throw new Error(`${expected[preset]} phase ${phase+1} lost starting incident`);
+      }
       const text=await page.locator('.cy-stage').innerText();
       if(text.length<200)throw new Error(`${expected[preset]} phase ${phase+1} is unexpectedly empty`);
       if(/\bNaN\b|\bundefined\b|\bInfinity\b/.test(text))

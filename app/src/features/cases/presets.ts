@@ -3,7 +3,7 @@ import { createCase, type CaseKind, type StrategicCase } from './model';
 export type PresetKey = Exclude<CaseKind,'general'>;
 
 interface Preset {
-  title:string; programme:string; decision:string; initiative:string;
+  title:string; programme:string; scenario:string; decision:string; initiative:string;
   vulnerability:string; mechanism:string; boundary:string; timeHorizon:string;
   names:[string,string,string];
   explanations:[string,string,string];
@@ -14,6 +14,7 @@ export const PRESETS: Record<PresetKey,Preset> = {
   ecodesign:{
     title:'Eurodrone · Eco-design and critical material dependencies',
     programme:'Hypothetical Eurodrone support subsystem — no programme data',
+    scenario:'A fictional support-system component has stopped working. Its support function must be restored within 100 days. Replacing it depends on a new component, while qualified repair also faces a critical supply lead time. Could repair, or repair with an alternative supply route, restore the function sooner?',
     decision:'Could a qualified repair and multiple sourcing strategy reduce vulnerability in long-term support?',
     initiative:'Evaluate repairability, traceable material options and qualified alternative sourcing for ONE support component.',
     vulnerability:'Long replenishment time and dependence on scarce, concentrated supply sources.',
@@ -27,6 +28,7 @@ export const PRESETS: Record<PresetKey,Preset> = {
   climate:{
     title:'Product climate adaptation · Extreme-heat scenario',
     programme:'Hypothetical aircraft ground-support activity',
+    scenario:'During a fictional extreme-heat episode, a ground-support system overheats and the support activity is interrupted. The target is to restore service within 24 hours. Should we keep the current configuration, protect the equipment or combine protection with changed operating procedures?',
     decision:'Which adaptation better preserves a defined support activity during an extreme-heat event?',
     initiative:'Evaluate equipment hardening, revised maintenance and protective infrastructure under a fixed heat scenario.',
     vulnerability:'Weather-related disruption and slower restoration of the same service.',
@@ -40,6 +42,7 @@ export const PRESETS: Record<PresetKey,Preset> = {
   saf:{
     title:'SAF · Fuel-supply resilience for an equivalent mission',
     programme:'Hypothetical military aviation base and mission — no fleet approval inferred',
+    scenario:'During planning for a fictional mission, the team identifies a risk of not obtaining the required fuel in time through the current supply route. The supply-recovery target is 15 days. We compare the existing contract with possible SAF routes, subject to fuel compatibility, qualification and availability.',
     decision:'Could an authorised SAF supply route reduce lifecycle impact while preserving fuel availability?',
     initiative:'Assess authorised fuel blends, contracts, traceability and a fallback supply route before deployment.',
     vulnerability:'Limited suppliers, uncertain availability, incremental costs and platform-specific approvals.',
@@ -53,6 +56,7 @@ export const PRESETS: Record<PresetKey,Preset> = {
   wildfire:{
     title:'Wildfires · Connected detection and emergency response',
     programme:'Hypothetical multi-agency fire-response exercise',
+    scenario:'In a fictional wildfire-response exercise, an actionable alert is delayed by fragmented observations and unreliable communications. The goal is to have useful information available within 30 minutes. We compare the current process with integrated observations and a more resilient communications route.',
     decision:'Can integrated satellite/airborne intelligence improve actionable alert time without weakening communications?',
     initiative:'Compare existing reporting with an integrated satellite, drone and incident-command information flow.',
     vulnerability:'Delayed alerts, fragmented information, unreliable communications and false positives.',
@@ -71,6 +75,7 @@ const ES_PRESETS: Record<PresetKey,Omit<Preset,'values'>> = {
   ecodesign:{
     title:'Eurodrone · Ecodiseño y dependencia de materiales críticos',
     programme:'Subsistema hipotético de soporte de Eurodrone — sin datos del programa',
+    scenario:'En un ejercicio ficticio de soporte de Eurodrone, un componente de un subsistema de apoyo se ha averiado. Hay que restablecer su función en un máximo de 100 días. Sustituirlo depende de recibir una pieza nueva; repararlo requiere una intervención cualificada y también tiene un plazo de suministro. ¿Qué opción permite recuperar antes el servicio?',
     decision:'¿Podría una reparación cualificada y la diversificación de suministro reducir vulnerabilidades del soporte a largo plazo?',
     initiative:'Evaluar reparabilidad, alternativas de materiales trazables y abastecimiento cualificado de un único componente de soporte.',
     vulnerability:'Plazos prolongados de reposición y dependencia de fuentes de suministro concentradas.',
@@ -83,6 +88,7 @@ const ES_PRESETS: Record<PresetKey,Omit<Preset,'values'>> = {
   climate:{
     title:'Adaptación climática · Escenario de calor extremo',
     programme:'Actividad hipotética de soporte de aeronaves en tierra',
+    scenario:'Durante un episodio simulado de calor extremo, un equipo de apoyo en tierra se sobrecalienta e interrumpe una actividad de soporte. El objetivo es restablecerla en 24 horas. Comparamos la configuración actual, la protección térmica del equipo y esa protección combinada con cambios operativos.',
     decision:'¿Qué medida protege mejor la actividad de soporte durante un episodio de calor extremo?',
     initiative:'Evaluar protección térmica de equipos, mantenimiento adaptado e infraestructura de apoyo bajo el mismo episodio.',
     vulnerability:'Interrupciones por meteorología extrema y recuperación lenta del servicio.',
@@ -95,6 +101,7 @@ const ES_PRESETS: Record<PresetKey,Omit<Preset,'values'>> = {
   saf:{
     title:'SAF · Resiliencia de abastecimiento para una misión equivalente',
     programme:'Base y misión militar hipotéticas — sin asumir aprobación de la flota',
+    scenario:'Al preparar una misión ficticia, aparece el riesgo de no recibir a tiempo el combustible necesario por la dependencia de una ruta de suministro. El plazo objetivo es de 15 días. Comparamos el contrato actual con posibles vías de SAF, siempre condicionadas a autorización técnica y disponibilidad.',
     decision:'¿Puede una vía autorizada de SAF reducir el impacto de ciclo de vida sin comprometer la disponibilidad de combustible?',
     initiative:'Evaluar mezclas autorizadas, contratos, trazabilidad y suministro de contingencia antes de desplegar.',
     vulnerability:'Proveedores limitados, disponibilidad incierta, costes adicionales y autorizaciones específicas por plataforma.',
@@ -107,6 +114,7 @@ const ES_PRESETS: Record<PresetKey,Omit<Preset,'values'>> = {
   wildfire:{
     title:'Incendios forestales · Detección y respuesta conectada',
     programme:'Ejercicio hipotético de emergencias con múltiples organismos',
+    scenario:'En un simulacro ficticio de incendio forestal, la alerta útil para los equipos de respuesta llega tarde porque la información está dispersa y las comunicaciones son vulnerables. El objetivo es disponer de una alerta en 30 minutos. Se comparan los medios actuales con observación integrada y comunicaciones redundantes.',
     decision:'¿Puede la integración de datos aéreos y satelitales acelerar alertas útiles sin debilitar las comunicaciones?',
     initiative:'Comparar avisos actuales con observación integrada por satélite, dron y centro de mando.',
     vulnerability:'Avisos tardíos, información fragmentada, interrupciones de comunicaciones y falsos positivos.',
@@ -365,7 +373,7 @@ export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCas
   const p:Preset=locale==='es'?{...ES_PRESETS[kind],values:PRESETS[kind].values}:PRESETS[kind];
   const result=createCase(kind,locale);
   result.id='SYNTH-'+kind.toUpperCase();
-  result.title=p.title;result.programme=p.programme;
+  result.title=p.title;result.programme=p.programme;result.scenario=p.scenario;
   result.decision=p.decision;result.initiative=p.initiative;
   result.vulnerability=p.vulnerability;result.mechanism=p.mechanism;
   result.boundary=p.boundary;result.timeHorizon=p.timeHorizon;
