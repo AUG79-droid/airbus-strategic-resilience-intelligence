@@ -6,6 +6,7 @@ const browser=await chromium.launch({
   headless:true,args:['--disable-extensions','--no-first-run']
 });
 const expected=['Eurodrone','Climate','SAF','Wildfire'];
+const spanishNames=['Sustitución convencional','Configuración actual','Contrato de combustible actual','Coordinación actual'];
 const audiences=['defenceCustomer','engineering','programmeManager','executiveLeadership'];
 const options=['baseline','option-a','option-b'];
 const checks=[];
@@ -59,10 +60,69 @@ try{
       if(/\bNaN\b|\bundefined\b|\bInfinity\b/.test(text))
         throw new Error(`${expected[preset]} ${option}/${audience} contains an invalid numeric token`);
     }
-    checks.push(`${expected[preset]}: four phases, baseline plus two alternatives and four audiences`);
+
+    // Switching language must localise the existing case, not reset it or mix languages.
+    await page.locator('.language-switch button').nth(1).click();
+    const esScenario=await page.getByTestId('case-scenario-recap').innerText();
+    if(esScenario.includes(scenario)||esScenario.length<130)
+      throw Error(`${expected[preset]} scenario was not translated to Spanish`);
+    for(let phase=0;phase<4;phase++){
+      await page.locator('.workflow-button').nth(phase).click();
+      await page.locator('.cy-stage').waitFor();
+      const text=await page.locator('.cy-stage').innerText();
+      if(text.includes(scenario))throw Error(`${expected[preset]} phase ${phase+1} retained English scenario`);
+      if(phase===0){
+        const title=await page.locator('.case-line strong').innerText();
+        if(title!==['Eurodrone · Ecodiseño y dependencia de materiales críticos',
+          'Adaptación climática · Escenario de calor extremo',
+          'SAF · Resiliencia de abastecimiento para una misión equivalente',
+          'Incendios forestales · Detección y respuesta conectada'][preset])
+          throw Error(`${expected[preset]} Spanish case title is wrong: ${title}`);
+      }
+      if(phase===1){
+        if((await page.locator('.cy-results article').count())!==3)
+          throw Error(`${expected[preset]} missing three decisions in Spanish`);
+        const baseline=await page.getByTestId('baseline-results').innerText();
+        if(!baseline.includes(spanishNames[preset])||!baseline.includes('Tiempo medio de recuperación'))
+          throw Error(`${expected[preset]} baseline result was not localized in Spanish`);
+        if(baseline.includes('Expected recovery time')||text.includes('Conventional replacement'))
+          throw Error(`${expected[preset]} Challenge has leaked English case text`);
+      }
+      if(phase===2&&text.includes('SIMULATED EXERCISE ·'))
+        throw Error(`${expected[preset]} Check retained English evidence titles`);
+      if(/\\bNaN\\b|\\bundefined\\b|\\bInfinity\\b/.test(text))
+        throw Error(`${expected[preset]} Spanish phase ${phase+1} has invalid output`);
+    }
+    const esSelects=page.locator('.cy-choices select');
+    for(const option of options)for(const audience of audiences){
+      await esSelects.nth(0).selectOption(option);
+      await esSelects.nth(1).selectOption(audience);
+      const output=page.locator('.cy-output');
+      const text=await output.innerText();
+      if(!text.includes('Respuesta del análisis')||text.includes('Model-based answer'))
+        throw Error(`${expected[preset]} ${option}/${audience} missing Spanish analysis`);
+      if((await output.locator('.cy-deep-dive__item').count())!==7)
+        throw Error(`${expected[preset]} ${option}/${audience} missing Spanish detail`);
+    }
+    await page.locator('.language-switch button').nth(0).click();
+    await page.locator('.workflow-button').nth(0).click();
+    const roundtrip=await page.getByTestId('case-scenario').locator('textarea[data-case-field="scenario"]').inputValue();
+    if(roundtrip!==scenario)throw Error(`${expected[preset]} original English case was not restored`);
+    checks.push(`${expected[preset]}: ES/EN four phases, three decisions, four audiences, locale roundtrip`);
+  }
+  // Also walk the standard DEMO-60 in both languages across all four phases.
+  await page.locator('.case-mode-switch button').first().click();
+  for(const lang of [0,1]){
+    await page.locator('.language-switch button').nth(lang).click();
+    for(let phase=0;phase<4;phase++){
+      await page.locator('.workflow-button').nth(phase).click();
+      await page.locator('.workspace-view').waitFor();
+      if((await page.locator('.workspace-view').innerText()).length<100)
+        throw Error(`DEMO-60 language ${lang} phase ${phase} is empty`);
+    }
   }
   if(errors.length)throw new Error(`Browser errors:\n${errors.join('\n')}`);
-  console.log(JSON.stringify({base,checks,combinations:expected.length*options.length*audiences.length,errors},null,2));
+  console.log(JSON.stringify({base,checks,combinations:expected.length*options.length*audiences.length*2,errors},null,2));
   await context.close();
 }finally{
   await browser.close();
