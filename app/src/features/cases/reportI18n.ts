@@ -24,6 +24,12 @@ export function localizeCaseDiagnostic(input:string,locale:'es'|'en'):string{
   const investigate=input.match(/^Investigate: ([A-Za-z]+) is missing$/);
   if(investigate)return 'Investigar: falta '+(fields[investigate[1]]??investigate[1]);
   return input
+    .replaceAll('functionalUnit:', 'unidad funcional:')
+    .replaceAll('period:', 'periodo:')
+    .replaceAll('boundary:', 'perímetro:')
+    .replaceAll('inventoryMethod:', 'método de inventario:')
+    .replaceAll('allocationRule:', 'regla de asignación:')
+    .replaceAll('factorSourceVersion:', 'versión de los factores:')
     .replace('missing traceable review for baseline and alternative','falta revisión trazable para referencia y alternativa')
     .replace('Scope, technical, method and reviewer gates are not all confirmed',
       'No están confirmadas las cuatro declaraciones de alcance, viabilidad técnica, método y revisión')
