@@ -404,3 +404,69 @@ export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCas
   }));
   return result;
 }
+
+/**
+ * Localise the seeded, fictional case without resetting any user-entered inputs,
+ * numerical assumptions, selections or evidence IDs. Only text that still
+ * exactly matches the original built-in seed is translated.
+ */
+export function localizePresetCase(data:StrategicCase,locale:'es'|'en'):StrategicCase{
+  const kind=data.kind;
+  if(!data.hypothetical||kind==='general'||data.id!=='SYNTH-'+kind.toUpperCase())return data;
+  const source=fromPreset(kind,locale==='es'?'en':'es');
+  const target=fromPreset(kind,locale);
+  const translate=(value:string|undefined,before:string|undefined,after:string|undefined)=>
+    value===before?(after??''):value;
+  const fields=['title','programme','scenario','decision','initiative','vulnerability',
+    'mechanism','boundary','timeHorizon','owner'] as const;
+  const updated={...data};
+  for(const key of fields){
+    const translated=translate(updated[key],source[key],target[key]);
+    if(translated!==undefined)updated[key]=translated;
+  }
+  updated.metrics=data.metrics.map(metric=>{
+    const previous=source.metrics.find(x=>x.id===metric.id);
+    const next=target.metrics.find(x=>x.id===metric.id);
+    return previous&&next?{...metric,label:translate(metric.label,previous.label,next.label)??metric.label}:metric;
+  });
+  updated.options=data.options.map(option=>{
+    const previous=source.options.find(x=>x.id===option.id);
+    const next=target.options.find(x=>x.id===option.id);
+    return previous&&next?{...option,
+      name:translate(option.name,previous.name,next.name)??option.name,
+      explanation:translate(option.explanation,previous.explanation,next.explanation)??option.explanation
+    }:option;
+  });
+  updated.parameters=Object.fromEntries(Object.entries(data.parameters).map(([id,parameter])=>{
+    const previous=source.parameters[id],next=target.parameters[id];
+    return [id,previous&&next?{...parameter,
+      reason:translate(parameter.reason,previous.reason,next.reason)??parameter.reason
+    }:parameter];
+  }));
+  updated.evidence=data.evidence.map(item=>{
+    const previous=source.evidence.find(x=>x.id===item.id);
+    const next=target.evidence.find(x=>x.id===item.id);
+    if(!previous||!next)return item;
+    return {...item,
+      title:translate(item.title,previous.title,next.title)??item.title,
+      reference:translate(item.reference,previous.reference,next.reference)??item.reference,
+      owner:translate(item.owner,previous.owner,next.owner)??item.owner,
+      reviewer:translate(item.reviewer,previous.reviewer,next.reviewer)??item.reviewer,
+      limitations:translate(item.limitations,previous.limitations,next.limitations)??item.limitations
+    };
+  });
+  updated.environmentalBasis=data.environmentalBasis.map(item=>{
+    const previous=source.environmentalBasis.find(x=>x.optionId===item.optionId);
+    const next=target.environmentalBasis.find(x=>x.optionId===item.optionId);
+    if(!previous||!next)return item;
+    return {...item,
+      functionalUnit:translate(item.functionalUnit,previous.functionalUnit,next.functionalUnit)??item.functionalUnit,
+      period:translate(item.period,previous.period,next.period)??item.period,
+      boundary:translate(item.boundary,previous.boundary,next.boundary)??item.boundary,
+      inventoryMethod:translate(item.inventoryMethod,previous.inventoryMethod,next.inventoryMethod)??item.inventoryMethod,
+      allocationRule:translate(item.allocationRule,previous.allocationRule,next.allocationRule)??item.allocationRule,
+      factorSourceVersion:translate(item.factorSourceVersion,previous.factorSourceVersion,next.factorSourceVersion)??item.factorSourceVersion
+    };
+  });
+  return updated;
+}
