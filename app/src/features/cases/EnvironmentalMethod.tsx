@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { Locale } from '../../app/types';
 import { compareEnvironmentalBasis, type EnvironmentalBasis } from './environmentBasis';
 import { displayOptionName, type StrategicCase } from './model';
+import { localizeCaseDiagnostic } from './reportI18n';
 
 interface Props {locale:Locale;data:StrategicCase;setData:Dispatch<SetStateAction<StrategicCase>>}
 const fields=[
