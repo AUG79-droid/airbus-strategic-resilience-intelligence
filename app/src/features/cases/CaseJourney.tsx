@@ -674,7 +674,7 @@ export function CaseJourney({locale,view,data,setData}:Props){
           </section>
           {!exerciseComplete(active)&&<>
             <h4>{t('Qué información falta para completar la evaluación','What information is still needed to complete the assessment')}</h4>
-            <ul>{active.missing.length?active.missing.map((m,i)=><li key={i}>{m}</li>):
+            <ul>{active.missing.length?active.missing.map((m,i)=><li key={i}>{localizeCaseDiagnostic(m,locale)}</li>):
               <li>{t('Falta la revisión técnica y operativa de las conclusiones.',
                 'The conclusions still need technical and operational review.')}</li>}</ul>
           </>}
