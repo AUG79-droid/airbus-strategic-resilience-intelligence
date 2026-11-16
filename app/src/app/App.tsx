@@ -9,6 +9,7 @@ import type { Locale, ViewId } from './types';
 import type { StrategyId } from '../domain';
 import { CaseJourney } from '../features/cases/CaseJourney';
 import { createCase, validateCaseImport } from '../features/cases/model';
+import { localizePresetCase } from '../features/cases/presets';
 import { MODEL_PROVENANCE } from '../features/cases/modelProvenance';
 
 const DEMO_DRAFT_KEY='asri-demo-draft-v2';
@@ -204,7 +205,7 @@ export function App() {
                   className={locale === language ? 'is-active' : ''}
                   type="button"
                   key={language}
-                  onClick={() => setLocale(language)}
+                  onClick={() => { setCustomCase(current => localizePresetCase(current,language)); setLocale(language); }}
                   aria-pressed={locale === language}
                 >
                   {language.toUpperCase()}
