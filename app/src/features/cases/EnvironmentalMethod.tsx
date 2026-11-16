@@ -39,7 +39,7 @@ export function EnvironmentalMethod({locale,data,setData}:Props) {
           {status.status==='declaredComparable'
             ?t('Los metadatos declarados coinciden (pendiente de verificar fuentes y factores).',
               'Declared metadata match (sources and factors still need independent verification).')
-            :t('Inventarios NO comparables o incompletos: ','Inventories incompatible or incomplete: ')+status.issues.join('; ')}
+            :t('Inventarios NO comparables o incompletos: ','Inventories incompatible or incomplete: ')+status.issues.map(issue=>localizeCaseDiagnostic(issue,locale)).join('; ')}
         </p>}
         <div className="cy-field-grid">
           {fields.map(([key,nameEs,nameEn])=><label className="cy-field" key={key}>
