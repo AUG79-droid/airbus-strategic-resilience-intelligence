@@ -54,7 +54,7 @@ describe('Create your own strategic case', () => {
     expect(new Set(c.evidence.map(e=>e.id)).size).toBe(18);
     expect(c.evidence.every(e=>
       e.id.startsWith('SIM-EURO-') &&
-      e.reference.includes('fictional / ficticio') &&
+      e.reference.includes(locale==='es'?'(ficticio)':'(fictional)') &&
       e.reviewer.toLowerCase().match(/fictic|fictional/) &&
       e.status==='reviewed' &&
       e.nature==='estimate' &&
@@ -103,7 +103,7 @@ describe('Create your own strategic case', () => {
       expect(new Set(c.evidence.map(e=>e.id)).size).toBe(evidenceCount);
       expect(c.evidence.every(e=>e.id.startsWith(prefix)&&
         e.status==='reviewed'&&e.nature==='estimate'&&
-        e.reference.includes('fictional / ficticio')&&
+        e.reference.includes(locale==='es'?'(ficticio)':'(fictional)')&&
         e.reviewer.toLowerCase().match(/fictic|fictional/)&&
         e.limitations.length>100)).toBe(true);
       for(const option of c.options){
