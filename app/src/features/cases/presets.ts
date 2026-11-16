@@ -262,7 +262,7 @@ function populateEurodroneExercise(result:StrategicCase,locale:'es'|'en'):void {
         id,
         title:(es?'EJERCICIO SIMULADO · ':'SIMULATED EXERCISE · ')+(es?def.es:def.en)+
           ' — '+optionLabels[optionIndex],
-        reference:'SIM-EURO-'+def.code+'-'+suffix+'-v1 (fictional / ficticio)',
+        reference:'SIM-EURO-'+def.code+'-'+suffix+'-v1 '+(es?'(ficticio)':'(fictional)'),
         owner:es?def.ownerEs:def.ownerEn,
         reviewer:es?'Revisión metodológica del ejercicio (ficticia)':
           'Exercise methodology reviewer (fictional)',
@@ -343,7 +343,7 @@ function populateOtherSimulatedExercise(result:StrategicCase,kind:'climate'|'saf
         id,
         title:(es?'REVISIÓN SIMULADA · ':'SIMULATED REVIEW · ')+
           (es?definition.es:definition.en)+' — '+option.name,
-        reference:id+'-v1 (fictional / ficticio)',
+        reference:id+'-v1 '+(es?'(ficticio)':'(fictional)'),
         owner:es?definition.ownerEs:definition.ownerEn,
         reviewer:es?'Responsable independiente del ejercicio (ficticio)':
           'Independent exercise reviewer (fictional)',
@@ -397,8 +397,8 @@ export function fromPreset(kind: PresetKey, locale:'es'|'en'='en'): StrategicCas
     functionalUnit:locale==='es'?'Misma unidad funcional ficticia':'Same fictional functional unit',
     period:result.timeHorizon,
     boundary:result.boundary,
-    inventoryMethod:'SIMULATED illustrative inventory, not an LCA / Inventario ilustrativo ficticio, no ACV',
-    allocationRule:'Identical simulated allocation assumptions / Supuestos de asignación ficticios idénticos',
+    inventoryMethod:locale==='es'?'Inventario ilustrativo simulado; no es un ACV':'Simulated illustrative inventory; not an LCA',
+    allocationRule:locale==='es'?'Supuestos de asignación ficticios idénticos':'Identical simulated allocation assumptions',
     factorSourceVersion:'SYNTHETIC-EXERCISE-ONLY-v1',
     evidenceId:''
   }));
@@ -415,8 +415,17 @@ export function localizePresetCase(data:StrategicCase,locale:'es'|'en'):Strategi
   if(!data.hypothetical||kind==='general'||data.id!=='SYNTH-'+kind.toUpperCase())return data;
   const source=fromPreset(kind,locale==='es'?'en':'es');
   const target=fromPreset(kind,locale);
-  const translate=(value:string|undefined,before:string|undefined,after:string|undefined)=>
-    value===before?(after??''):value;
+  const translate=(value:string|undefined,before:string|undefined,after:string|undefined)=>{
+    if(value===before)return after??'';
+    // Old archives used mixed EN/ES text even when a single locale was selected.
+    if(value==='SIMULATED illustrative inventory, not an LCA / Inventario ilustrativo ficticio, no ACV')
+      return locale==='es'?'Inventario ilustrativo simulado; no es un ACV':'Simulated illustrative inventory; not an LCA';
+    if(value==='Identical simulated allocation assumptions / Supuestos de asignación ficticios idénticos')
+      return locale==='es'?'Supuestos de asignación ficticios idénticos':'Identical simulated allocation assumptions';
+    if(value?.endsWith(' (fictional / ficticio)'))
+      return value.replace(' (fictional / ficticio)',locale==='es'?' (ficticio)':' (fictional)');
+    return value;
+  };
   const fields=['title','programme','scenario','decision','initiative','vulnerability',
     'mechanism','boundary','timeHorizon','owner'] as const;
   const updated={...data};
