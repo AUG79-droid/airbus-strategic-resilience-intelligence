@@ -1,3 +1,4 @@
+import { completeInitialAssessment } from './learning-assessment-qa.mjs';
 import { chromium } from 'playwright-core';
 const url=process.env.LAB_URL??'http://127.0.0.1:4174';
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:true});
@@ -8,6 +9,7 @@ try{
     const page=await context.newPage();
     page.on('pageerror',error=>errors.push(error.message));
     await page.goto(url+'/#/challenge',{waitUntil:'networkidle'});
+    await completeInitialAssessment(page);
     await page.getByRole('heading',{name:'Make a decision and see what happens'}).waitFor();
     await page.getByTestId('decision-choice-repairFirst').click();
     await page.getByTestId('decision-feedback').waitFor();

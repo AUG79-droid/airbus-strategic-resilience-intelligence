@@ -1,3 +1,4 @@
+import { completeInitialAssessment } from './learning-assessment-qa.mjs';
 import { chromium } from 'playwright-core';
 const url=process.env.EVIDENCE_URL??'http://127.0.0.1:4174';
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:true});
@@ -7,6 +8,7 @@ try{
   const context=await browser.newContext({viewport,reducedMotion:'reduce'});
   const page=await context.newPage();page.on('pageerror',err=>errors.push(err.message));
   await page.goto(url+'/#/validate',{waitUntil:'networkidle'});
+  await completeInitialAssessment(page);
   await page.getByRole('heading',{name:'What supports our decision?'}).waitFor();
   const toggle=page.getByTestId('validate-advanced-toggle');
   await toggle.click();

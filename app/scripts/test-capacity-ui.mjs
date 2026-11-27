@@ -1,3 +1,4 @@
+import { completeInitialAssessment } from './learning-assessment-qa.mjs';
 import {chromium} from 'playwright-core';
 import {readFile,mkdir} from 'node:fs/promises';
 import path from 'node:path';
@@ -12,6 +13,7 @@ try {
   const errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(base+'/#/investigate',{waitUntil:'networkidle'});
+  await completeInitialAssessment(page);
   await page.locator('.case-mode-switch button').last().click();
   await page.locator('.cy-preset-grid button').first().click();
   await page.locator('.workspace-tabs button').nth(1).click();

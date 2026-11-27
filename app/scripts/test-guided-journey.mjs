@@ -1,3 +1,4 @@
+import { completeInitialAssessment } from './learning-assessment-qa.mjs';
 import { chromium } from 'playwright-core';
 const url=process.env.QA_URL??'http://127.0.0.1:4174';
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:true});
@@ -7,6 +8,7 @@ try {
   const context=await browser.newContext({viewport,reducedMotion:'reduce'});
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url+'/#/investigate',{waitUntil:'networkidle'});
+  await completeInitialAssessment(page);
   const stages=['investigate','challenge','validate','translate'];
   for(let i=0;i<stages.length;i++){
     await page.locator('.workspace-tabs button').nth(i).click();

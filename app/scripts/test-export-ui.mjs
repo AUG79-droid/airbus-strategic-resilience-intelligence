@@ -1,3 +1,4 @@
+import { completeInitialAssessment } from './learning-assessment-qa.mjs';
 import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,7 @@ const errors = [];
 page.on('console', (message) => { if (message.type() === 'error' && !message.text().includes('Failed to load resource: the server responded with a status of 404')) errors.push(message.text()); });
 page.on('pageerror', (error) => errors.push(error.message));
 await page.goto(`${baseUrl}/#/translate`, { waitUntil: 'networkidle' });
+await completeInitialAssessment(page);
 await page.getByTestId('strategy-parallel').click();
 await page.getByTestId('audience-programmeManager').click();
 await page.getByTestId('open-export-review').click();

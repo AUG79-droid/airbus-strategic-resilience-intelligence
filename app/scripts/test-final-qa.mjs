@@ -1,3 +1,4 @@
+import { completeInitialAssessment } from './learning-assessment-qa.mjs';
 import { chromium } from 'playwright-core';
 
 const baseUrl = process.env.QA_URL ?? 'http://127.0.0.1:4174';
@@ -14,6 +15,7 @@ for (const viewport of viewports) {
   page.on('pageerror', (error) => errors.push(`${viewport.name}: ${error.message}`));
   for (const route of routes) {
     await page.goto(`${baseUrl}/#/${route}`, { waitUntil: 'networkidle' });
+    await completeInitialAssessment(page);
     const metrics = await page.evaluate(() => ({ innerWidth, scrollWidth: document.documentElement.scrollWidth, bodyWidth: document.body.getBoundingClientRect().width, emptyTallPanels: [...document.querySelectorAll('main section, main article')].filter((element) => { const rect = element.getBoundingClientRect(); return rect.height > 700 && (element.textContent?.trim().length ?? 0) < 80; }).length }));
     if (metrics.scrollWidth > metrics.innerWidth || metrics.bodyWidth > metrics.innerWidth + 1) throw new Error(`${viewport.name}/${route} horizontal overflow: ${JSON.stringify(metrics)}`);
     if (metrics.emptyTallPanels) throw new Error(`${viewport.name}/${route} contains a tall empty panel.`);
@@ -21,6 +23,7 @@ for (const viewport of viewports) {
     if (active !== 1) throw new Error(`${viewport.name}/${route} has ${active} active navigation entries.`);
   }
   await page.goto(`${baseUrl}/#/investigate`, { waitUntil: 'networkidle' });
+  await completeInitialAssessment(page);
   for (const index of [1, 2, 3, 0]) await page.locator('.workflow-button').nth(index).click();
   await page.getByRole('button', { name: 'ES', exact: true }).click();
   if (await page.locator('html').getAttribute('lang') !== 'es') throw new Error(`${viewport.name}: language did not switch to Spanish.`);

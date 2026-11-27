@@ -1,3 +1,4 @@
+import { completeInitialAssessment } from './learning-assessment-qa.mjs';
 import { chromium } from 'playwright-core';
 
 const url=process.env.QA_URL??'http://127.0.0.1:4174';
@@ -9,6 +10,7 @@ try {
   const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url+'/#/investigate',{waitUntil:'networkidle'});
+  await completeInitialAssessment(page);
   await page.locator('.case-mode-switch button').last().click();
   await page.locator('.workspace-tabs button').nth(1).click();
   await page.locator('.cy-universal__section').nth(1).locator('summary').click();
@@ -30,6 +32,7 @@ try {
     throw Error('The expected admissible joint range was not displayed.');
   // Opt-in browser draft recovery is permitted ONLY for hypothetical examples.
   await page.goto(url+'/#/investigate',{waitUntil:'networkidle'});
+  await completeInitialAssessment(page);
   await page.locator('.case-mode-switch button').last().click();
   const optIn=page.locator('section[aria-label="Optional local draft saving"] input[type=checkbox]');
   await optIn.check();
@@ -40,6 +43,7 @@ try {
     return raw&&JSON.parse(raw).title==='Saved fictional example regression';
   });
   await page.reload({waitUntil:'networkidle'});
+  await completeInitialAssessment(page);
   await page.locator('.case-mode-switch button').last().click();
   if(await page.locator('textarea[data-case-field=title]').inputValue()!=='Saved fictional example regression')
     throw Error('Opt-in fictional draft was not restored after reload.');
@@ -49,6 +53,7 @@ try {
   // Regression ASRI-012: language changes may NOT silently switch the
   // selected alternative or executive audience before an export.
   await page.goto(url+'/#/investigate',{waitUntil:'networkidle'});
+  await completeInitialAssessment(page);
   await page.locator('.case-mode-switch button').last().click();
   await page.locator('.cy-preset-grid button').first().click();
   await page.locator('.workspace-tabs button').nth(3).click();

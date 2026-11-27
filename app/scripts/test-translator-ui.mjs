@@ -1,3 +1,4 @@
+import { completeInitialAssessment } from './learning-assessment-qa.mjs';
 import { chromium } from 'playwright-core';
 
 const baseUrl = process.env.TRANSLATOR_URL ?? 'http://127.0.0.1:4174';
@@ -16,6 +17,7 @@ async function open(path, viewport) {
     if (response.status() >= 400 && !response.url().endsWith('/favicon.ico')) errors.push(`HTTP ${response.status()} ${response.url()}`);
   });
   await page.goto(`${baseUrl}/#/${path}`, { waitUntil: 'networkidle' });
+  await completeInitialAssessment(page);
   return { context, page };
 }
 
