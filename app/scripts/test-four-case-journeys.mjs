@@ -1,3 +1,4 @@
+import { completeInitialAssessment } from './learning-assessment-qa.mjs';
 import {chromium} from 'playwright-core';
 
 const base=process.env.QA_URL??'http://127.0.0.1:4174';
@@ -20,6 +21,7 @@ try{
       errors.push(message.text());
   });
   await page.goto(base+'/#/investigate',{waitUntil:'networkidle'});
+  await completeInitialAssessment(page);
   await page.locator('.case-mode-switch button').last().click();
 
   for(let preset=0;preset<expected.length;preset++){
